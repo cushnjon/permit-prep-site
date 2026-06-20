@@ -107,11 +107,13 @@ export default function Home() {
   };
 
   const handleRandomQuestion = () => {
-    const zone = gameData[gameState.currentZoneIndex];
-    const randomIndex = Math.floor(Math.random() * zone.questions.length);
+    const randomZoneIndex = Math.floor(Math.random() * gameData.length);
+    const randomZone = gameData[randomZoneIndex];
+    const randomQuestionIndex = Math.floor(Math.random() * randomZone.questions.length);
     setGameState(prev => ({
       ...prev,
-      currentQuestionIndex: randomIndex,
+      currentZoneIndex: randomZoneIndex,
+      currentQuestionIndex: randomQuestionIndex,
       selectedAnswer: null,
       showArticle: false,
       answersCollapsed: false,
@@ -277,8 +279,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
             title="Random Question"
           >
             <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="pulse-bounce"
             >
               <Dices size={18} className="text-accent" />
             </motion.div>
@@ -361,14 +362,21 @@ function TextDriveGame({
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
             <div className="flex items-center gap-2">
-              <button
+              <motion.button
                 onClick={onRandomQuestion}
                 disabled={!!selectedAnswer}
                 className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Random Question"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Dices size={18} />
-              </button>
+                <motion.div
+                  animate={{ rotateY: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Dices size={18} />
+                </motion.div>
+              </motion.button>
               <button
                 onClick={onToggleGlossary}
                 className="p-2 rounded-lg hover:bg-white/20 transition-colors"
@@ -554,7 +562,7 @@ function TextDriveGame({
             <div className="space-y-3">
               <h3 className="text-lg font-bold text-primary mb-4">Question Glossary</h3>
               {question.glossary && question.glossary.length > 0 ? (
-                question.glossary.map((item, idx) => (
+                question.glossary.slice(0, 1).map((item, idx) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 10 }}
@@ -606,7 +614,23 @@ function TextDriveGame({
               <h4 className="text-lg font-bold text-primary mb-1">{question.extended_reading.title}</h4>
               <p className="text-xs text-muted-foreground font-semibold">{question.extended_reading.context_type}</p>
             </div>
-            <p className="text-sm leading-relaxed text-foreground">{question.extended_reading.summary}</p>
+            <p className="text-sm leading-relaxed text-foreground">
+              {question.extended_reading.summary.split(/\[(.*?)\]\((.*?)\)/).map((part, idx) => {
+                if (idx % 3 === 0) return part;
+                if (idx % 3 === 1) return (
+                  <a
+                    key={idx}
+                    href={question.extended_reading.summary.split(/\[(.*?)\]\((.*?)\)/)[idx + 1]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent font-semibold hover:underline transition-all"
+                  >
+                    {part}
+                  </a>
+                );
+                return null;
+              })}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
