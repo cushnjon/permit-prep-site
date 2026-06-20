@@ -170,6 +170,7 @@ export default function Home() {
             speedTier="15 MPH"
             isExpanded={gameState.expandedSection === 0}
             onToggle={() => toggleSection(0)}
+            onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 0 && (
               <TextDriveGame
@@ -196,6 +197,7 @@ export default function Home() {
             speedTier="25 MPH"
             isExpanded={gameState.expandedSection === 1}
             onToggle={() => toggleSection(1)}
+            onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 1 && (
               <PlaceholderGame title="Color Clash: Signage Matching" />
@@ -209,6 +211,7 @@ export default function Home() {
             speedTier="45 MPH"
             isExpanded={gameState.expandedSection === 2}
             onToggle={() => toggleSection(2)}
+            onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 2 && (
               <PlaceholderGame title="Right-of-Way Roulette" />
@@ -226,10 +229,11 @@ interface GameSectionProps {
   speedTier: string;
   isExpanded: boolean;
   onToggle: () => void;
+  onRandomQuestion?: () => void;
   children: React.ReactNode;
 }
 
-function GameSection({ title, logo, speedTier, isExpanded, onToggle, children }: GameSectionProps) {
+function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, children }: GameSectionProps) {
   return (
     <motion.div
       className="glow-border rounded-lg overflow-hidden drop-shadow-medium"
@@ -241,15 +245,19 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, children }:
         onClick={onToggle}
         className="w-full bg-card/70 hover:bg-card transition-colors p-3 flex items-center justify-between"
       >
-        <div className="flex items-center gap-3">
-          <img src={logo} alt={title} className="h-10 w-10" />
-          <div className="text-left flex items-center gap-2">
-            <h2 className="text-base font-bold text-primary">{title}</h2>
-            <p className="text-xs text-muted-foreground font-medium">{speedTier}</p>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <img src={logo} alt={title} className="h-10 w-10 flex-shrink-0" />
+          <div className="text-left flex items-center gap-1 min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-primary truncate">{title}</h2>
+            <p className="text-xs text-muted-foreground font-medium flex-shrink-0">{speedTier}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRandomQuestion?.();
+            }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
@@ -260,19 +268,6 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, children }:
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             >
               <Dices size={18} className="text-accent" />
-            </motion.div>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
-            title="Zone Glossary"
-          >
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <BookOpen size={18} className="text-accent" />
             </motion.div>
           </motion.button>
           <motion.div
@@ -380,6 +375,42 @@ function TextDriveGame({
           </div>
         </div>
       </div>
+
+      {/* Zone Glossary Dropdown */}
+      <AnimatePresence>
+        {showGlossary && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft"
+          >
+            <h3 className="text-lg font-bold text-primary mb-4">Zone Glossary</h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {zone.questions.map((q, idx) => (
+                <motion.button
+                  key={q.id}
+                  onClick={() => {
+                    // Find and navigate to this question
+                    const newIndex = zone.questions.findIndex(question => question.id === q.id);
+                    if (newIndex !== -1) {
+                      // Reset state and go to this question
+                      onToggleGlossary();
+                    }
+                  }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="w-full text-left p-3 rounded-lg border border-accent/20 hover:bg-accent/10 hover:border-accent/50 transition-all"
+                >
+                  <p className="text-sm font-semibold text-accent mb-1">Q{idx + 1}</p>
+                  <p className="text-xs text-foreground line-clamp-2">{q.prompt}</p>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Question or Glossary */}
       <AnimatePresence mode="wait">
