@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
+import ColorClashGame from "@/components/ColorClashGame";
+import RightOfWayGame from "@/components/RightOfWayGame";
 
 interface GameState {
   currentZoneIndex: number;
@@ -215,7 +217,7 @@ export default function Home() {
             onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 1 && (
-              <PlaceholderGame title="Color Clash: Signage Matching" />
+              <ColorClashGame onScoreUpdate={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))} />
             )}
           </GameSection>
 
@@ -229,7 +231,7 @@ export default function Home() {
             onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 2 && (
-              <PlaceholderGame title="Right-of-Way Roulette" />
+              <RightOfWayGame onScoreUpdate={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))} />
             )}
           </GameSection>
         </div>
