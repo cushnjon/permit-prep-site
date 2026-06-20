@@ -19,6 +19,7 @@ export default function TrafficRunnerGame({ onScoreUpdate }: TrafficRunnerGamePr
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameLoopRef = useRef<number | undefined>(undefined);
   const keyPressRef = useRef(false);
+  const buttonPressRef = useRef(false);
 
   const level = runnerLevels[currentLevel];
 
@@ -48,6 +49,19 @@ export default function TrafficRunnerGame({ onScoreUpdate }: TrafficRunnerGamePr
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [gameActive, crashed]);
+
+  // Handle mobile button controls
+  const handleMobileButtonDown = () => {
+    if (gameActive && !crashed) {
+      buttonPressRef.current = true;
+      setIsMoving(true);
+    }
+  };
+
+  const handleMobileButtonUp = () => {
+    buttonPressRef.current = false;
+    setIsMoving(false);
+  };
 
   // Game loop
   useEffect(() => {
@@ -268,9 +282,9 @@ export default function TrafficRunnerGame({ onScoreUpdate }: TrafficRunnerGamePr
         <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
           <p className="text-sm font-semibold">
             {gameActive && !crashed
-              ? 'Hold SPACE to move forward. Release when you DON\'T have right of way!'
+              ? 'Hold SPACE or tap the button below to move forward. Release when you DON\'T have right of way!'
               : crashed
-                ? '❌ You crashed! Release the button when there\'s no right of way.'
+                ? '❌ You crashed! Release when there\'s no right of way.'
                 : '✓ Level complete!'}
           </p>
         </div>
@@ -280,7 +294,7 @@ export default function TrafficRunnerGame({ onScoreUpdate }: TrafficRunnerGamePr
             <>
               <button
                 onClick={startGame}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2 select-none"
               >
                 <ChevronUp size={20} />
                 {crashed ? 'Retry Level' : 'Start Level'}
@@ -296,11 +310,14 @@ export default function TrafficRunnerGame({ onScoreUpdate }: TrafficRunnerGamePr
             </>
           ) : (
             <button
-              onClick={resetLevel}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
+              onMouseDown={handleMobileButtonDown}
+              onMouseUp={handleMobileButtonUp}
+              onMouseLeave={handleMobileButtonUp}
+              onTouchStart={handleMobileButtonDown}
+              onTouchEnd={handleMobileButtonUp}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 px-4 rounded flex items-center justify-center gap-2 text-lg transition-all duration-100 shadow-lg"
             >
-              <RotateCcw size={20} />
-              Reset
+              HOLD TO MOVE
             </button>
           )}
         </div>
