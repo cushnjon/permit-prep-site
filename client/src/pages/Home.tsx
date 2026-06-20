@@ -239,21 +239,49 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, children }:
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full bg-card/70 hover:bg-card transition-colors p-4 flex items-center justify-between"
+        className="w-full bg-card/70 hover:bg-card transition-colors p-3 flex items-center justify-between"
       >
-        <div className="flex items-center gap-4">
-          <img src={logo} alt={title} className="h-12 w-12" />
-          <div className="text-left">
-            <h2 className="text-lg font-bold text-primary">{title}</h2>
-            <p className="text-sm text-muted-foreground">{speedTier}</p>
+        <div className="flex items-center gap-3">
+          <img src={logo} alt={title} className="h-10 w-10" />
+          <div className="text-left flex items-center gap-2">
+            <h2 className="text-base font-bold text-primary">{title}</h2>
+            <p className="text-xs text-muted-foreground font-medium">{speedTier}</p>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <ChevronDown className="h-6 w-6 text-accent" />
-        </motion.div>
+        <div className="flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
+            title="Random Question"
+          >
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <Dices size={18} className="text-accent" />
+            </motion.div>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
+            title="Zone Glossary"
+          >
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <BookOpen size={18} className="text-accent" />
+            </motion.div>
+          </motion.button>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown className="h-5 w-5 text-accent" />
+          </motion.div>
+        </div>
       </button>
 
       {/* Content */}
