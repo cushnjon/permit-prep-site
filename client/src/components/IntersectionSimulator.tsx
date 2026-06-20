@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { rightOfWayRouletteScenarios, IntersectionScenario } from "@/data/rightOfWayRouletteData";
+import scenarios from "@/data/rightOfWayRouletteData";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, XCircle, Zap } from "lucide-react";
 
@@ -16,7 +16,7 @@ export default function IntersectionSimulator({ onScoreUpdate }: IntersectionSim
   const [totalScore, setTotalScore] = useState(0);
   const [crashOccurred, setCrashOccurred] = useState(false);
 
-  const currentScenario = rightOfWayRouletteScenarios[currentScenarioIndex];
+  const currentScenario = scenarios[currentScenarioIndex];
   const vehicleIds = Object.keys(currentScenario.setup);
 
   const handleVehicleClick = (vehicleId: string) => {
@@ -40,7 +40,7 @@ export default function IntersectionSimulator({ onScoreUpdate }: IntersectionSim
   };
 
   const handleNextScenario = () => {
-    if (currentScenarioIndex < rightOfWayRouletteScenarios.length - 1) {
+    if (currentScenarioIndex < scenarios.length - 1) {
       setCurrentScenarioIndex(prev => prev + 1);
       setSelectedSequence([]);
       setScenarioComplete(false);
@@ -76,7 +76,7 @@ export default function IntersectionSimulator({ onScoreUpdate }: IntersectionSim
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-bold text-primary">{currentScenario.title}</h3>
               <span className="text-xs font-semibold text-accent">
-                Scenario {currentScenarioIndex + 1} of {rightOfWayRouletteScenarios.length}
+                Scenario {currentScenarioIndex + 1} of {scenarios.length}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{currentScenario.intersection_type}</p>
@@ -198,7 +198,7 @@ export default function IntersectionSimulator({ onScoreUpdate }: IntersectionSim
                 onClick={handleNextScenario}
                 className="w-full bg-accent hover:bg-accent/90"
               >
-                {currentScenarioIndex < rightOfWayRouletteScenarios.length - 1
+                {currentScenarioIndex < scenarios.length - 1
                   ? "Next Scenario"
                   : "Complete Game"}
               </Button>
@@ -215,7 +215,7 @@ export default function IntersectionSimulator({ onScoreUpdate }: IntersectionSim
           <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-green-800 mb-2">Right-of-Way Roulette Complete!</h3>
           <p className="text-sm text-green-700 mb-4">
-            You've mastered {rightOfWayRouletteScenarios.length} critical intersection scenarios.
+            You've mastered {scenarios.length} critical intersection scenarios.
           </p>
           <p className="text-lg font-bold text-green-800">Total Score: {totalScore} points</p>
         </motion.div>

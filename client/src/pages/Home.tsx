@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
 import IntersectionSimulator from "@/components/IntersectionSimulator";
-import RightOfWayGame from "@/components/RightOfWayGame";
+import MotionBasedGame from "@/components/MotionBasedGame";
 
 interface GameState {
   currentZoneIndex: number;
@@ -231,7 +231,7 @@ export default function Home() {
             onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 2 && (
-              <RightOfWayGame onScoreUpdate={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))} />
+              <MotionBasedGame />
             )}
           </GameSection>
         </div>
