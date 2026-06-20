@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
-import IntersectionSimulator from "@/components/IntersectionSimulator";
 import MotionBasedGame from "@/components/MotionBasedGame";
 
 interface GameState {
@@ -217,7 +216,7 @@ export default function Home() {
             onRandomQuestion={handleRandomQuestion}
           >
             {gameState.expandedSection === 1 && (
-              <IntersectionSimulator onScoreUpdate={(points: number) => setGameState(prev => ({ ...prev, score: prev.score + points }))} />
+              <MotionBasedGame />
             )}
           </GameSection>
 

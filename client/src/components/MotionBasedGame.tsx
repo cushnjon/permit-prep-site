@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motionBasedScenarios, Scenario, Vehicle } from "@/data/motionBasedGameData";
+import { IsometricVehicle } from "./IsometricVehicle";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +27,18 @@ export default function MotionBasedGame() {
     });
     setVehiclePositions(initialPositions);
   }, [scenario]);
+
+  // Auto-start when vehicle is selected
+  useEffect(() => {
+    if (selectedVehicleId && !isPlaying && !crashed && !success) {
+      // Small delay before starting
+      const timer = setTimeout(() => {
+        setIsPlaying(true);
+        startTimeRef.current = null;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedVehicleId, isPlaying, crashed, success]);
 
   // Animation loop
   useEffect(() => {
@@ -110,14 +123,6 @@ export default function MotionBasedGame() {
   const handleSelectVehicle = (vehicleId: string) => {
     if (isPlaying || success || crashed) return;
     setSelectedVehicleId(vehicleId);
-  };
-
-  const handleStart = () => {
-    if (!selectedVehicleId) return;
-    setIsPlaying(true);
-    startTimeRef.current = null;
-    setCrashed(false);
-    setSuccess(false);
   };
 
   const handleReset = () => {
@@ -212,13 +217,13 @@ export default function MotionBasedGame() {
                 }}
               >
                 <div
-                  className={`text-4xl p-2 rounded-lg ${
+                  className={`p-2 rounded-lg ${
                     isSelected
                       ? "bg-yellow-300 ring-4 ring-yellow-500 scale-125"
                       : "bg-gray-700 hover:bg-gray-600"
                   }`}
                 >
-                  {vehicle.emoji}
+                  <IsometricVehicle type={vehicle.type} color={vehicle.color} size={32} />
                 </div>
               </div>
             );
@@ -263,10 +268,10 @@ export default function MotionBasedGame() {
               } ${isPlaying || success || crashed ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{vehicle.emoji}</span>
+                <IsometricVehicle type={vehicle.type} color={vehicle.color} size={24} />
                 <div>
-                  <p className="font-bold text-gray-900">{vehicle.label}</p>
-                  <p className="text-xs text-gray-600">{vehicle.name}</p>
+                  <p className="font-bold text-gray-900">{vehicle.name}</p>
+                  <p className="text-xs text-gray-600">{vehicle.label}</p>
                 </div>
               </div>
             </button>
@@ -283,14 +288,6 @@ export default function MotionBasedGame() {
 
       {/* Controls */}
       <div className="flex gap-3 flex-wrap">
-        <Button
-          onClick={handleStart}
-          disabled={!selectedVehicleId || isPlaying || success || crashed}
-          className="flex-1 bg-green-600 hover:bg-green-700"
-        >
-          {isPlaying ? "Playing..." : "Start Scenario"}
-        </Button>
-
         <Button
           onClick={handleReset}
           variant="outline"
