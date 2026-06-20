@@ -321,32 +321,39 @@ function TextDriveGame({
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-3"
               >
-                {answers.map((answer, idx) => (
-                  <motion.button
-                    key={answer.key}
-                    onClick={() => onAnswerClick(answer.key)}
-                    disabled={!!selectedAnswer}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 drop-shadow-soft ${
-                      selectedAnswer === answer.key
-                        ? isCorrect
-                          ? "border-accent bg-accent/10 shadow-md shadow-accent/20"
-                          : "border-destructive bg-destructive/10 shadow-md shadow-destructive/20"
-                        : "border-border bg-card hover:border-primary/50 hover:bg-card/80"
-                    } ${!selectedAnswer ? "cursor-pointer" : ""}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-semibold text-sm">
-                        {String.fromCharCode(65 + idx)}
+                {answers.map((answer, idx) => {
+                  const isThisAnswerCorrect = answer.key === question.correct_answer;
+                  const isThisAnswerSelected = selectedAnswer === answer.key;
+                  
+                  return (
+                    <motion.button
+                      key={answer.key}
+                      onClick={() => onAnswerClick(answer.key)}
+                      disabled={!!selectedAnswer}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 drop-shadow-soft ${
+                        selectedAnswer
+                          ? isThisAnswerCorrect
+                            ? "border-accent bg-accent/10 shadow-md shadow-accent/20 text-accent"
+                            : isThisAnswerSelected
+                            ? "border-destructive bg-destructive/10 shadow-md shadow-destructive/20 text-destructive"
+                            : "border-border bg-card/50 opacity-50"
+                          : "border-border bg-card hover:border-primary/50 hover:bg-card/80 cursor-pointer"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-semibold text-sm">
+                          {String.fromCharCode(65 + idx)}
+                        </div>
+                        <div className="flex-grow">
+                          <p className="text-base font-medium">{answer.text}</p>
+                        </div>
                       </div>
-                      <div className="flex-grow">
-                        <p className="text-base font-medium">{answer.text}</p>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </motion.div>
             ) : (
               <motion.div
