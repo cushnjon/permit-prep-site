@@ -1,3 +1,9 @@
+export interface GlossaryItem {
+  term: string;
+  quick_tip: string;
+  correct_answer: string;
+}
+
 export interface Question {
   id: string;
   prompt: string;
@@ -13,6 +19,7 @@ export interface Question {
     context_type: string;
     summary: string;
   };
+  glossary?: GlossaryItem[];
 }
 
 export interface Zone {
@@ -42,7 +49,24 @@ export const gameData: Zone[] = [
           title: "The Playground Contract: Signing Up for the Team",
           context_type: "Kid-Friendly Breakdown",
           summary: "Think of signing your license application like joining a school playground game. By joining the game, you are making a pinky promise to follow the referee's safety rules before you even start playing. If a coach or police officer needs to check that everyone is playing fair and healthy, your signature means you already promised to say 'Yes' and cooperate!"
-        }
+        },
+        glossary: [
+          {
+            term: "Implied Consent",
+            quick_tip: "A legal agreement you make by signing your license that you'll take chemical tests if asked by an officer.",
+            correct_answer: "To take a breath, blood, or urine test if an officer suspects a chemical DUI."
+          },
+          {
+            term: "Chemical DUI",
+            quick_tip: "Driving under the influence of alcohol or drugs, detected through breath, blood, or urine tests.",
+            correct_answer: "Refusal to submit to chemical testing can result in immediate administrative penalties."
+          },
+          {
+            term: "License Application",
+            quick_tip: "The official document you sign to get permission to drive, which includes legal agreements.",
+            correct_answer: "Your signature on the license application means you agree to the Implied Consent Law."
+          }
+        ]
       }
     ]
   },

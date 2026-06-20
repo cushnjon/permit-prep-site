@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Clock, Zap, Play, ChevronUp } from "lucide-react";
-import { gameData, Question } from "@/data/gameData";
+import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
+import { gameData, Question, Zone } from "@/data/gameData";
 
 interface GameState {
   currentZoneIndex: number;
@@ -12,6 +12,7 @@ interface GameState {
   showArticle: boolean;
   expandedSection: number | null;
   answersCollapsed: boolean;
+  showGlossary: boolean;
 }
 
 const GAME_LOGOS = {
@@ -31,6 +32,7 @@ export default function Home() {
     showArticle: false,
     expandedSection: 0, // Start with Text Drive expanded
     answersCollapsed: false,
+    showGlossary: false,
   });
 
   // Timer effect
@@ -104,6 +106,26 @@ export default function Home() {
     }));
   };
 
+  const handleRandomQuestion = () => {
+    const zone = gameData[gameState.currentZoneIndex];
+    const randomIndex = Math.floor(Math.random() * zone.questions.length);
+    setGameState(prev => ({
+      ...prev,
+      currentQuestionIndex: randomIndex,
+      selectedAnswer: null,
+      showArticle: false,
+      answersCollapsed: false,
+      showGlossary: false,
+    }));
+  };
+
+  const handleToggleGlossary = () => {
+    setGameState(prev => ({
+      ...prev,
+      showGlossary: !prev.showGlossary,
+    }));
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -157,9 +179,12 @@ export default function Home() {
                 showArticle={gameState.showArticle}
                 sideNote={getSideNote()}
                 answersCollapsed={gameState.answersCollapsed}
+                showGlossary={gameState.showGlossary}
                 onAnswerClick={handleAnswerClick}
                 onNextQuestion={handleNextQuestion}
                 onToggleAnswers={toggleAnswersExpanded}
+                onRandomQuestion={handleRandomQuestion}
+                onToggleGlossary={handleToggleGlossary}
               />
             )}
           </GameSection>
@@ -252,15 +277,18 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, children }:
 }
 
 interface TextDriveGameProps {
-  zone: typeof gameData[0];
+  zone: Zone;
   question: Question;
   selectedAnswer: string | null;
   showArticle: boolean;
   sideNote: string | null;
   answersCollapsed: boolean;
+  showGlossary: boolean;
   onAnswerClick: (answer: "a" | "b" | "c" | "d") => void;
   onNextQuestion: () => void;
   onToggleAnswers: () => void;
+  onRandomQuestion: () => void;
+  onToggleGlossary: () => void;
 }
 
 function TextDriveGame({
@@ -270,9 +298,12 @@ function TextDriveGame({
   showArticle,
   sideNote,
   answersCollapsed,
+  showGlossary,
   onAnswerClick,
   onNextQuestion,
   onToggleAnswers,
+  onRandomQuestion,
+  onToggleGlossary,
 }: TextDriveGameProps) {
   const answers = [
     { key: "a" as const, text: question.a },
@@ -287,9 +318,28 @@ function TextDriveGame({
     <div className="space-y-6">
       {/* Zone Header + Ticker Container */}
       <div className="w-full rounded-lg overflow-hidden drop-shadow-medium">
-        {/* Zone Strip Header */}
+        {/* Zone Strip Header with Controls */}
         <div className="w-full bg-gradient-to-r from-primary to-accent/80 text-primary-foreground p-3">
-          <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onRandomQuestion}
+                disabled={!!selectedAnswer}
+                className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Random Question"
+              >
+                <Dices size={18} />
+              </button>
+              <button
+                onClick={onToggleGlossary}
+                className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+                title="Glossary"
+              >
+                <BookOpen size={18} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Scrolling Ticker */}
@@ -303,18 +353,26 @@ function TextDriveGame({
         </div>
       </div>
 
-      {/* Question */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Reading Text */}
-        <div className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
-            <h4 className="text-sm font-semibold text-primary mb-3">Question</h4>
-            <p className="text-base leading-relaxed text-foreground">{question.prompt}</p>
-          </div>
-        </div>
+      {/* Question or Glossary */}
+      <AnimatePresence mode="wait">
+        {!showGlossary ? (
+          <motion.div
+            key="question"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+            {/* Left: Reading Text */}
+            <div className="lg:col-span-1">
+              <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
+                <h4 className="text-sm font-semibold text-primary mb-3">Question</h4>
+                <p className="text-base leading-relaxed text-foreground">{question.prompt}</p>
+              </div>
+            </div>
 
-        {/* Right: Multiple Choice */}
-        <div className="lg:col-span-2">
+            {/* Right: Multiple Choice */}
+            <div className="lg:col-span-2">
           <AnimatePresence mode="wait">
             {!answersCollapsed ? (
               <motion.div
@@ -405,8 +463,39 @@ function TextDriveGame({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-      </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="glossary"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full"
+          >
+            <div className="space-y-3">
+              <h3 className="text-lg font-bold text-primary mb-4">Question Glossary</h3>
+              {question.glossary && question.glossary.length > 0 ? (
+                question.glossary.map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft"
+                  >
+                    <h4 className="font-bold text-accent mb-2">{item.term}</h4>
+                    <p className="text-sm text-muted-foreground mb-3"><span className="font-semibold">Quick Tip:</span> {item.quick_tip}</p>
+                    <p className="text-sm text-foreground border-l-2 border-accent pl-3"><span className="font-semibold text-accent">Correct Answer:</span> {item.correct_answer}</p>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No glossary items available for this question.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Side Note */}
       <AnimatePresence>
