@@ -285,17 +285,20 @@ function TextDriveGame({
 
   return (
     <div className="space-y-6">
-      {/* Zone Strip Header */}
-      <div className="w-full bg-gradient-to-r from-primary to-accent/80 text-primary-foreground rounded-lg p-3 drop-shadow-medium">
-        <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
-      </div>
+      {/* Zone Header + Ticker Container */}
+      <div className="w-full rounded-lg overflow-hidden drop-shadow-medium">
+        {/* Zone Strip Header */}
+        <div className="w-full bg-gradient-to-r from-primary to-accent/80 text-primary-foreground p-3">
+          <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
+        </div>
 
-      {/* Scrolling Ticker */}
-      <div className="w-full relative overflow-hidden bg-accent/5 border border-accent/20 rounded-lg drop-shadow-soft">
-        <div className="h-12 flex items-center px-4">
-          <div className="scroll-ticker whitespace-nowrap text-sm text-muted-foreground font-medium">
-            <span className="inline-block mr-12">{zone.background_tip}</span>
-            <span className="inline-block mr-12">{zone.background_tip}</span>
+        {/* Scrolling Ticker */}
+        <div className="w-full relative overflow-hidden bg-accent/5 border-t border-accent/20">
+          <div className="h-12 flex items-center px-4">
+            <div className="scroll-ticker whitespace-nowrap text-sm text-muted-foreground font-medium">
+              <span className="inline-block mr-12">{zone.background_tip}</span>
+              <span className="inline-block mr-12">{zone.background_tip}</span>
+            </div>
           </div>
         </div>
       </div>
