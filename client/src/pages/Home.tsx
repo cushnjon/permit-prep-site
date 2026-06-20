@@ -285,10 +285,22 @@ function TextDriveGame({
 
   return (
     <div className="space-y-6">
-      {/* Zone Info */}
-      <div className="bg-accent/5 border border-accent/20 rounded-lg p-4 drop-shadow-soft">
-        <h3 className="text-sm font-semibold text-accent mb-2">{zone.zone}</h3>
-        <p className="text-sm text-muted-foreground">{zone.background_tip}</p>
+      {/* Zone Strip Header */}
+      <div className="bg-gradient-to-r from-primary to-accent/80 text-primary-foreground rounded-lg p-3 drop-shadow-medium">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
+          <div className="text-xs font-semibold opacity-90">Zone Info Below</div>
+        </div>
+      </div>
+
+      {/* Scrolling Ticker */}
+      <div className="relative overflow-hidden bg-accent/5 border border-accent/20 rounded-lg drop-shadow-soft">
+        <div className="h-12 flex items-center px-4">
+          <div className="scroll-ticker whitespace-nowrap text-sm text-muted-foreground font-medium">
+            <span className="inline-block mr-12">{zone.background_tip}</span>
+            <span className="inline-block mr-12">{zone.background_tip}</span>
+          </div>
+        </div>
       </div>
 
       {/* Question */}

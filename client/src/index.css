@@ -208,6 +208,20 @@
     animation: pull-tab-bounce 2s ease-in-out infinite;
   }
 
+  /* Scrolling ticker animation */
+  @keyframes scroll-ticker {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .scroll-ticker {
+    animation: scroll-ticker 20s linear infinite;
+  }
+
   /* Score increment animation */
   @keyframes score-pop {
     0% {
