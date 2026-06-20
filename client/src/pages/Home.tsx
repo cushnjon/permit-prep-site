@@ -126,6 +126,18 @@ export default function Home() {
     }));
   };
 
+  const handleNavigateToQuestion = (zoneIndex: number, questionIndex: number) => {
+    setGameState(prev => ({
+      ...prev,
+      currentZoneIndex: zoneIndex,
+      currentQuestionIndex: questionIndex,
+      selectedAnswer: null,
+      showArticle: false,
+      answersCollapsed: false,
+      showGlossary: false,
+    }));
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -186,6 +198,7 @@ export default function Home() {
                 onToggleAnswers={toggleAnswersExpanded}
                 onRandomQuestion={handleRandomQuestion}
                 onToggleGlossary={handleToggleGlossary}
+                onNavigateToQuestion={handleNavigateToQuestion}
               />
             )}
           </GameSection>
@@ -312,6 +325,7 @@ interface TextDriveGameProps {
   onToggleAnswers: () => void;
   onRandomQuestion: () => void;
   onToggleGlossary: () => void;
+  onNavigateToQuestion?: (zoneIndex: number, questionIndex: number) => void;
 }
 
 function TextDriveGame({
@@ -327,6 +341,7 @@ function TextDriveGame({
   onToggleAnswers,
   onRandomQuestion,
   onToggleGlossary,
+  onNavigateToQuestion,
 }: TextDriveGameProps) {
   const answers = [
     { key: "a" as const, text: question.a },
@@ -376,7 +391,7 @@ function TextDriveGame({
         </div>
       </div>
 
-      {/* Zone Glossary Dropdown */}
+      {/* Zone Glossary Dropdown - All Zones and Questions */}
       <AnimatePresence>
         {showGlossary && (
           <motion.div
@@ -385,27 +400,31 @@ function TextDriveGame({
             exit={{ opacity: 0, y: -10 }}
             className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft"
           >
-            <h3 className="text-lg font-bold text-primary mb-4">Zone Glossary</h3>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {zone.questions.map((q, idx) => (
-                <motion.button
-                  key={q.id}
-                  onClick={() => {
-                    // Find and navigate to this question
-                    const newIndex = zone.questions.findIndex(question => question.id === q.id);
-                    if (newIndex !== -1) {
-                      // Reset state and go to this question
-                      onToggleGlossary();
-                    }
-                  }}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="w-full text-left p-3 rounded-lg border border-accent/20 hover:bg-accent/10 hover:border-accent/50 transition-all"
-                >
-                  <p className="text-sm font-semibold text-accent mb-1">Q{idx + 1}</p>
-                  <p className="text-xs text-foreground line-clamp-2">{q.prompt}</p>
-                </motion.button>
+            <h3 className="text-lg font-bold text-primary mb-4">All Questions by Zone</h3>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {gameData.map((z, zoneIdx) => (
+                <div key={z.zone} className="border-b border-accent/20 pb-3 last:border-b-0">
+                  <h4 className="text-sm font-bold text-accent mb-2">{z.zone}</h4>
+                  <div className="space-y-2 pl-2">
+                    {z.questions.map((q, qIdx) => (
+                      <motion.button
+                        key={q.id}
+                        onClick={() => {
+                          // Navigate to this zone and question
+                          onNavigateToQuestion?.(zoneIdx, qIdx);
+                          onToggleGlossary();
+                        }}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: (zoneIdx * 5 + qIdx) * 0.02 }}
+                        className="w-full text-left p-2 rounded-lg border border-accent/20 hover:bg-accent/10 hover:border-accent/50 transition-all"
+                      >
+                        <p className="text-xs font-semibold text-accent mb-1">Q{qIdx + 1}</p>
+                        <p className="text-xs text-foreground line-clamp-2">{q.prompt}</p>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </motion.div>
