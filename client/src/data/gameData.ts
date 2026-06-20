@@ -89,7 +89,14 @@ export const gameData: Zone[] = [
           title: "The Lightning McQueen Rule: Big Trucks and Kind Choices",
           context_type: "Animated Story Analogy",
           summary: "In cartoons like 'Cars', massive semi-trucks like Mack are much bigger than little race cars, but that doesn't mean they get to cut in line! On the real road, nobody 'owns' the right-of-way. Just like in the school cafeteria line, you have to wait for someone else to be nice and say, 'Your turn to go ahead of me!'"
-        }
+        },
+        glossary: [
+          {
+            term: "Right-of-Way",
+            quick_tip: "The legal permission to proceed through an intersection or road before other vehicles.",
+            correct_answer: "You can only yield right-of-way to others; you cannot claim it yourself."
+          }
+        ]
       },
       {
         id: "Q_ROW_02",
@@ -105,7 +112,14 @@ export const gameData: Zone[] = [
           title: "Look Right, Look Left: The Freeze-Dance Sign",
           context_type: "Kindergarten Game Rules",
           summary: "A Yield sign is like playing a game of Freeze Dance with other cars. When you see it, you must slow down your feet and look around. If you see a bike, a person walking, or another car coming up the hallway, you have to freeze completely and let them pass by first before you can start dancing forward again!"
-        }
+        },
+        glossary: [
+          {
+            term: "Yield Sign",
+            quick_tip: "A red and white triangular sign that requires you to slow down or stop to let other traffic pass first.",
+            correct_answer: "You must slow down or stop completely to let cross traffic or pedestrians pass first."
+          }
+        ]
       },
       {
         id: "Q_ROW_03",
@@ -121,7 +135,14 @@ export const gameData: Zone[] = [
           title: "Simon Says and Traffic Lights",
           context_type: "Middle School Science Corner",
           summary: "An intersection is 'controlled' when it acts just like a game of Simon Says! The big metal traffic lights and red Stop signs are Simon. If the light says 'Red,' Simon says stop! If there are no signs or lights at all, it's uncontrolled, meaning drivers have to use their shared neighborhood rulebook to decide who goes first."
-        }
+        },
+        glossary: [
+          {
+            term: "Controlled Intersection",
+            quick_tip: "An intersection regulated by traffic lights, stop signs, or yield signs that control vehicle movement.",
+            correct_answer: "It is regulated actively by traffic lights, stop signs, or yield signs."
+          }
+        ]
       },
       {
         id: "Q_ROW_04",
@@ -137,7 +158,14 @@ export const gameData: Zone[] = [
           title: "The Right-Hand High-Five Rule",
           context_type: "Classroom Sharing Lesson",
           summary: "When two students reach for the same toy or box of crayons at the exact same second, how do they share? Road laws make it easy: always look to your right hand! If a car is sitting right where your right hand is pointing, they get to pick up the toy—or cross the street—first. It keeps everyone smiling and avoids bumps!"
-        }
+        },
+        glossary: [
+          {
+            term: "Rule of the Right",
+            quick_tip: "At an uncontrolled intersection, the vehicle on your right has the right-of-way when arriving simultaneously.",
+            correct_answer: "The vehicle arriving on your right has the legal right-of-way."
+          }
+        ]
       },
       {
         id: "Q_ROW_05",
@@ -153,7 +181,14 @@ export const gameData: Zone[] = [
           title: "Playing Hide-and-Seek with Big Cars",
           context_type: "Fun Safety Science",
           summary: "Did you know cars have built-in hiding spots? They are called blind spots! Even if a driver looks in all three of their glass mirrors, a small motorcycle or a bicycle can be hiding right next to the back door like a sneaky hide-and-seek player. The only way to spot them is to turn your neck all the way around like an owl!"
-        }
+        },
+        glossary: [
+          {
+            term: "Blind Spot",
+            quick_tip: "Areas around your vehicle that you cannot see in your mirrors and require a physical head-turn to check.",
+            correct_answer: "Physically turn your head and look directly over your shoulder to check blind spots."
+          }
+        ]
       }
     ]
   },
@@ -176,7 +211,14 @@ export const gameData: Zone[] = [
           title: "Running in Heavy Mud vs. Running on Grass",
           context_type: "Gym Class Example",
           summary: "Imagine running as fast as you can during gym class on dry grass. Now imagine trying to sprint that fast through thick, slippery mud or in total darkness! You would trip, right? The Basic Speed Law just means using your common sense. If the weather gets messy, you have to slow down your tires so you stay safe."
-        }
+        },
+        glossary: [
+          {
+            term: "Basic Speed Law",
+            quick_tip: "A law requiring you to drive at a safe speed for current road and weather conditions, regardless of posted limits.",
+            correct_answer: "Slow down below the posted limit to match what is safe for current conditions."
+          }
+        ]
       },
       {
         id: "Q_SPD_02",
@@ -192,7 +234,14 @@ export const gameData: Zone[] = [
           title: "The Slip-and-Slide Effect on the Road",
           context_type: "Summer Toy Science",
           summary: "Have you ever run and slid across a backyard Slip-and-Slide water mat? It's super fun because your body floats right on top of the wet plastic! But when a heavy car goes too fast over a deep puddle, its tires do the exact same thing. The rubber lifts off the street and floats on the water. When that happens, the steering wheel won't turn the car at all!"
-        }
+        },
+        glossary: [
+          {
+            term: "Hydroplaning",
+            quick_tip: "When tires lose contact with the road and float on water, causing loss of steering and braking control.",
+            correct_answer: "Tires ride on a layer of water, causing a total loss of traction and steering."
+          }
+        ]
       },
       {
         id: "Q_SPD_03",
@@ -208,7 +257,14 @@ export const gameData: Zone[] = [
           title: "The Bubble Rule: Giving Your Friends Personal Space",
           context_type: "School Bus Safety Rule",
           summary: "In school, teachers talk about keeping an 'invisible bubble' of personal space around yourself so nobody accidentally bumps elbows. Cars need a giant time-bubble on the highway! Counting 'one-alligator, two-alligator, three-alligator' after the car ahead passes a tree gives you a perfect safety bubble to stop safely if they step on their brakes."
-        }
+        },
+        glossary: [
+          {
+            term: "Following Distance",
+            quick_tip: "The safe space between your vehicle and the one ahead, measured in seconds (typically 3-4 seconds).",
+            correct_answer: "Maintain a minimum buffer of 3-to-4 seconds behind the lead vehicle."
+          }
+        ]
       },
       {
         id: "Q_SIG_01",
@@ -224,7 +280,14 @@ export const gameData: Zone[] = [
           title: "Red, White, and Black: The Rule Makers",
           context_type: "Color Secret Code",
           summary: "Road signs speak in a secret color code. Red, White, and Black signs are the bosses of the highway. They tell you exactly what the law says you MUST do (like STOP or go 25 MPH). If a sign has these colors, it's not a suggestion—it's a strict rule, just like 'No running in the hallways!'"
-        }
+        },
+        glossary: [
+          {
+            term: "Regulatory Sign",
+            quick_tip: "A red, white, and black sign that tells you what you must or must not do by law.",
+            correct_answer: "They mandate what you must or must not do by law; colored red, white, and black."
+          }
+        ]
       },
       {
         id: "Q_SIG_02",
@@ -240,7 +303,14 @@ export const gameData: Zone[] = [
           title: "Yellow Diamonds Mean 'Watch Out!'",
           context_type: "Preschool Picture Book Style",
           summary: "Bright yellow diamonds look like little glowing warning lights on the side of the road. They don't give you tickets, but they whisper helpful secrets like: 'Hey driver, there's a sharp turn coming up!' or 'Watch out, deer like to cross the grass here!' They give your eyes a heads-up so you don't get surprised."
-        }
+        },
+        glossary: [
+          {
+            term: "Warning Sign",
+            quick_tip: "A bright yellow diamond-shaped sign that alerts you to upcoming road hazards or changes.",
+            correct_answer: "They are almost always bright yellow and diamond-shaped."
+          }
+        ]
       },
       {
         id: "Q_SIG_03",
@@ -256,7 +326,14 @@ export const gameData: Zone[] = [
           title: "The Green, Blue, and Brown Map Signs",
           context_type: "Adventure Map Guide",
           summary: "Guide signs are like real-life treasure maps! Giant green signs tell you how many miles are left until you reach Disneyland or Grandma's house. Big blue signs tell you where to find yummy snacks or gas stations, and brown signs point to cool camping parks and hiking trails. They help your family navigate without getting lost!"
-        }
+        },
+        glossary: [
+          {
+            term: "Guide Sign",
+            quick_tip: "Green, blue, or brown signs that provide directional routing, mileage, and information about services.",
+            correct_answer: "Directional routing, mileage to destinations, and available motorist services."
+          }
+        ]
       },
       {
         id: "Q_SIG_04",
@@ -272,7 +349,14 @@ export const gameData: Zone[] = [
           title: "The Carpool Diamond: The Car-Sharing Reward Lane",
           context_type: "Eco-Friendly Short Story",
           summary: "When people share a ride together instead of driving separate cars, they are helping keep the air clean and reducing traffic jams. To reward them, the road has a special lane painted with shiny white diamonds! If you have your family or friends in the car, you get to jump into the Diamond Lane and zoom past the slow traffic!"
-        }
+        },
+        glossary: [
+          {
+            term: "HOV Lane",
+            quick_tip: "A lane marked with white diamond symbols reserved for vehicles with minimum passenger occupancy.",
+            correct_answer: "Marked by a white diamond symbol; reserved for vehicles meeting minimum passenger limits."
+          }
+        ]
       }
     ]
   },
@@ -295,7 +379,14 @@ export const gameData: Zone[] = [
           title: "Zero Tolerance: The Absolute Zero Rule",
           context_type: "Science & Safety Lesson",
           summary: "In math and science, zero means absolutely nothing at all. For young drivers under 21 years old, the law has a rule called Zero Tolerance. This means a young person's body must have exactly ZERO alcohol in it if they are steering a car. It keeps their growing brains sharp and guarantees everyone stays perfectly safe on the road!"
-        }
+        },
+        glossary: [
+          {
+            term: "Blood Alcohol Concentration (BAC)",
+            quick_tip: "The percentage of alcohol in your bloodstream; 0.08% is the legal limit for drivers over 21.",
+            correct_answer: "0.08% or higher for adults over 21; 0.00% (Zero Tolerance) for anyone under 21."
+          }
+        ]
       },
       {
         id: "Q_LEG_03",
@@ -311,7 +402,14 @@ export const gameData: Zone[] = [
           title: "Being a Superhero Defensive Driver",
           context_type: "Relatable Analogy",
           summary: "A defensive driver is like a superhero with super-vision! Instead of just staring at the bumper right in front of them, they keep their eyes scanning far ahead to spot potential trouble before it happens—like a loose ball rolling into the street or a puddle of ice. They are always ready to protect themselves and others by staying alert!"
-        }
+        },
+        glossary: [
+          {
+            term: "Defensive Driving",
+            quick_tip: "A driving strategy where you anticipate hazards ahead and make preemptive adjustments to stay safe.",
+            correct_answer: "Actively looking ahead to anticipate hazards and making preemptive adjustments."
+          }
+        ]
       }
     ]
   }
