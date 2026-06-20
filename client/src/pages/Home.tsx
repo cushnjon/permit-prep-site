@@ -275,7 +275,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
             }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
+            className="pl-1 pr-2 py-2 rounded-lg hover:bg-accent/10 transition-colors"
             title="Random Question"
           >
             <motion.div
