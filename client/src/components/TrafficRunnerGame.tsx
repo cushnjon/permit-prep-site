@@ -1,33 +1,23 @@
 /**
- * Traffic Jam Runner — Intersection-Based
- * - Intersections spawn every 50 meters
- * - Each intersection has realistic cross-traffic based on exact DMV rules
- * - Crashes ONLY happen at intersections when violating ROW
- * - 8 unique DMV scenarios rotate through
+ * Traffic Jam Runner — Real Intersection Mechanics
+ * - Player drives forward on main road
+ * - Every 50 meters: intersection appears with cross-traffic
+ * - Player must turn left or right to navigate intersection
+ * - Cross-traffic spawns from perpendicular roads
+ * - Collision only happens if player moves into intersection without right-of-way
+ * - 8 DMV scenarios with exact right-of-way rules
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 340;
 const H = 560;
-const ROAD_LEFT = 65;
-const ROAD_RIGHT = W - 65;
-const ROAD_W = ROAD_RIGHT - ROAD_LEFT;
-const LANE_L = ROAD_LEFT + ROAD_W * 0.27;
-const LANE_R = ROAD_LEFT + ROAD_W * 0.73;
-const PLAYER_X = W / 2;
-const PLAYER_Y = H - 100;
-const PW = 32;
-const PH = 50;
-const STRIPE_H = 30;
-const STRIPE_GAP = 30;
+const ROAD_W = 200;
+const ROAD_H = 200;
 const LEVEL_TIME = 60;
 const INTERSECTION_INTERVAL = 50; // meters between intersections
-const INTERSECTION_ZONE = 80; // pixel height of intersection danger zone
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type LaneDir = 'down' | 'cross-left' | 'cross-right';
-
 interface Car {
   id: number;
   x: number; y: number;
@@ -35,25 +25,26 @@ interface Car {
   speed: number;
   color: string; roofColor: string; windowColor: string;
   label: string;
-  laneDir: LaneDir;
   hasROW: boolean;
   isPed: boolean;
   isEmergency: boolean;
+  direction: 'up' | 'down' | 'left' | 'right'; // direction of travel
 }
 
 interface Intersection {
+  id: number;
   distanceMeters: number;
   scenario: Scenario;
-  passed: boolean;
-  crashed: boolean;
+  turnDir: 'left' | 'right';
+  crossTraffic: Car[];
+  playerHasROW: boolean;
 }
 
 interface Scenario {
   title: string;
   law: string;
   description: string;
-  turnDir: 'left' | 'right' | 'straight';
-  spawnCars: () => Car[];
+  spawnCrossTraffic: () => Car[];
 }
 
 interface GameState {
@@ -64,7 +55,8 @@ interface GameState {
   level: number;
   timeLeft: number;
   currentIntersection: Intersection | null;
-  intersectionProgress: number; // 0-1, how far through the intersection
+  intersectionVisible: boolean; // is intersection on screen?
+  playerTurning: 'none' | 'left' | 'right'; // player's turn input
 }
 
 // ─── Vehicle defs ─────────────────────────────────────────────────────────────
@@ -73,220 +65,255 @@ const MOTOR_DEFS = [
   { w: 32, h: 52, color: '#7c2d12', roofColor: '#431407', windowColor: '#fb923c', label: 'SUV' },
   { w: 36, h: 62, color: '#3b0764', roofColor: '#1e0338', windowColor: '#c084fc', label: 'Truck' },
   { w: 34, h: 56, color: '#064e3b', roofColor: '#022c22', windowColor: '#34d399', label: 'Van' },
-  { w: 30, h: 50, color: '#7f1d1d', roofColor: '#450a0a', windowColor: '#f87171', label: 'Pickup' },
-  { w: 18, h: 34, color: '#713f12', roofColor: '#3d1f07', windowColor: '#fbbf24', label: 'Moto' },
 ];
 
 let uid = 0;
 function rnd<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Polyfill for roundRect (not available in all browsers)
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  const r2 = Math.min(r, w / 2, h / 2);
-  ctx.moveTo(x + r2, y);
-  ctx.lineTo(x + w - r2, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r2);
-  ctx.lineTo(x + w, y + h - r2);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r2, y + h);
-  ctx.lineTo(x + r2, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r2);
-  ctx.lineTo(x, y + r2);
-  ctx.quadraticCurveTo(x, y, x + r2, y);
-  ctx.closePath();
-}
-
-function makeCar(x: number, y: number, speed: number, laneDir: LaneDir, hasROW: boolean): Car {
+function makeCar(x: number, y: number, speed: number, direction: 'up' | 'down' | 'left' | 'right', hasROW: boolean): Car {
   const d = rnd(MOTOR_DEFS);
-  return { id: uid++, x, y, w: d.w, h: d.h, speed, color: d.color, roofColor: d.roofColor, windowColor: d.windowColor, label: d.label, laneDir, hasROW, isPed: false, isEmergency: false };
+  return { id: uid++, x, y, w: d.w, h: d.h, speed, color: d.color, roofColor: d.roofColor, windowColor: d.windowColor, label: d.label, hasROW, isPed: false, isEmergency: false, direction };
 }
 
-function makePed(x: number, y: number, speed: number, laneDir: LaneDir): Car {
-  return { id: uid++, x, y, w: 12, h: 22, speed, color: '#166534', roofColor: '#14532d', windowColor: '#86efac', label: '🚶', laneDir, hasROW: true, isPed: true, isEmergency: false };
+function makePed(x: number, y: number, speed: number, direction: 'up' | 'down' | 'left' | 'right'): Car {
+  return { id: uid++, x, y, w: 12, h: 22, speed, color: '#166534', roofColor: '#14532d', windowColor: '#86efac', label: '🚶', hasROW: true, isPed: true, isEmergency: false, direction };
 }
 
-function makeEmergency(x: number, y: number, speed: number): Car {
-  return { id: uid++, x, y, w: 30, h: 50, speed, color: '#7f1d1d', roofColor: '#450a0a', windowColor: '#fca5a5', label: '🚨', laneDir: 'down', hasROW: true, isPed: false, isEmergency: true };
+function makeEmergency(x: number, y: number, speed: number, direction: 'up' | 'down' | 'left' | 'right'): Car {
+  return { id: uid++, x, y, w: 30, h: 50, speed, color: '#7f1d1d', roofColor: '#450a0a', windowColor: '#fca5a5', label: '🚨', hasROW: true, isPed: false, isEmergency: true, direction };
 }
 
-// ─── DMV Scenarios (exact driving rules) ──────────────────────────────────────
+// ─── DMV Scenarios ────────────────────────────────────────────────────────────
 const SCENARIOS: Scenario[] = [
   {
     title: 'Unprotected Left Turn',
     law: 'Yield to ALL oncoming straight traffic before turning left.',
-    description: 'You want to turn left. Oncoming cars have ROW.',
-    turnDir: 'left',
-    spawnCars: () => [
-      makeCar(LANE_R, -40, 140, 'down', true),
-      makeCar(LANE_R, -160, 120, 'down', true),
+    description: 'Turn left. Oncoming cars have ROW.',
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 + 80, H / 2 - 60, 140, 'up', true),
+      makeCar(W / 2 + 80, H / 2 - 160, 120, 'up', true),
     ],
   },
   {
     title: 'Right Turn — Pedestrian',
     law: 'Yield to pedestrians in the crosswalk before turning right.',
-    description: 'Pedestrians crossing have ROW.',
-    turnDir: 'right',
-    spawnCars: () => [
-      makePed(ROAD_LEFT - 18, PLAYER_Y - 45, 55, 'cross-left'),
-      makePed(ROAD_RIGHT + 18, PLAYER_Y - 65, 55, 'cross-right'),
+    description: 'Turn right. Pedestrians crossing have ROW.',
+    spawnCrossTraffic: () => [
+      makePed(W / 2 - 40, H / 2 - 80, 55, 'right'),
+      makePed(W / 2 + 40, H / 2 + 80, 55, 'left'),
     ],
   },
   {
     title: '4-Way Stop',
     law: 'Simultaneous arrival — yield to the vehicle on your RIGHT.',
     description: 'All vehicles arrived at same time. Yield to right.',
-    turnDir: 'straight',
-    spawnCars: () => [
-      makeCar(ROAD_RIGHT + 55, PLAYER_Y - 8, 90, 'cross-right', true),
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 + 100, H / 2, 90, 'left', true),
     ],
   },
   {
     title: 'Emergency Vehicle',
     law: 'Always yield to emergency vehicles — pull over and stop.',
     description: 'Emergency vehicle approaching. Must yield.',
-    turnDir: 'straight',
-    spawnCars: () => [
-      makeEmergency(PLAYER_X, -70, 180),
+    spawnCrossTraffic: () => [
+      makeEmergency(W / 2, H / 2 - 120, 180, 'down'),
     ],
   },
   {
     title: 'T-Intersection',
     law: 'Through-road traffic has right-of-way over entering vehicles.',
     description: 'You are on main road. Side traffic must yield.',
-    turnDir: 'straight',
-    spawnCars: () => [
-      makeCar(ROAD_LEFT - 75, PLAYER_Y - 15, 120, 'cross-left', true),
-      makeCar(ROAD_RIGHT + 75, PLAYER_Y - 35, 110, 'cross-right', true),
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 - 120, H / 2, 120, 'right', true),
+      makeCar(W / 2 + 120, H / 2, 110, 'left', true),
     ],
   },
   {
     title: 'Roundabout Entry',
     law: 'Yield to all vehicles already circulating inside the roundabout.',
     description: 'Traffic inside roundabout has ROW.',
-    turnDir: 'left',
-    spawnCars: () => [
-      makeCar(PLAYER_X - 18, PLAYER_Y - 65, 100, 'cross-right', true),
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 - 40, H / 2 - 80, 100, 'down', true),
     ],
   },
   {
     title: 'Driveway Exit',
     law: 'Yield to ALL road traffic and pedestrians when exiting a driveway.',
     description: 'You are exiting. All road traffic has ROW.',
-    turnDir: 'right',
-    spawnCars: () => [
-      makeCar(LANE_L, -40, 130, 'down', true),
-      makeCar(LANE_R, -90, 120, 'down', true),
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 - 80, H / 2 - 40, 130, 'down', true),
+      makeCar(W / 2 + 80, H / 2 - 40, 120, 'down', true),
     ],
   },
   {
     title: 'Green Light Left Turn',
     law: 'Green light does NOT give left-turners priority. Yield to oncoming straight traffic.',
     description: 'Turning left on green. Oncoming straight traffic has ROW.',
-    turnDir: 'left',
-    spawnCars: () => [
-      makeCar(LANE_R, -30, 150, 'down', true),
-      makeCar(LANE_R, -150, 140, 'down', true),
+    spawnCrossTraffic: () => [
+      makeCar(W / 2 + 90, H / 2 - 50, 150, 'up', true),
+      makeCar(W / 2 + 90, H / 2 - 140, 140, 'up', true),
     ],
   },
 ];
 
 // ─── Drawing ──────────────────────────────────────────────────────────────────
-function drawScene(
-  ctx: CanvasRenderingContext2D,
-  cars: Car[],
-  stripeOff: number,
-  isMoving: boolean
-) {
+function drawRoad(ctx: CanvasRenderingContext2D, offsetY: number) {
   // Background
   ctx.fillStyle = '#14532d';
   ctx.fillRect(0, 0, W, H);
 
-  // Grass texture
-  ctx.fillStyle = 'rgba(21,128,61,0.4)';
-  for (let gx = 0; gx < W; gx += 18) {
-    for (let gy = 0; gy < H; gy += 18) {
-      ctx.beginPath(); ctx.arc(gx + 4, gy + 4, 2, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-
-  // Road surface
+  // Main road (vertical)
   ctx.fillStyle = '#1c2526';
-  ctx.fillRect(ROAD_LEFT, 0, ROAD_W, H);
+  ctx.fillRect(W / 2 - ROAD_W / 2, 0, ROAD_W, H);
 
   // Road texture
   ctx.fillStyle = 'rgba(255,255,255,0.015)';
-  for (let ry = 0; ry < H; ry += 8) {
-    ctx.fillRect(ROAD_LEFT, ry, ROAD_W, 3);
+  for (let y = 0; y < H; y += 8) {
+    ctx.fillRect(W / 2 - ROAD_W / 2, y, ROAD_W, 3);
   }
-
-  // Edge rumble strips
-  const rumbleW = 8;
-  for (let ry = 0; ry < H; ry += 20) {
-    ctx.fillStyle = ry % 40 < 20 ? '#fbbf24' : '#1c2526';
-    ctx.fillRect(ROAD_LEFT, ry, rumbleW, 20);
-    ctx.fillRect(ROAD_RIGHT - rumbleW, ry, rumbleW, 20);
-  }
-
-  // Road edge lines
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(ROAD_LEFT + rumbleW, 0); ctx.lineTo(ROAD_LEFT + rumbleW, H); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(ROAD_RIGHT - rumbleW, 0); ctx.lineTo(ROAD_RIGHT - rumbleW, H); ctx.stroke();
 
   // Center dashes
   ctx.strokeStyle = '#fbbf24';
   ctx.lineWidth = 2.5;
-  ctx.setLineDash([STRIPE_H, STRIPE_GAP]);
-  ctx.lineDashOffset = -stripeOff;
-  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+  ctx.setLineDash([30, 30]);
+  ctx.lineDashOffset = -offsetY;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 0);
+  ctx.lineTo(W / 2, H);
+  ctx.stroke();
   ctx.setLineDash([]);
 
-  // Draw cars
-  for (const car of cars) drawCar(ctx, car);
+  // Edge lines
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - ROAD_W / 2 + 8, 0);
+  ctx.lineTo(W / 2 - ROAD_W / 2 + 8, H);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(W / 2 + ROAD_W / 2 - 8, 0);
+  ctx.lineTo(W / 2 + ROAD_W / 2 - 8, H);
+  ctx.stroke();
+
+  // Rumble strips
+  const rumbleW = 8;
+  for (let y = 0; y < H; y += 20) {
+    ctx.fillStyle = y % 40 < 20 ? '#fbbf24' : '#1c2526';
+    ctx.fillRect(W / 2 - ROAD_W / 2, y, rumbleW, 20);
+    ctx.fillRect(W / 2 + ROAD_W / 2 - rumbleW, y, rumbleW, 20);
+  }
+}
+
+function drawIntersection(ctx: CanvasRenderingContext2D, progress: number) {
+  // progress: 0 = intersection at bottom of screen, 1 = at top
+  const intersectionY = H - progress * (H + ROAD_H);
+
+  // Cross road (horizontal)
+  ctx.fillStyle = '#1c2526';
+  ctx.fillRect(0, intersectionY - ROAD_H / 2, W, ROAD_H);
+
+  // Cross road texture
+  ctx.fillStyle = 'rgba(255,255,255,0.015)';
+  for (let x = 0; x < W; x += 8) {
+    ctx.fillRect(x, intersectionY - ROAD_H / 2, 3, ROAD_H);
+  }
+
+  // Cross road center dashes
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([30, 30]);
+  ctx.beginPath();
+  ctx.moveTo(0, intersectionY);
+  ctx.lineTo(W, intersectionY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Cross road edge lines
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, intersectionY - ROAD_H / 2 + 8);
+  ctx.lineTo(W, intersectionY - ROAD_H / 2 + 8);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, intersectionY + ROAD_H / 2 - 8);
+  ctx.lineTo(W, intersectionY + ROAD_H / 2 - 8);
+  ctx.stroke();
+
+  // Intersection box (highlight)
+  ctx.strokeStyle = 'rgba(251,191,36,0.3)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(W / 2 - ROAD_W / 2, intersectionY - ROAD_H / 2, ROAD_W, ROAD_H);
 }
 
 function drawCar(ctx: CanvasRenderingContext2D, car: Car) {
   ctx.save();
   ctx.translate(car.x, car.y);
-  if (car.laneDir === 'cross-left') ctx.rotate(Math.PI / 2);
-  else if (car.laneDir === 'cross-right') ctx.rotate(-Math.PI / 2);
+
+  // Rotate based on direction
+  if (car.direction === 'left') ctx.rotate(Math.PI);
+  else if (car.direction === 'right') ctx.rotate(0);
+  else if (car.direction === 'down') ctx.rotate(Math.PI / 2);
+  else if (car.direction === 'up') ctx.rotate(-Math.PI / 2);
 
   const hw = car.w / 2, hh = car.h / 2;
 
   if (car.isPed) {
     ctx.fillStyle = '#bbf7d0';
-    ctx.beginPath(); ctx.arc(0, -hh + 4, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, -hh + 4, 4, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = car.color;
     ctx.fillRect(-2.5, -hh + 8, 5, 10);
     ctx.fillRect(-5, -hh + 18, 4, 7);
     ctx.fillRect(1, -hh + 18, 4, 7);
     ctx.restore();
-    if (car.hasROW) drawROWBadge(ctx, car.x + 10, car.y - 10);
+    if (car.hasROW) {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(car.x + 10, car.y - 10, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 5.5px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('ROW', car.x + 10, car.y - 8);
+    }
     return;
-  }
-
-  // Glow for emergency
-  if (car.isEmergency) {
-    const t = Date.now() % 400 < 200;
-    ctx.shadowColor = t ? '#3b82f6' : '#ef4444';
-    ctx.shadowBlur = 18;
   }
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath(); ctx.ellipse(3, hh + 4, hw * 0.8, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(3, hh + 4, hw * 0.8, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   // Body
   ctx.fillStyle = car.color;
-  ctx.beginPath(); roundRect(ctx, -hw, -hh, car.w, car.h, 6); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-hw + 6, -hh);
+  ctx.lineTo(hw - 6, -hh);
+  ctx.quadraticCurveTo(hw, -hh, hw, -hh + 6);
+  ctx.lineTo(hw, hh - 6);
+  ctx.quadraticCurveTo(hw, hh, hw - 6, hh);
+  ctx.lineTo(-hw + 6, hh);
+  ctx.quadraticCurveTo(-hw, hh, -hw, hh - 6);
+  ctx.lineTo(-hw, -hh + 6);
+  ctx.quadraticCurveTo(-hw, -hh, -hw + 6, -hh);
+  ctx.fill();
 
   // Roof
   ctx.fillStyle = car.roofColor;
-  ctx.beginPath(); roundRect(ctx, -hw + 4, -hh + car.h * 0.22, car.w - 8, car.h * 0.36, 4); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-hw + 4, -hh + car.h * 0.22);
+  ctx.lineTo(hw - 4, -hh + car.h * 0.22);
+  ctx.lineTo(hw - 4, -hh + car.h * 0.58);
+  ctx.lineTo(-hw + 4, -hh + car.h * 0.58);
+  ctx.fill();
 
   // Windshield
   ctx.fillStyle = car.windowColor;
   ctx.globalAlpha = 0.7;
-  ctx.beginPath(); roundRect(ctx, -hw + 3, -hh + 3, car.w - 6, 10, 2); ctx.fill();
+  ctx.fillRect(-hw + 3, -hh + 3, car.w - 6, 10);
   ctx.globalAlpha = 1;
 
   // Headlights
@@ -300,98 +327,114 @@ function drawCar(ctx: CanvasRenderingContext2D, car: Car) {
     ctx.shadowColor = '#fef9c3';
     ctx.shadowBlur = 6;
   }
-  ctx.beginPath(); roundRect(ctx, -hw + 2, -hh + 2, 6, 4, 1); ctx.fill();
-  ctx.beginPath(); roundRect(ctx, hw - 8, -hh + 2, 6, 4, 1); ctx.fill();
+  ctx.fillRect(-hw + 2, -hh + 2, 6, 4);
+  ctx.fillRect(hw - 8, -hh + 2, 6, 4);
   ctx.shadowBlur = 0;
 
   // Taillights
   ctx.fillStyle = '#ef4444';
   ctx.shadowColor = '#ef4444';
   ctx.shadowBlur = 5;
-  ctx.beginPath(); roundRect(ctx, -hw + 2, hh - 6, 6, 4, 1); ctx.fill();
-  ctx.beginPath(); roundRect(ctx, hw - 8, hh - 6, 6, 4, 1); ctx.fill();
+  ctx.fillRect(-hw + 2, hh - 6, 6, 4);
+  ctx.fillRect(hw - 8, hh - 6, 6, 4);
   ctx.shadowBlur = 0;
-
-  // Label
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = 'bold 7px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(car.label, 0, 3);
 
   ctx.restore();
 
-  if (car.hasROW) drawROWBadge(ctx, car.x + car.w / 2 - 1, car.y - car.h / 2 - 1);
-}
-
-function drawROWBadge(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.save();
-  ctx.shadowColor = '#ef4444';
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = '#dc2626';
-  ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 5.5px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('ROW', x, y + 2);
-  ctx.restore();
-}
-
-function drawPlayer(ctx: CanvasRenderingContext2D, isMoving: boolean, crashed: boolean) {
-  const hw = PW / 2, hh = PH / 2;
-  const body = crashed ? '#7f1d1d' : isMoving ? '#14532d' : '#166534';
-  const roof = crashed ? '#450a0a' : '#052e16';
-  const win = crashed ? '#fca5a5' : '#86efac';
-
-  ctx.shadowColor = crashed ? '#ef4444' : isMoving ? '#22c55e' : '#16a34a';
-  ctx.shadowBlur = crashed ? 20 : isMoving ? 14 : 8;
-
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath(); ctx.ellipse(PLAYER_X + 3, PLAYER_Y + hh + 4, hw * 0.8, 5, 0, 0, Math.PI * 2); ctx.fill();
-
-  ctx.fillStyle = body;
-  ctx.beginPath(); ctx.roundRect(PLAYER_X - hw, PLAYER_Y - hh, PW, PH, 6); ctx.fill();
-
-  ctx.fillStyle = roof;
-  ctx.beginPath(); ctx.roundRect(PLAYER_X - hw + 4, PLAYER_Y - hh + PH * 0.22, PW - 8, PH * 0.36, 4); ctx.fill();
-
-  ctx.fillStyle = win;
-  ctx.globalAlpha = 0.75;
-  ctx.beginPath(); ctx.roundRect(PLAYER_X - hw + 3, PLAYER_Y - hh + 3, PW - 6, 10, 2); ctx.fill();
-  ctx.globalAlpha = 1;
-
-  ctx.fillStyle = '#fef9c3';
-  ctx.shadowColor = '#fef9c3';
-  ctx.shadowBlur = 8;
-  ctx.beginPath(); ctx.roundRect(PLAYER_X - hw + 2, PLAYER_Y - hh + 2, 6, 4, 1); ctx.fill();
-  ctx.beginPath(); ctx.roundRect(PLAYER_X + hw - 8, PLAYER_Y - hh + 2, 6, 4, 1); ctx.fill();
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = '#ef4444';
-  ctx.shadowColor = '#ef4444';
-  ctx.shadowBlur = 6;
-  ctx.beginPath(); ctx.roundRect(PLAYER_X - hw + 2, PLAYER_Y + hh - 6, 6, 4, 1); ctx.fill();
-  ctx.beginPath(); ctx.roundRect(PLAYER_X + hw - 8, PLAYER_Y + hh - 6, 6, 4, 1); ctx.fill();
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 7px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('YOU', PLAYER_X, PLAYER_Y + 3);
-
-  if (crashed) {
-    ctx.font = 'bold 22px Arial';
-    ctx.fillText('💥', PLAYER_X, PLAYER_Y - hh - 14);
+  // ROW badge
+  if (car.hasROW) {
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(car.x + 10, car.y - 10, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 5.5px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('ROW', car.x + 10, car.y - 8);
   }
 }
 
-function drawHUD(
-  ctx: CanvasRenderingContext2D,
-  score: number, distance: number,
-  timeLeft: number,
-  currentIntersection: Intersection | null,
-  intersectionProgress: number
-) {
+function drawPlayer(ctx: CanvasRenderingContext2D, turning: 'none' | 'left' | 'right', crashed: boolean) {
+  const px = W / 2;
+  const py = H - 80;
+  const pw = 32;
+  const ph = 50;
+  const hw = pw / 2, hh = ph / 2;
+
+  ctx.save();
+  ctx.translate(px, py);
+
+  // Tilt based on turning
+  if (turning === 'left') ctx.rotate(-0.15);
+  else if (turning === 'right') ctx.rotate(0.15);
+
+  const body = crashed ? '#7f1d1d' : '#14532d';
+  const roof = crashed ? '#450a0a' : '#052e16';
+  const win = crashed ? '#fca5a5' : '#86efac';
+
+  ctx.shadowColor = crashed ? '#ef4444' : '#22c55e';
+  ctx.shadowBlur = crashed ? 20 : 12;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(3, hh + 4, hw * 0.8, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-hw + 6, -hh);
+  ctx.lineTo(hw - 6, -hh);
+  ctx.quadraticCurveTo(hw, -hh, hw, -hh + 6);
+  ctx.lineTo(hw, hh - 6);
+  ctx.quadraticCurveTo(hw, hh, hw - 6, hh);
+  ctx.lineTo(-hw + 6, hh);
+  ctx.quadraticCurveTo(-hw, hh, -hw, hh - 6);
+  ctx.lineTo(-hw, -hh + 6);
+  ctx.quadraticCurveTo(-hw, -hh, -hw + 6, -hh);
+  ctx.fill();
+
+  // Roof
+  ctx.fillStyle = roof;
+  ctx.fillRect(-hw + 4, -hh + ph * 0.22, pw - 8, ph * 0.36);
+
+  // Windshield
+  ctx.fillStyle = win;
+  ctx.globalAlpha = 0.75;
+  ctx.fillRect(-hw + 3, -hh + 3, pw - 6, 10);
+  ctx.globalAlpha = 1;
+
+  // Headlights
+  ctx.fillStyle = '#fef9c3';
+  ctx.shadowColor = '#fef9c3';
+  ctx.shadowBlur = 8;
+  ctx.fillRect(-hw + 2, -hh + 2, 6, 4);
+  ctx.fillRect(hw - 8, -hh + 2, 6, 4);
+  ctx.shadowBlur = 0;
+
+  // Taillights
+  ctx.fillStyle = '#ef4444';
+  ctx.shadowColor = '#ef4444';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(-hw + 2, hh - 6, 6, 4);
+  ctx.fillRect(hw - 8, hh - 6, 6, 4);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 7px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('YOU', 0, 3);
+
+  if (crashed) {
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText('💥', 0, -hh - 14);
+  }
+
+  ctx.restore();
+}
+
+function drawHUD(ctx: CanvasRenderingContext2D, score: number, distance: number, timeLeft: number, scenario: Scenario | null) {
   // Top HUD bar
   ctx.fillStyle = 'rgba(0,0,0,0.75)';
   ctx.fillRect(0, 0, W, 38);
@@ -401,15 +444,15 @@ function drawHUD(
   const pct = Math.max(0, timeLeft / LEVEL_TIME);
   const mColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#fbbf24' : '#ef4444';
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath(); roundRect(ctx, mX, mY, mW, mH, 4); ctx.fill();
+  ctx.fillRect(mX, mY, mW, mH);
   ctx.fillStyle = mColor;
   ctx.shadowColor = mColor;
   ctx.shadowBlur = 6;
-  ctx.beginPath(); roundRect(ctx, mX, mY, mW * pct, mH, 4); ctx.fill();
+  ctx.fillRect(mX, mY, mW * pct, mH);
   ctx.shadowBlur = 0;
   ctx.strokeStyle = 'rgba(255,255,255,0.25)';
   ctx.lineWidth = 1;
-  ctx.beginPath(); roundRect(ctx, mX, mY, mW, mH, 4); ctx.stroke();
+  ctx.strokeRect(mX, mY, mW, mH);
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 9px Arial';
   ctx.textAlign = 'left';
@@ -427,34 +470,20 @@ function drawHUD(
   ctx.textAlign = 'right';
   ctx.fillText(`${score} pts`, W - 8, 24);
 
-  // Intersection info
-  if (currentIntersection && intersectionProgress > 0 && intersectionProgress < 1) {
-    const s = currentIntersection.scenario;
+  // Scenario info
+  if (scenario) {
     ctx.fillStyle = 'rgba(15,23,42,0.85)';
     ctx.fillRect(0, 38, W, 28);
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 9px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`⚠ ${s.title}`, W / 2, 50);
+    ctx.fillText(`⚠ ${scenario.title}`, W / 2, 50);
     ctx.fillStyle = '#94a3b8';
     ctx.font = '8px Arial';
-    let t = s.law;
+    let t = scenario.law;
     while (ctx.measureText(t).width > W - 16 && t.length > 10) t = t.slice(0, -4) + '…';
     ctx.fillText(t, W / 2, 62);
   }
-
-  // ROW indicator (bottom)
-  const hasROW = currentIntersection ? true : false; // simplified for now
-  const rowBg = hasROW ? 'rgba(20,83,45,0.92)' : 'rgba(127,29,29,0.92)';
-  ctx.fillStyle = rowBg;
-  ctx.fillRect(ROAD_LEFT + 8, H - 38, ROAD_W - 16, 28);
-  ctx.strokeStyle = hasROW ? '#22c55e' : '#ef4444';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); roundRect(ctx, ROAD_LEFT + 8, H - 38, ROAD_W - 16, 28, 4); ctx.stroke();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 10px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(hasROW ? '✓ APPROACHING INTERSECTION' : '✗ CLEAR INTERSECTION — RELEASE', W / 2, H - 19);
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -462,14 +491,12 @@ interface Props { onScoreUpdate?: (s: number) => void; }
 
 export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<GameState>({
     phase: 'idle', score: 0, distance: 0, streak: 0, level: 0,
-    timeLeft: LEVEL_TIME, currentIntersection: null, intersectionProgress: 0,
+    timeLeft: LEVEL_TIME, currentIntersection: null, intersectionVisible: false, playerTurning: 'none',
   });
   const carsRef = useRef<Car[]>([]);
-  const stripeRef = useRef(0);
-  const movingRef = useRef(false);
+  const roadOffsetRef = useRef(0);
   const lastTRef = useRef(0);
   const rafRef = useRef(0);
   const nextIntersectionRef = useRef(INTERSECTION_INTERVAL);
@@ -477,35 +504,6 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
   const [disp, setDisp] = useState({ ...stateRef.current });
   const [levelIdx, setLevelIdx] = useState(0);
   const LEVEL_NAMES = ['Suburban Streets', 'Downtown Grid', 'Highway Approach'];
-
-  const computeROW = useCallback((cars: Car[], scenario: Scenario): boolean => {
-    // Simplified: if any ROW car is in danger zone, player doesn't have ROW
-    const dTop = PLAYER_Y - PH / 2 - 100;
-    const dBot = PLAYER_Y + PH / 2 + 50;
-    for (const car of cars) {
-      if (!car.hasROW) continue;
-      if (car.laneDir === 'cross-left' || car.laneDir === 'cross-right') {
-        if (car.x > ROAD_LEFT - 60 && car.x < ROAD_RIGHT + 60 && car.y > dTop && car.y < dBot) return false;
-      } else {
-        if (car.y > dTop && car.y < dBot) return false;
-      }
-    }
-    return true;
-  }, []);
-
-  const checkCollision = useCallback((cars: Car[]): boolean => {
-    const px = PLAYER_X - PW / 2, py = PLAYER_Y - PH / 2;
-    for (const car of cars) {
-      const cx = car.x - car.w / 2, cy = car.y - car.h / 2;
-      if (px < cx + car.w && px + PW > cx && py < cy + car.h && py + PH > cy) return true;
-    }
-    return false;
-  }, []);
-
-  function buildScenarioQueue(): Scenario[] {
-    const pool = [...SCENARIOS].sort(() => Math.random() - 0.5);
-    return pool;
-  }
 
   const gameLoop = useCallback((ts: number) => {
     const canvas = canvasRef.current;
@@ -517,78 +515,87 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
 
     const dt = Math.min((ts - lastTRef.current) / 1000, 0.05);
     lastTRef.current = ts;
-    const moving = movingRef.current;
     const lv = s.level;
-    const baseSpeed = 120 + lv * 40;
+    const baseSpeed = 120 + lv * 40; // pixels per second
 
     // ── Road scroll ──────────────────────────────────────────────────────────
-    if (moving) stripeRef.current = (stripeRef.current + 160 * dt) % (STRIPE_H + STRIPE_GAP);
+    roadOffsetRef.current = (roadOffsetRef.current + baseSpeed * dt) % 60;
 
     // ── Distance / intersection logic ────────────────────────────────────────
-    let newDist = s.distance;
-    let newScore = s.score;
+    let newDist = s.distance + baseSpeed * dt * 0.05; // convert pixels to meters
+    let newScore = s.score + Math.floor(baseSpeed * dt * 0.1);
     let newIntersection = s.currentIntersection;
-    let intersectionProgress = s.intersectionProgress;
+    let intersectionVisible = s.intersectionVisible;
 
-    if (moving) {
-      newDist += 160 * dt * 0.05; // ~160 px/s = ~5 m/s in game
-      newScore += Math.floor(160 * dt * 0.1);
-
-      // Check if we should spawn a new intersection
-      if (newDist >= nextIntersectionRef.current) {
-        if (scenarioQueueRef.current.length === 0) scenarioQueueRef.current = buildScenarioQueue();
-        const scenario = scenarioQueueRef.current.shift()!;
-        newIntersection = {
-          distanceMeters: nextIntersectionRef.current,
-          scenario,
-          passed: false,
-          crashed: false,
-        };
-        carsRef.current = scenario.spawnCars();
-        intersectionProgress = 0;
-        nextIntersectionRef.current += INTERSECTION_INTERVAL;
+    // Check if we should spawn a new intersection
+    if (newDist >= nextIntersectionRef.current) {
+      if (scenarioQueueRef.current.length === 0) {
+        scenarioQueueRef.current = [...SCENARIOS].sort(() => Math.random() - 0.5);
       }
+      const scenario = scenarioQueueRef.current.shift()!;
+      const turnDir = Math.random() > 0.5 ? 'left' : 'right';
+      newIntersection = {
+        id: uid++,
+        distanceMeters: nextIntersectionRef.current,
+        scenario,
+        turnDir,
+        crossTraffic: scenario.spawnCrossTraffic(),
+        playerHasROW: false,
+      };
+      intersectionVisible = true;
+      nextIntersectionRef.current += INTERSECTION_INTERVAL;
+    }
 
-      // Update intersection progress
-      if (newIntersection) {
-        intersectionProgress = Math.min(1, (newDist - newIntersection.distanceMeters) / (INTERSECTION_ZONE / 160 * 0.05));
-        if (intersectionProgress >= 1) {
-          // Passed intersection
-          newIntersection.passed = true;
-          newIntersection = null;
-          intersectionProgress = 0;
+    // Update intersection visibility based on distance
+    if (newIntersection) {
+      const distToIntersection = newIntersection.distanceMeters - newDist;
+      intersectionVisible = distToIntersection > -30 && distToIntersection < 80;
+
+      // Check if player passed intersection
+      if (distToIntersection < -30) {
+        newScore += 100; // bonus for clearing intersection
+        newIntersection = null;
+        intersectionVisible = false;
+      }
+    }
+
+    // ── Move cross-traffic ───────────────────────────────────────────────────
+    if (newIntersection) {
+      for (const car of newIntersection.crossTraffic) {
+        if (car.direction === 'up') car.y -= car.speed * dt;
+        else if (car.direction === 'down') car.y += car.speed * dt;
+        else if (car.direction === 'left') car.x -= car.speed * dt;
+        else if (car.direction === 'right') car.x += car.speed * dt;
+      }
+      newIntersection.crossTraffic = newIntersection.crossTraffic.filter(c => {
+        if (c.direction === 'up' || c.direction === 'down') return c.y > -100 && c.y < H + 100;
+        return c.x > -100 && c.x < W + 100;
+      });
+    }
+
+    // ── Collision detection (at intersection) ────────────────────────────────
+    let crashed = false;
+    if (newIntersection && intersectionVisible) {
+      const px = W / 2;
+      const py = H - 80;
+      const pw = 32;
+      const ph = 50;
+
+      // Check collision with cross-traffic
+      for (const car of newIntersection.crossTraffic) {
+        const dx = Math.abs(px - car.x);
+        const dy = Math.abs(py - car.y);
+        if (dx < (pw + car.w) / 2 && dy < (ph + car.h) / 2) {
+          crashed = true;
+          break;
         }
       }
     }
 
-    // ── Move cars ────────────────────────────────────────────────────────────
-    for (const car of carsRef.current) {
-      if (car.laneDir === 'cross-left') car.x += car.speed * dt;
-      else if (car.laneDir === 'cross-right') car.x -= car.speed * dt;
-      else car.y += car.speed * dt;
-    }
-    carsRef.current = carsRef.current.filter(c => {
-      if (c.laneDir === 'cross-left') return c.x < W + 100;
-      if (c.laneDir === 'cross-right') return c.x > -100;
-      return c.y - c.h / 2 < H + 80;
-    });
-
-    // ── Collision detection (ONLY at intersections) ───────────────────────────
-    let crashed = false;
-    if (newIntersection && intersectionProgress > 0.2 && intersectionProgress < 0.8) {
-      // In active intersection zone
-      if (moving && !computeROW(carsRef.current, newIntersection.scenario)) {
-        crashed = true;
-      }
-      if (checkCollision(carsRef.current)) {
-        crashed = true;
-      }
-    }
-
     if (crashed) {
-      stateRef.current = { ...s, phase: 'crashed', score: newScore, distance: newDist, currentIntersection: newIntersection, intersectionProgress };
+      stateRef.current = { ...s, phase: 'crashed', score: newScore, distance: newDist };
       setDisp({ ...stateRef.current });
-      renderFrame(ctx, false, true, stateRef.current);
+      renderFrame(ctx, s.playerTurning, true, stateRef.current);
       onScoreUpdate?.(newScore);
       return;
     }
@@ -598,34 +605,46 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
     if (newTime <= 0) {
       stateRef.current = { ...s, phase: 'timeout', timeLeft: 0, score: newScore, distance: newDist };
       setDisp({ ...stateRef.current });
-      renderFrame(ctx, moving, false, stateRef.current);
+      renderFrame(ctx, s.playerTurning, false, stateRef.current);
       onScoreUpdate?.(newScore);
       return;
     }
 
     // ── Level complete ───────────────────────────────────────────────────────
-    if (newDist >= 500) { // 500m = 10 intersections
+    if (newDist >= 500) {
       stateRef.current = { ...s, phase: 'levelComplete', score: newScore, distance: newDist, streak: s.streak + 1 };
       setDisp({ ...stateRef.current });
-      renderFrame(ctx, moving, false, stateRef.current);
+      renderFrame(ctx, s.playerTurning, false, stateRef.current);
       onScoreUpdate?.(newScore);
       return;
     }
 
-    stateRef.current = { ...s, score: newScore, distance: newDist, timeLeft: newTime, currentIntersection: newIntersection, intersectionProgress };
-    renderFrame(ctx, moving, false, stateRef.current);
+    stateRef.current = { ...s, score: newScore, distance: newDist, timeLeft: newTime, currentIntersection: newIntersection, intersectionVisible };
+    renderFrame(ctx, s.playerTurning, false, stateRef.current);
     if (ts % 80 < 20) setDisp({ ...stateRef.current });
 
     rafRef.current = requestAnimationFrame(gameLoop);
-  }, [checkCollision, computeROW, onScoreUpdate]);
+  }, [onScoreUpdate]);
 
-  function renderFrame(ctx: CanvasRenderingContext2D, moving: boolean, crashed: boolean, s: GameState) {
+  function renderFrame(ctx: CanvasRenderingContext2D, turning: 'none' | 'left' | 'right', crashed: boolean, s: GameState) {
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, W, H);
 
-    drawScene(ctx, carsRef.current, stripeRef.current, moving);
-    drawPlayer(ctx, moving, crashed);
-    drawHUD(ctx, s.score, s.distance, s.timeLeft, s.currentIntersection, s.intersectionProgress);
+    drawRoad(ctx, roadOffsetRef.current);
+
+    if (s.currentIntersection && s.intersectionVisible) {
+      const distToIntersection = s.currentIntersection.distanceMeters - s.distance;
+      const progress = Math.max(0, Math.min(1, (80 - distToIntersection) / 80));
+      drawIntersection(ctx, progress);
+
+      // Draw cross-traffic
+      for (const car of s.currentIntersection.crossTraffic) {
+        drawCar(ctx, car);
+      }
+    }
+
+    drawPlayer(ctx, turning, crashed);
+    drawHUD(ctx, s.score, s.distance, s.timeLeft, s.currentIntersection?.scenario || null);
 
     if (crashed) {
       ctx.fillStyle = 'rgba(127,29,29,0.6)';
@@ -674,14 +693,13 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
   const startGame = useCallback((lv: number) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     carsRef.current = [];
-    stripeRef.current = 0;
-    movingRef.current = false;
+    roadOffsetRef.current = 0;
     nextIntersectionRef.current = INTERSECTION_INTERVAL;
-    scenarioQueueRef.current = buildScenarioQueue();
+    scenarioQueueRef.current = [...SCENARIOS].sort(() => Math.random() - 0.5);
     const ns: GameState = {
       phase: 'playing', score: 0, distance: 0,
       streak: stateRef.current.streak, level: lv,
-      timeLeft: LEVEL_TIME, currentIntersection: null, intersectionProgress: 0,
+      timeLeft: LEVEL_TIME, currentIntersection: null, intersectionVisible: false, playerTurning: 'none',
     };
     stateRef.current = ns;
     setDisp(ns);
@@ -689,16 +707,28 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
     rafRef.current = requestAnimationFrame(gameLoop);
   }, [gameLoop]);
 
-  const pressStart = useCallback(() => { if (stateRef.current.phase === 'playing') movingRef.current = true; }, []);
-  const pressEnd = useCallback(() => { movingRef.current = false; }, []);
+  const handleTurn = useCallback((dir: 'left' | 'right') => {
+    if (stateRef.current.phase === 'playing') {
+      stateRef.current.playerTurning = dir;
+    }
+  }, []);
+
+  const handleRelease = useCallback(() => {
+    stateRef.current.playerTurning = 'none';
+  }, []);
 
   useEffect(() => {
-    const kd = (e: KeyboardEvent) => { if (e.code === 'Space') { e.preventDefault(); pressStart(); } };
-    const ku = (e: KeyboardEvent) => { if (e.code === 'Space') { e.preventDefault(); pressEnd(); } };
+    const kd = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowLeft') { e.preventDefault(); handleTurn('left'); }
+      if (e.code === 'ArrowRight') { e.preventDefault(); handleTurn('right'); }
+    };
+    const ku = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { e.preventDefault(); handleRelease(); }
+    };
     window.addEventListener('keydown', kd);
     window.addEventListener('keyup', ku);
     return () => { window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); };
-  }, [pressStart, pressEnd]);
+  }, [handleTurn, handleRelease]);
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
@@ -710,8 +740,8 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
     if (!ctx) return;
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, W, H);
-    drawScene(ctx, [], 0, false);
-    drawPlayer(ctx, false, false);
+    drawRoad(ctx, 0);
+    drawPlayer(ctx, 'none', false);
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(0, H / 2 - 70, W, 120);
     ctx.strokeStyle = '#22c55e';
@@ -723,11 +753,11 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
     ctx.fillText('Traffic Jam Runner', W / 2, H / 2 - 34);
     ctx.fillStyle = '#94a3b8';
     ctx.font = '11px Arial';
-    ctx.fillText('Hold button to drive forward', W / 2, H / 2 - 10);
-    ctx.fillText('Release when you must yield', W / 2, H / 2 + 8);
+    ctx.fillText('Use ← → arrows to turn', W / 2, H / 2 - 10);
+    ctx.fillText('Navigate intersections safely', W / 2, H / 2 + 8);
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 10px Arial';
-    ctx.fillText('Intersections every 50m  |  8 DMV ROW laws', W / 2, H / 2 + 28);
+    ctx.fillText('8 DMV Right-of-Way Scenarios', W / 2, H / 2 + 28);
     ctx.fillStyle = '#f87171';
     ctx.font = '9px Arial';
     ctx.fillText('🔴 ROW = that vehicle has right of way', W / 2, H / 2 + 44);
@@ -737,7 +767,7 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
   const isPlaying = phase === 'playing';
 
   return (
-    <div ref={containerRef} className="w-full flex flex-col items-center gap-1 select-none">
+    <div className="w-full flex flex-col items-center gap-1 select-none">
       {/* Level selector */}
       <div className="w-full flex items-center justify-between bg-slate-800 text-white rounded-lg px-3 py-1.5 border border-slate-700">
         <button onClick={() => setLevelIdx(i => Math.max(0, i - 1))} className="font-bold text-xl px-2 disabled:opacity-30 text-green-400" disabled={levelIdx === 0}>‹</button>
@@ -757,7 +787,7 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
           className="w-full rounded-t-xl border-2 border-slate-600 touch-none block"
         />
 
-        {/* HOLD button overlaid */}
+        {/* Controls overlaid */}
         <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
           {!isPlaying ? (
             <div className="flex gap-2">
@@ -775,16 +805,28 @@ export default function TrafficRunnerGame({ onScoreUpdate }: Props) {
               )}
             </div>
           ) : (
-            <button
-              onMouseDown={pressStart}
-              onMouseUp={pressEnd}
-              onMouseLeave={pressEnd}
-              onTouchStart={(e) => { e.preventDefault(); pressStart(); }}
-              onTouchEnd={(e) => { e.preventDefault(); pressEnd(); }}
-              onTouchCancel={(e) => { e.preventDefault(); pressEnd(); }}
-              className="w-full bg-blue-700 active:bg-blue-900 text-white font-extrabold py-4 rounded-lg shadow-xl text-lg border border-blue-400 touch-none"
-              style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-            >🚗 HOLD TO DRIVE</button>
+            <div className="flex gap-2">
+              <button
+                onMouseDown={() => handleTurn('left')}
+                onMouseUp={handleRelease}
+                onMouseLeave={handleRelease}
+                onTouchStart={(e) => { e.preventDefault(); handleTurn('left'); }}
+                onTouchEnd={(e) => { e.preventDefault(); handleRelease(); }}
+                onTouchCancel={(e) => { e.preventDefault(); handleRelease(); }}
+                className="flex-1 bg-blue-700 active:bg-blue-900 text-white font-extrabold py-4 rounded-lg shadow-xl text-lg border border-blue-400 touch-none"
+                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+              >← TURN LEFT</button>
+              <button
+                onMouseDown={() => handleTurn('right')}
+                onMouseUp={handleRelease}
+                onMouseLeave={handleRelease}
+                onTouchStart={(e) => { e.preventDefault(); handleTurn('right'); }}
+                onTouchEnd={(e) => { e.preventDefault(); handleRelease(); }}
+                onTouchCancel={(e) => { e.preventDefault(); handleRelease(); }}
+                className="flex-1 bg-blue-700 active:bg-blue-900 text-white font-extrabold py-4 rounded-lg shadow-xl text-lg border border-blue-400 touch-none"
+                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+              >TURN RIGHT →</button>
+            </div>
           )}
         </div>
       </div>
