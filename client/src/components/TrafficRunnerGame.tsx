@@ -453,13 +453,22 @@ function TrafficRunnerGame() {
           onClick={() => {
             if (stateRef.current.phase === 'idle') {
               startGame();
-            } else if (stateRef.current.phase === 'playing') {
-              setIsPaused(!isPaused);
             }
           }}
-          className="px-4 py-2 bg-blue-500 text-white rounded font-bold"
+          disabled={stateRef.current.phase !== 'idle'}
+          className="px-4 py-2 bg-green-500 text-white rounded font-bold disabled:opacity-50"
         >
-          {stateRef.current.phase === 'idle' ? '▶ Play' : isPaused ? '▶ Resume' : '⏸ Pause'}
+          Play Car
+        </button>
+        <button
+          onClick={() => {
+            stateRef.current.phase = 'idle';
+            setIsPaused(false);
+          }}
+          disabled={stateRef.current.phase === 'idle'}
+          className="px-4 py-2 bg-red-500 text-white rounded font-bold disabled:opacity-50"
+        >
+          Stop Car
         </button>
       </div>
     </div>
