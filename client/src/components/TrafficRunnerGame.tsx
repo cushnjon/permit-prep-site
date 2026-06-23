@@ -436,16 +436,29 @@ export default function TrafficRunnerGame() {
     g.turnTimer = 0;
     g.nextTurnIn = 3 + Math.random() * 2;
     setPhase('playing');
+    setPlayerStopped(false);
   }, []);
 
   const handleStop = useCallback(() => {
-    gs.current.phase = 'idle';
+    const g = gs.current;
+    g.phase = 'idle';
+    g.px = 100; g.py = 400;
+    g.heading = -Math.PI / 2;
+    g.score = 0; g.time = 0;
+    g.coinsCollected = 0; g.scenarioIdx = 0;
+    g.lightTime = 0;
+    g.coins = [];
+    g.ai = [];
+    g.turnTimer = 0;
+    g.nextTurnIn = 3 + Math.random() * 2;
     setPhase('idle');
     setPlayerStopped(false);
   }, []);
 
   const handlePause = useCallback(() => {
-    setPlayerStopped(!playerStopped);
+    if (gs.current.phase === 'playing') {
+      setPlayerStopped(!playerStopped);
+    }
   }, [playerStopped]);
 
   return (
