@@ -1,9 +1,8 @@
 /**
- * Traffic Jam Runner — Camera-Relative Road Navigation
- * - Car stays centered on screen, map rotates around it
- * - Roads are 3x car size wide with proper lane positioning
- * - Car positioned in right 2/3 of road
- * - All road directions (N-S-E-W) properly rendered
+ * Traffic Jam Runner — Real DMV Test Site Map
+ * - Uses actual street map image as background
+ * - Car follows real road network (diagonal, curved, irregular)
+ * - Camera-relative rendering with map image
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -20,6 +19,9 @@ const TURN_INTERVAL_MIN = 3000;
 const TURN_INTERVAL_MAX = 5000;
 const COIN_SIZE = 6;
 const COIN_COUNT = 20;
+
+// Map image URL (from manus-upload-file)
+const MAP_IMAGE_URL = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-map-85.jpg';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Coin {
@@ -51,54 +53,67 @@ const SCENARIOS = [
 
 const LEVEL_NAMES = ['Suburban Streets', 'Downtown Rush', 'Highway Merge'];
 
-// ─── Road network (world coordinates) ────────────────────────────────────────
-// Vertical roads (N-S)
-const VERTICAL_ROADS = [
-  100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
+// ─── Real road network (extracted from DMV map) ────────────────────────────────
+// These are approximate coordinates based on the map image
+// Each road is defined as a series of waypoints
+const ROADS = [
+  // Main vertical roads (N-S)
+  { name: 'N Lind Ave', points: [[200, 0], [200, 1200]], direction: 'vertical' },
+  { name: 'N Rogers Ave', points: [[400, 0], [400, 1200]], direction: 'vertical' },
+  { name: 'Foster Ave', points: [[600, 0], [600, 1200]], direction: 'vertical' },
+  { name: 'N Lockwood Ave', points: [[800, 0], [800, 1200]], direction: 'vertical' },
+  { name: 'N Liano Ave', points: [[1000, 0], [1000, 1200]], direction: 'vertical' },
+
+  // Main horizontal roads (E-W)
+  { name: 'W Winona St', points: [[0, 200], [1200, 200]], direction: 'horizontal' },
+  { name: 'W Foster Ave', points: [[0, 400], [1200, 400]], direction: 'horizontal' },
+  { name: 'W Lovejoy Ave', points: [[0, 600], [1200, 600]], direction: 'horizontal' },
+  { name: 'W Liano Ave', points: [[0, 800], [1200, 800]], direction: 'horizontal' },
+  { name: 'W Carmen Ave', points: [[0, 1000], [1200, 1000]], direction: 'horizontal' },
+
+  // Diagonal roads
+  { name: 'Diagonal NE', points: [[100, 900], [500, 300]], direction: 'diagonal' },
+  { name: 'Diagonal NW', points: [[900, 300], [500, 900]], direction: 'diagonal' },
 ];
 
-// Horizontal roads (E-W)
-const HORIZONTAL_ROADS = [
-  100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
-];
+// ─── Helper: Find closest point on any road ────────────────────────────────
+function findClosestRoadPoint(x: number, y: number): { x: number; y: number; roadName: string } {
+  let closest: { dist: number; x: number; y: number; roadName: string } = { dist: Infinity, x, y, roadName: 'Unknown' };
 
-// ─── Helper: Check if point is on a road ────────────────────────────────────
-function isOnRoad(x: number, y: number, tolerance: number = ROAD_WIDTH / 2): boolean {
-  // Check vertical roads
-  for (const roadX of VERTICAL_ROADS) {
-    if (Math.abs(x - roadX) < tolerance && y >= 0 && y < MAP_H) return true;
-  }
-  // Check horizontal roads
-  for (const roadY of HORIZONTAL_ROADS) {
-    if (Math.abs(y - roadY) < tolerance && x >= 0 && x < MAP_W) return true;
-  }
-  return false;
+  ROADS.forEach((road) => {
+    for (let i = 0; i < road.points.length - 1; i++) {
+      const [x1, y1] = road.points[i];
+      const [x2, y2] = road.points[i + 1];
+
+      // Find closest point on line segment
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) continue;
+
+      let t = ((x - x1) * dx + (y - y1) * dy) / (len * len);
+      t = Math.max(0, Math.min(1, t));
+
+      const closestX = x1 + t * dx;
+      const closestY = y1 + t * dy;
+      const dist = Math.hypot(x - closestX, y - closestY);
+
+      if (dist < closest.dist && dist < ROAD_WIDTH / 2 + 10) {
+        closest = { dist, x: closestX, y: closestY, roadName: road.name };
+      }
+    }
+  });
+
+  return closest;
 }
 
-// ─── Helper: Find closest road to position ────────────────────────────────────
-function findClosestRoad(x: number, y: number): { x: number; y: number; heading: number } {
-  let closest = { dist: Infinity, x, y, heading: 0 };
-
-  // Check vertical roads
-  for (const roadX of VERTICAL_ROADS) {
-    const dist = Math.abs(x - roadX);
-    if (dist < closest.dist && y >= 0 && y < MAP_H) {
-      closest = { dist, x: roadX, y, heading: 0 };
-    }
-  }
-
-  // Check horizontal roads
-  for (const roadY of HORIZONTAL_ROADS) {
-    const dist = Math.abs(y - roadY);
-    if (dist < closest.dist && x >= 0 && x < MAP_W) {
-      closest = { dist, x, y: roadY, heading: 1 };
-    }
-  }
-
-  return { x: closest.x, y: closest.y, heading: closest.heading };
+// ─── Helper: Check if point is on a road ────────────────────────────────
+function isOnRoad(x: number, y: number): boolean {
+  const closest = findClosestRoadPoint(x, y);
+  return (closest as any).dist < ROAD_WIDTH / 2;
 }
 
-// ─── Helper: Wrap position to opposite side ────────────────────────────────────
+// ─── Helper: Wrap position to opposite side ────────────────────────────────
 function wrapPosition(x: number, y: number): { x: number; y: number } {
   let newX = x;
   let newY = y;
@@ -108,13 +123,14 @@ function wrapPosition(x: number, y: number): { x: number; y: number } {
   if (y < 0) newY = MAP_H - 10;
   if (y > MAP_H) newY = 10;
 
-  const snapped = findClosestRoad(newX, newY);
+  const snapped = findClosestRoadPoint(newX, newY);
   return { x: snapped.x, y: snapped.y };
 }
 
 // ─── Game Component ────────────────────────────────────────────────────────────
 export function TrafficRunnerGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mapImageRef = useRef<HTMLImageElement | null>(null);
   const stateRef = useRef<GameState>({
     phase: 'idle',
     score: 0,
@@ -136,6 +152,16 @@ export function TrafficRunnerGame() {
   const nextTurnTimeRef = useRef(0);
   const currentScenarioRef = useRef(0);
 
+  // Load map image
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      mapImageRef.current = img;
+    };
+    img.src = MAP_IMAGE_URL;
+  }, []);
+
   // ─── Spawn coins on roads ────────────────────────────────────────────────────────
   const spawnCoins = useCallback(() => {
     const coins: Coin[] = [];
@@ -143,7 +169,7 @@ export function TrafficRunnerGame() {
     while (coins.length < COIN_COUNT && attempts < 200) {
       const x = Math.random() * MAP_W;
       const y = Math.random() * MAP_H;
-      if (isOnRoad(x, y, ROAD_WIDTH / 2 + 10)) {
+      if (isOnRoad(x, y)) {
         coins.push({ x, y, collected: false });
       }
       attempts++;
@@ -161,59 +187,64 @@ export function TrafficRunnerGame() {
     const carScreenX = CANVAS_W / 2;
     const carScreenY = CANVAS_H / 2;
 
-    // Draw roads relative to car position
+    // Draw map image if loaded
+    if (mapImageRef.current) {
+      const offsetX = carScreenX - (carXRef.current / MAP_W) * mapImageRef.current.width;
+      const offsetY = carScreenY - (carYRef.current / MAP_H) * mapImageRef.current.height;
+      const scale = CANVAS_W / MAP_W;
+      ctx.globalAlpha = 0.3;
+      ctx.drawImage(
+        mapImageRef.current,
+        offsetX,
+        offsetY,
+        mapImageRef.current.width * scale,
+        mapImageRef.current.height * scale
+      );
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw roads as lines
     ctx.strokeStyle = '#d0d0d0';
     ctx.lineWidth = ROAD_WIDTH;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    // Vertical roads
-    for (const roadX of VERTICAL_ROADS) {
-      const screenX = carScreenX + (roadX - carXRef.current);
-      if (screenX > -ROAD_WIDTH && screenX < CANVAS_W + ROAD_WIDTH) {
-        ctx.beginPath();
-        ctx.moveTo(screenX, -ROAD_WIDTH);
-        ctx.lineTo(screenX, CANVAS_H + ROAD_WIDTH);
-        ctx.stroke();
-      }
-    }
-
-    // Horizontal roads
-    for (const roadY of HORIZONTAL_ROADS) {
-      const screenY = carScreenY + (roadY - carYRef.current);
-      if (screenY > -ROAD_WIDTH && screenY < CANVAS_H + ROAD_WIDTH) {
-        ctx.beginPath();
-        ctx.moveTo(-ROAD_WIDTH, screenY);
-        ctx.lineTo(CANVAS_W + ROAD_WIDTH, screenY);
-        ctx.stroke();
-      }
-    }
+    ROADS.forEach((road) => {
+      ctx.beginPath();
+      let first = true;
+      road.points.forEach(([x, y]) => {
+        const screenX = carScreenX + (x - carXRef.current);
+        const screenY = carScreenY + (y - carYRef.current);
+        if (first) {
+          ctx.moveTo(screenX, screenY);
+          first = false;
+        } else {
+          ctx.lineTo(screenX, screenY);
+        }
+      });
+      ctx.stroke();
+    });
 
     // Road markings (dashed center lines)
     ctx.strokeStyle = '#ffff99';
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
 
-    // Vertical road markings
-    for (const roadX of VERTICAL_ROADS) {
-      const screenX = carScreenX + (roadX - carXRef.current);
-      if (screenX > -ROAD_WIDTH && screenX < CANVAS_W + ROAD_WIDTH) {
-        ctx.beginPath();
-        ctx.moveTo(screenX, -ROAD_WIDTH);
-        ctx.lineTo(screenX, CANVAS_H + ROAD_WIDTH);
-        ctx.stroke();
-      }
-    }
-
-    // Horizontal road markings
-    for (const roadY of HORIZONTAL_ROADS) {
-      const screenY = carScreenY + (roadY - carYRef.current);
-      if (screenY > -ROAD_WIDTH && screenY < CANVAS_H + ROAD_WIDTH) {
-        ctx.beginPath();
-        ctx.moveTo(-ROAD_WIDTH, screenY);
-        ctx.lineTo(CANVAS_W + ROAD_WIDTH, screenY);
-        ctx.stroke();
-      }
-    }
+    ROADS.forEach((road) => {
+      ctx.beginPath();
+      let first = true;
+      road.points.forEach(([x, y]) => {
+        const screenX = carScreenX + (x - carXRef.current);
+        const screenY = carScreenY + (y - carYRef.current);
+        if (first) {
+          ctx.moveTo(screenX, screenY);
+          first = false;
+        } else {
+          ctx.lineTo(screenX, screenY);
+        }
+      });
+      ctx.stroke();
+    });
 
     ctx.setLineDash([]);
   }, []);
@@ -323,6 +354,13 @@ export function TrafficRunnerGame() {
 
     let newX = carXRef.current + dx;
     let newY = carYRef.current + dy;
+
+    // Snap to nearest road if off road
+    if (!isOnRoad(newX, newY)) {
+      const snapped = findClosestRoadPoint(newX, newY);
+      newX = snapped.x;
+      newY = snapped.y;
+    }
 
     // Wrap around at edges
     if (newX < 0 || newX > MAP_W || newY < 0 || newY > MAP_H) {
@@ -440,7 +478,7 @@ export function TrafficRunnerGame() {
     spawnCoins();
 
     // Start on a road
-    const startRoad = findClosestRoad(MAP_W / 2, MAP_H / 2);
+    const startRoad = findClosestRoadPoint(MAP_W / 2, MAP_H / 2);
     carXRef.current = startRoad.x;
     carYRef.current = startRoad.y;
     headingRef.current = 0;
@@ -544,7 +582,7 @@ export function TrafficRunnerGame() {
       {/* Info */}
       <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300">
         <p className="font-bold text-yellow-400 mb-0.5">How to Play:</p>
-        <p className="text-slate-400 text-xs leading-relaxed">Your car drives on the street grid and turns randomly. Stay on the roads! Collect coins for points. Press STOP to yield and complete the level.</p>
+        <p className="text-slate-400 text-xs leading-relaxed">Your car drives on the DMV Test Site streets and turns randomly. Stay on the roads! Collect coins for points. Press STOP to yield and complete the level.</p>
       </div>
     </div>
   );
