@@ -514,7 +514,7 @@ export function TrafficRunnerGame() {
 
     if (s.phase === 'idle') {
       drawMap(ctx);
-      drawCar(ctx);
+      // Draw instruction panel BEHIND the car
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillRect(0, CANVAS_H / 2 - 70, CANVAS_W, 120);
       ctx.strokeStyle = '#22c55e';
@@ -531,6 +531,8 @@ export function TrafficRunnerGame() {
       ctx.fillStyle = '#d97706';
       ctx.font = 'bold 10px Arial';
       ctx.fillText('8 DMV Right-of-Way Scenarios', CANVAS_W / 2, CANVAS_H / 2 + 28);
+      // Draw car ON TOP of the instruction panel
+      drawCar(ctx);
       return;
     }
 
