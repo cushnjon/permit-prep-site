@@ -1,10 +1,10 @@
 /**
- * Traffic Jam Runner — Snake.io Style Game
- * - Car moves constantly forward
- * - Random turns every 3-5 seconds (50/50 left or right, otherwise forward)
- * - Collect coins/iron scattered on map
- * - Stop button to yield at intersections (right-of-way mechanic)
- * - No reverse, only forward/left/right
+ * Traffic Jam Runner — Real Street Map with Road Constraints
+ * - Car moves on actual street map (DMV Test Site area)
+ * - Car constrained to roads (gray lines)
+ * - Wrap-around at edges to closest parallel road
+ * - Coins spawn only on roads
+ * - 8 DMV scenarios rotate
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -12,14 +12,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 const CANVAS_W = 340;
 const CANVAS_H = 560;
 const MAP_W = 800;
-const MAP_H = 800;
+const MAP_H = 1000;
 const LEVEL_TIME = 90;
-const CAR_SIZE = 16;
-const CAR_SPEED = 120; // pixels per second
+const CAR_SIZE = 14;
+const CAR_SPEED = 100; // pixels per second
 const TURN_INTERVAL_MIN = 3000; // 3 seconds
 const TURN_INTERVAL_MAX = 5000; // 5 seconds
-const COIN_SIZE = 8;
-const COIN_COUNT = 15;
+const COIN_SIZE = 6;
+const COIN_COUNT = 12;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Coin {
@@ -51,6 +51,82 @@ const SCENARIOS = [
 
 const LEVEL_NAMES = ['Suburban Streets', 'Downtown Rush', 'Highway Merge'];
 
+// ─── Road network definition (approximate grid of roads) ────────────────────
+// Vertical roads (N-S)
+const VERTICAL_ROADS = [
+  { x: 80, lanes: [60, 80, 100] },
+  { x: 180, lanes: [160, 180, 200] },
+  { x: 280, lanes: [260, 280, 300] },
+  { x: 380, lanes: [360, 380, 400] },
+  { x: 480, lanes: [460, 480, 500] },
+  { x: 580, lanes: [560, 580, 600] },
+  { x: 680, lanes: [660, 680, 700] },
+];
+
+// Horizontal roads (E-W)
+const HORIZONTAL_ROADS = [
+  { y: 100, lanes: [80, 100, 120] },
+  { y: 200, lanes: [180, 200, 220] },
+  { y: 300, lanes: [280, 300, 320] },
+  { y: 400, lanes: [380, 400, 420] },
+  { y: 500, lanes: [480, 500, 520] },
+  { y: 600, lanes: [580, 600, 620] },
+  { y: 700, lanes: [680, 700, 720] },
+  { y: 800, lanes: [780, 800, 820] },
+  { y: 900, lanes: [880, 900, 920] },
+];
+
+// ─── Helper: Find closest road to position ────────────────────────────────────
+function findClosestRoad(x: number, y: number): { x: number; y: number; heading: number } {
+  let closest = { dist: Infinity, x, y, heading: 0 };
+
+  // Check vertical roads
+  VERTICAL_ROADS.forEach((road) => {
+    const dist = Math.abs(x - road.x);
+    if (dist < closest.dist && y >= 0 && y < MAP_H) {
+      closest = { dist, x: road.x, y, heading: 0 };
+    }
+  });
+
+  // Check horizontal roads
+  HORIZONTAL_ROADS.forEach((road) => {
+    const dist = Math.abs(y - road.y);
+    if (dist < closest.dist && x >= 0 && x < MAP_W) {
+      closest = { dist, x, y: road.y, heading: 1 };
+    }
+  });
+
+  return { x: closest.x, y: closest.y, heading: closest.heading };
+}
+
+// ─── Helper: Check if position is on a road ────────────────────────────────────
+function isOnRoad(x: number, y: number, tolerance: number = 25): boolean {
+  // Check vertical roads
+  for (const road of VERTICAL_ROADS) {
+    if (Math.abs(x - road.x) < tolerance && y >= 0 && y < MAP_H) return true;
+  }
+  // Check horizontal roads
+  for (const road of HORIZONTAL_ROADS) {
+    if (Math.abs(y - road.y) < tolerance && x >= 0 && x < MAP_W) return true;
+  }
+  return false;
+}
+
+// ─── Helper: Wrap position to opposite side ────────────────────────────────────
+function wrapPosition(x: number, y: number): { x: number; y: number } {
+  let newX = x;
+  let newY = y;
+
+  if (x < 0) newX = MAP_W - 10;
+  if (x > MAP_W) newX = 10;
+  if (y < 0) newY = MAP_H - 10;
+  if (y > MAP_H) newY = 10;
+
+  // Snap to closest road
+  const snapped = findClosestRoad(newX, newY);
+  return { x: snapped.x, y: snapped.y };
+}
+
 // ─── Game Component ────────────────────────────────────────────────────────────
 export function TrafficRunnerGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,41 +153,79 @@ export function TrafficRunnerGame() {
   const nextTurnTimeRef = useRef(0);
   const currentScenarioRef = useRef(0);
 
-  // ─── Spawn coins ────────────────────────────────────────────────────────────
+  // ─── Spawn coins on roads ────────────────────────────────────────────────────────
   const spawnCoins = useCallback(() => {
     const coins: Coin[] = [];
-    for (let i = 0; i < COIN_COUNT; i++) {
-      coins.push({
-        x: Math.random() * (MAP_W - 100) + 50,
-        y: Math.random() * (MAP_H - 100) + 50,
-        collected: false,
-      });
+    let attempts = 0;
+    while (coins.length < COIN_COUNT && attempts < 100) {
+      const x = Math.random() * MAP_W;
+      const y = Math.random() * MAP_H;
+      if (isOnRoad(x, y, 30)) {
+        coins.push({ x, y, collected: false });
+      }
+      attempts++;
     }
     coinsRef.current = coins;
   }, []);
 
   // ─── Draw functions ────────────────────────────────────────────────────────
   const drawMap = useCallback((ctx: CanvasRenderingContext2D, offsetX: number, offsetY: number) => {
-    // Background grass
-    ctx.fillStyle = '#1f2937';
+    // Background
+    ctx.fillStyle = '#f5f5f5';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Grid pattern
-    ctx.strokeStyle = 'rgba(107, 114, 128, 0.2)';
+    // Draw roads (gray lines)
+    ctx.strokeStyle = '#d0d0d0';
+    ctx.lineWidth = 2;
+
+    // Vertical roads
+    VERTICAL_ROADS.forEach((road) => {
+      const screenX = road.x - offsetX;
+      if (screenX > -50 && screenX < CANVAS_W + 50) {
+        ctx.beginPath();
+        ctx.moveTo(screenX, -offsetY);
+        ctx.lineTo(screenX, CANVAS_H - offsetY);
+        ctx.stroke();
+      }
+    });
+
+    // Horizontal roads
+    HORIZONTAL_ROADS.forEach((road) => {
+      const screenY = road.y - offsetY;
+      if (screenY > -50 && screenY < CANVAS_H + 50) {
+        ctx.beginPath();
+        ctx.moveTo(-offsetX, screenY);
+        ctx.lineTo(CANVAS_W - offsetX, screenY);
+        ctx.stroke();
+      }
+    });
+
+    // Road markings (dashed center lines)
+    ctx.strokeStyle = '#ffff99';
     ctx.lineWidth = 1;
-    const gridSize = 40;
-    for (let x = -offsetX % gridSize; x < CANVAS_W; x += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, CANVAS_H);
-      ctx.stroke();
-    }
-    for (let y = -offsetY % gridSize; y < CANVAS_H; y += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(CANVAS_W, y);
-      ctx.stroke();
-    }
+    ctx.setLineDash([5, 5]);
+
+    VERTICAL_ROADS.forEach((road) => {
+      const screenX = road.x - offsetX;
+      if (screenX > -50 && screenX < CANVAS_W + 50) {
+        ctx.beginPath();
+        ctx.moveTo(screenX, -offsetY);
+        ctx.lineTo(screenX, CANVAS_H - offsetY);
+        ctx.stroke();
+      }
+    });
+
+    HORIZONTAL_ROADS.forEach((road) => {
+      const screenY = road.y - offsetY;
+      if (screenY > -50 && screenY < CANVAS_H + 50) {
+        ctx.beginPath();
+        ctx.moveTo(-offsetX, screenY);
+        ctx.lineTo(CANVAS_W - offsetX, screenY);
+        ctx.stroke();
+      }
+    });
+
+    ctx.setLineDash([]);
   }, []);
 
   const drawCar = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, heading: number) => {
@@ -123,7 +237,7 @@ export function TrafficRunnerGame() {
     ctx.fillStyle = '#22c55e';
     ctx.fillRect(-CAR_SIZE / 2, -CAR_SIZE / 2, CAR_SIZE, CAR_SIZE);
 
-    // Car front indicator
+    // Car front
     ctx.fillStyle = '#fbbf24';
     ctx.fillRect(-CAR_SIZE / 2 + 2, -CAR_SIZE / 2, CAR_SIZE - 4, 4);
 
@@ -150,7 +264,7 @@ export function TrafficRunnerGame() {
 
   const drawHUD = useCallback((ctx: CanvasRenderingContext2D, s: GameState) => {
     // Time
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = '#333';
     ctx.font = '11px Arial';
     ctx.textAlign = 'left';
     ctx.fillText(`${s.time.toFixed(1)}s`, 8, 12);
@@ -161,13 +275,13 @@ export function TrafficRunnerGame() {
 
     // Scenario title
     if (s.phase === 'playing') {
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 12px Arial';
+      ctx.fillStyle = '#d97706';
+      ctx.font = 'bold 11px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(SCENARIOS[currentScenarioRef.current].title, CANVAS_W / 2, 24);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '10px Arial';
-      ctx.fillText(SCENARIOS[currentScenarioRef.current].law, CANVAS_W / 2, 36);
+      ctx.fillStyle = '#666';
+      ctx.font = '9px Arial';
+      ctx.fillText(SCENARIOS[currentScenarioRef.current].law, CANVAS_W / 2, 34);
     }
   }, []);
 
@@ -202,7 +316,6 @@ export function TrafficRunnerGame() {
         if (rand < 0.75) {
           headingRef.current = (headingRef.current + 1) % 4;
         }
-        // else go forward (no change)
       }
       nextTurnTimeRef.current = now + (Math.random() * (TURN_INTERVAL_MAX - TURN_INTERVAL_MIN) + TURN_INTERVAL_MIN);
     }
@@ -212,14 +325,18 @@ export function TrafficRunnerGame() {
     const dx = [0, moveDistance, 0, -moveDistance][headingRef.current];
     const dy = [-moveDistance, 0, moveDistance, 0][headingRef.current];
 
-    carXRef.current += dx;
-    carYRef.current += dy;
+    let newX = carXRef.current + dx;
+    let newY = carYRef.current + dy;
 
-    // Wrap around map
-    if (carXRef.current < 0) carXRef.current = MAP_W;
-    if (carXRef.current > MAP_W) carXRef.current = 0;
-    if (carYRef.current < 0) carYRef.current = MAP_H;
-    if (carYRef.current > MAP_H) carYRef.current = 0;
+    // Wrap around at edges
+    if (newX < 0 || newX > MAP_W || newY < 0 || newY > MAP_H) {
+      const wrapped = wrapPosition(newX, newY);
+      newX = wrapped.x;
+      newY = wrapped.y;
+    }
+
+    carXRef.current = newX;
+    carYRef.current = newY;
 
     // Check coin collection
     let newScore = s.score;
@@ -227,7 +344,7 @@ export function TrafficRunnerGame() {
     coinsRef.current.forEach((coin) => {
       if (!coin.collected) {
         const dist = Math.hypot(carXRef.current - coin.x, carYRef.current - coin.y);
-        if (dist < CAR_SIZE) {
+        if (dist < CAR_SIZE + COIN_SIZE) {
           coin.collected = true;
           newScore += 10;
           coinsCollected += 1;
@@ -254,7 +371,7 @@ export function TrafficRunnerGame() {
     rafRef.current = requestAnimationFrame(gameLoop);
   }, []);
 
-  // ─── Draw frame ────────────────────────────────────────────────────────────
+  // ─── Draw frame ────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -266,20 +383,20 @@ export function TrafficRunnerGame() {
     if (s.phase === 'idle') {
       drawMap(ctx, 0, 0);
       drawCar(ctx, CANVAS_W / 2, CANVAS_H / 2, 0);
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillRect(0, CANVAS_H / 2 - 70, CANVAS_W, 120);
       ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2;
       ctx.strokeRect(0, CANVAS_H / 2 - 70, CANVAS_W, 120);
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = '#1f2937';
       ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Snake Traffic', CANVAS_W / 2, CANVAS_H / 2 - 34);
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('Street Navigation', CANVAS_W / 2, CANVAS_H / 2 - 34);
+      ctx.fillStyle = '#666';
       ctx.font = '11px Arial';
-      ctx.fillText('Collect coins while driving', CANVAS_W / 2, CANVAS_H / 2 - 10);
-      ctx.fillText('Press STOP to yield', CANVAS_W / 2, CANVAS_H / 2 + 8);
-      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('Follow the roads and collect coins', CANVAS_W / 2, CANVAS_H / 2 - 10);
+      ctx.fillText('Press STOP to yield and complete', CANVAS_W / 2, CANVAS_H / 2 + 8);
+      ctx.fillStyle = '#d97706';
       ctx.font = 'bold 10px Arial';
       ctx.fillText('8 DMV Right-of-Way Scenarios', CANVAS_W / 2, CANVAS_H / 2 + 28);
       return;
@@ -337,11 +454,14 @@ export function TrafficRunnerGame() {
   const startGame = useCallback((lv: number) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     spawnCoins();
-    carXRef.current = MAP_W / 2;
-    carYRef.current = MAP_H / 2;
+
+    // Start on a road
+    const startRoad = findClosestRoad(MAP_W / 2, MAP_H / 2);
+    carXRef.current = startRoad.x;
+    carYRef.current = startRoad.y;
     headingRef.current = 0;
-    cameraXRef.current = MAP_W / 2 - CANVAS_W / 2;
-    cameraYRef.current = MAP_H / 2 - CANVAS_H / 2;
+    cameraXRef.current = Math.max(0, Math.min(MAP_W - CANVAS_W, carXRef.current - CANVAS_W / 2));
+    cameraYRef.current = Math.max(0, Math.min(MAP_H - CANVAS_H, carYRef.current - CANVAS_H / 2));
     nextTurnTimeRef.current = performance.now() + TURN_INTERVAL_MIN;
     currentScenarioRef.current = Math.floor(Math.random() * SCENARIOS.length);
 
@@ -368,7 +488,6 @@ export function TrafficRunnerGame() {
 
   const stopForYield = useCallback(() => {
     if (stateRef.current.phase === 'playing') {
-      // Player yielded - award bonus points
       stateRef.current.score += 50;
       stateRef.current.phase = 'levelComplete';
       setDisp({ ...stateRef.current });
@@ -399,7 +518,7 @@ export function TrafficRunnerGame() {
           ref={canvasRef}
           width={CANVAS_W}
           height={CANVAS_H}
-          className="w-full rounded-t-xl border-2 border-slate-600 touch-none block"
+          className="w-full rounded-t-xl border-2 border-slate-600 touch-none block bg-white"
         />
 
         {/* Controls */}
@@ -443,7 +562,7 @@ export function TrafficRunnerGame() {
       {/* Info */}
       <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300">
         <p className="font-bold text-yellow-400 mb-0.5">How to Play:</p>
-        <p className="text-slate-400 text-xs leading-relaxed">Your car drives automatically and turns randomly every 3-5 seconds. Collect coins for points. Press STOP to yield at intersections and complete the level!</p>
+        <p className="text-slate-400 text-xs leading-relaxed">Your car drives on the street grid and turns randomly. Stay on the roads! Collect coins for points. Press STOP to yield and complete the level.</p>
       </div>
     </div>
   );
