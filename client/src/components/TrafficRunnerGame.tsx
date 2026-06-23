@@ -1,25 +1,25 @@
 /**
- * Traffic Jam Runner — Real Street Map with Road Constraints
- * - Car moves on actual street map (DMV Test Site area)
- * - Car constrained to roads (gray lines)
- * - Wrap-around at edges to closest parallel road
- * - Coins spawn only on roads
- * - 8 DMV scenarios rotate
+ * Traffic Jam Runner — Camera-Relative Road Navigation
+ * - Car stays centered on screen, map rotates around it
+ * - Roads are 3x car size wide with proper lane positioning
+ * - Car positioned in right 2/3 of road
+ * - All road directions (N-S-E-W) properly rendered
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CANVAS_W = 340;
 const CANVAS_H = 560;
-const MAP_W = 800;
-const MAP_H = 1000;
+const MAP_W = 1200;
+const MAP_H = 1200;
 const LEVEL_TIME = 90;
 const CAR_SIZE = 14;
+const ROAD_WIDTH = CAR_SIZE * 3; // 42px
 const CAR_SPEED = 100; // pixels per second
-const TURN_INTERVAL_MIN = 3000; // 3 seconds
-const TURN_INTERVAL_MAX = 5000; // 5 seconds
+const TURN_INTERVAL_MIN = 3000;
+const TURN_INTERVAL_MAX = 5000;
 const COIN_SIZE = 6;
-const COIN_COUNT = 12;
+const COIN_COUNT = 20;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Coin {
@@ -51,65 +51,51 @@ const SCENARIOS = [
 
 const LEVEL_NAMES = ['Suburban Streets', 'Downtown Rush', 'Highway Merge'];
 
-// ─── Road network definition (approximate grid of roads) ────────────────────
+// ─── Road network (world coordinates) ────────────────────────────────────────
 // Vertical roads (N-S)
 const VERTICAL_ROADS = [
-  { x: 80, lanes: [60, 80, 100] },
-  { x: 180, lanes: [160, 180, 200] },
-  { x: 280, lanes: [260, 280, 300] },
-  { x: 380, lanes: [360, 380, 400] },
-  { x: 480, lanes: [460, 480, 500] },
-  { x: 580, lanes: [560, 580, 600] },
-  { x: 680, lanes: [660, 680, 700] },
+  100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
 ];
 
 // Horizontal roads (E-W)
 const HORIZONTAL_ROADS = [
-  { y: 100, lanes: [80, 100, 120] },
-  { y: 200, lanes: [180, 200, 220] },
-  { y: 300, lanes: [280, 300, 320] },
-  { y: 400, lanes: [380, 400, 420] },
-  { y: 500, lanes: [480, 500, 520] },
-  { y: 600, lanes: [580, 600, 620] },
-  { y: 700, lanes: [680, 700, 720] },
-  { y: 800, lanes: [780, 800, 820] },
-  { y: 900, lanes: [880, 900, 920] },
+  100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
 ];
+
+// ─── Helper: Check if point is on a road ────────────────────────────────────
+function isOnRoad(x: number, y: number, tolerance: number = ROAD_WIDTH / 2): boolean {
+  // Check vertical roads
+  for (const roadX of VERTICAL_ROADS) {
+    if (Math.abs(x - roadX) < tolerance && y >= 0 && y < MAP_H) return true;
+  }
+  // Check horizontal roads
+  for (const roadY of HORIZONTAL_ROADS) {
+    if (Math.abs(y - roadY) < tolerance && x >= 0 && x < MAP_W) return true;
+  }
+  return false;
+}
 
 // ─── Helper: Find closest road to position ────────────────────────────────────
 function findClosestRoad(x: number, y: number): { x: number; y: number; heading: number } {
   let closest = { dist: Infinity, x, y, heading: 0 };
 
   // Check vertical roads
-  VERTICAL_ROADS.forEach((road) => {
-    const dist = Math.abs(x - road.x);
+  for (const roadX of VERTICAL_ROADS) {
+    const dist = Math.abs(x - roadX);
     if (dist < closest.dist && y >= 0 && y < MAP_H) {
-      closest = { dist, x: road.x, y, heading: 0 };
+      closest = { dist, x: roadX, y, heading: 0 };
     }
-  });
+  }
 
   // Check horizontal roads
-  HORIZONTAL_ROADS.forEach((road) => {
-    const dist = Math.abs(y - road.y);
+  for (const roadY of HORIZONTAL_ROADS) {
+    const dist = Math.abs(y - roadY);
     if (dist < closest.dist && x >= 0 && x < MAP_W) {
-      closest = { dist, x, y: road.y, heading: 1 };
+      closest = { dist, x, y: roadY, heading: 1 };
     }
-  });
+  }
 
   return { x: closest.x, y: closest.y, heading: closest.heading };
-}
-
-// ─── Helper: Check if position is on a road ────────────────────────────────────
-function isOnRoad(x: number, y: number, tolerance: number = 25): boolean {
-  // Check vertical roads
-  for (const road of VERTICAL_ROADS) {
-    if (Math.abs(x - road.x) < tolerance && y >= 0 && y < MAP_H) return true;
-  }
-  // Check horizontal roads
-  for (const road of HORIZONTAL_ROADS) {
-    if (Math.abs(y - road.y) < tolerance && x >= 0 && x < MAP_W) return true;
-  }
-  return false;
 }
 
 // ─── Helper: Wrap position to opposite side ────────────────────────────────────
@@ -122,7 +108,6 @@ function wrapPosition(x: number, y: number): { x: number; y: number } {
   if (y < 0) newY = MAP_H - 10;
   if (y > MAP_H) newY = 10;
 
-  // Snap to closest road
   const snapped = findClosestRoad(newX, newY);
   return { x: snapped.x, y: snapped.y };
 }
@@ -145,8 +130,6 @@ export function TrafficRunnerGame() {
   const carXRef = useRef(MAP_W / 2);
   const carYRef = useRef(MAP_H / 2);
   const headingRef = useRef(0); // 0=up, 1=right, 2=down, 3=left
-  const cameraXRef = useRef(0);
-  const cameraYRef = useRef(0);
   const coinsRef = useRef<Coin[]>([]);
   const lastTRef = useRef(0);
   const rafRef = useRef<number | undefined>(undefined);
@@ -157,10 +140,10 @@ export function TrafficRunnerGame() {
   const spawnCoins = useCallback(() => {
     const coins: Coin[] = [];
     let attempts = 0;
-    while (coins.length < COIN_COUNT && attempts < 100) {
+    while (coins.length < COIN_COUNT && attempts < 200) {
       const x = Math.random() * MAP_W;
       const y = Math.random() * MAP_H;
-      if (isOnRoad(x, y, 30)) {
+      if (isOnRoad(x, y, ROAD_WIDTH / 2 + 10)) {
         coins.push({ x, y, collected: false });
       }
       attempts++;
@@ -169,69 +152,79 @@ export function TrafficRunnerGame() {
   }, []);
 
   // ─── Draw functions ────────────────────────────────────────────────────────
-  const drawMap = useCallback((ctx: CanvasRenderingContext2D, offsetX: number, offsetY: number) => {
+  const drawMap = useCallback((ctx: CanvasRenderingContext2D) => {
     // Background
     ctx.fillStyle = '#f5f5f5';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Draw roads (gray lines)
+    // Car is always at center of screen
+    const carScreenX = CANVAS_W / 2;
+    const carScreenY = CANVAS_H / 2;
+
+    // Draw roads relative to car position
     ctx.strokeStyle = '#d0d0d0';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = ROAD_WIDTH;
+    ctx.lineCap = 'round';
 
     // Vertical roads
-    VERTICAL_ROADS.forEach((road) => {
-      const screenX = road.x - offsetX;
-      if (screenX > -50 && screenX < CANVAS_W + 50) {
+    for (const roadX of VERTICAL_ROADS) {
+      const screenX = carScreenX + (roadX - carXRef.current);
+      if (screenX > -ROAD_WIDTH && screenX < CANVAS_W + ROAD_WIDTH) {
         ctx.beginPath();
-        ctx.moveTo(screenX, -offsetY);
-        ctx.lineTo(screenX, CANVAS_H - offsetY);
+        ctx.moveTo(screenX, -ROAD_WIDTH);
+        ctx.lineTo(screenX, CANVAS_H + ROAD_WIDTH);
         ctx.stroke();
       }
-    });
+    }
 
     // Horizontal roads
-    HORIZONTAL_ROADS.forEach((road) => {
-      const screenY = road.y - offsetY;
-      if (screenY > -50 && screenY < CANVAS_H + 50) {
+    for (const roadY of HORIZONTAL_ROADS) {
+      const screenY = carScreenY + (roadY - carYRef.current);
+      if (screenY > -ROAD_WIDTH && screenY < CANVAS_H + ROAD_WIDTH) {
         ctx.beginPath();
-        ctx.moveTo(-offsetX, screenY);
-        ctx.lineTo(CANVAS_W - offsetX, screenY);
+        ctx.moveTo(-ROAD_WIDTH, screenY);
+        ctx.lineTo(CANVAS_W + ROAD_WIDTH, screenY);
         ctx.stroke();
       }
-    });
+    }
 
     // Road markings (dashed center lines)
     ctx.strokeStyle = '#ffff99';
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
 
-    VERTICAL_ROADS.forEach((road) => {
-      const screenX = road.x - offsetX;
-      if (screenX > -50 && screenX < CANVAS_W + 50) {
+    // Vertical road markings
+    for (const roadX of VERTICAL_ROADS) {
+      const screenX = carScreenX + (roadX - carXRef.current);
+      if (screenX > -ROAD_WIDTH && screenX < CANVAS_W + ROAD_WIDTH) {
         ctx.beginPath();
-        ctx.moveTo(screenX, -offsetY);
-        ctx.lineTo(screenX, CANVAS_H - offsetY);
+        ctx.moveTo(screenX, -ROAD_WIDTH);
+        ctx.lineTo(screenX, CANVAS_H + ROAD_WIDTH);
         ctx.stroke();
       }
-    });
+    }
 
-    HORIZONTAL_ROADS.forEach((road) => {
-      const screenY = road.y - offsetY;
-      if (screenY > -50 && screenY < CANVAS_H + 50) {
+    // Horizontal road markings
+    for (const roadY of HORIZONTAL_ROADS) {
+      const screenY = carScreenY + (roadY - carYRef.current);
+      if (screenY > -ROAD_WIDTH && screenY < CANVAS_H + ROAD_WIDTH) {
         ctx.beginPath();
-        ctx.moveTo(-offsetX, screenY);
-        ctx.lineTo(CANVAS_W - offsetX, screenY);
+        ctx.moveTo(-ROAD_WIDTH, screenY);
+        ctx.lineTo(CANVAS_W + ROAD_WIDTH, screenY);
         ctx.stroke();
       }
-    });
+    }
 
     ctx.setLineDash([]);
   }, []);
 
-  const drawCar = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, heading: number) => {
+  const drawCar = useCallback((ctx: CanvasRenderingContext2D) => {
+    const carScreenX = CANVAS_W / 2;
+    const carScreenY = CANVAS_H / 2;
+
     ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate((heading * Math.PI) / 2);
+    ctx.translate(carScreenX, carScreenY);
+    ctx.rotate((headingRef.current * Math.PI) / 2);
 
     // Car body
     ctx.fillStyle = '#22c55e';
@@ -244,11 +237,14 @@ export function TrafficRunnerGame() {
     ctx.restore();
   }, []);
 
-  const drawCoins = useCallback((ctx: CanvasRenderingContext2D, offsetX: number, offsetY: number) => {
+  const drawCoins = useCallback((ctx: CanvasRenderingContext2D) => {
+    const carScreenX = CANVAS_W / 2;
+    const carScreenY = CANVAS_H / 2;
+
     coinsRef.current.forEach((coin) => {
       if (!coin.collected) {
-        const screenX = coin.x - offsetX;
-        const screenY = coin.y - offsetY;
+        const screenX = carScreenX + (coin.x - carXRef.current);
+        const screenY = carScreenY + (coin.y - carYRef.current);
         if (screenX > -20 && screenX < CANVAS_W + 20 && screenY > -20 && screenY < CANVAS_H + 20) {
           ctx.fillStyle = '#fbbf24';
           ctx.beginPath();
@@ -285,7 +281,7 @@ export function TrafficRunnerGame() {
     }
   }, []);
 
-  // ─── Game loop ────────────────────────────────────────────────────────────
+  // ─── Game loop ────────────────────────────────────────────────────────
   const gameLoop = useCallback(() => {
     const now = performance.now();
     const deltaTime = lastTRef.current ? (now - lastTRef.current) / 1000 : 0;
@@ -352,14 +348,6 @@ export function TrafficRunnerGame() {
       }
     });
 
-    // Update camera to follow car
-    cameraXRef.current = carXRef.current - CANVAS_W / 2;
-    cameraYRef.current = carYRef.current - CANVAS_H / 2;
-
-    // Clamp camera
-    cameraXRef.current = Math.max(0, Math.min(MAP_W - CANVAS_W, cameraXRef.current));
-    cameraYRef.current = Math.max(0, Math.min(MAP_H - CANVAS_H, cameraYRef.current));
-
     // Random scenario every 15 seconds
     if (Math.floor(newTime) % 15 === 0 && Math.floor(newTime) !== Math.floor(s.time)) {
       currentScenarioRef.current = Math.floor(Math.random() * SCENARIOS.length);
@@ -381,8 +369,8 @@ export function TrafficRunnerGame() {
     const s = stateRef.current;
 
     if (s.phase === 'idle') {
-      drawMap(ctx, 0, 0);
-      drawCar(ctx, CANVAS_W / 2, CANVAS_H / 2, 0);
+      drawMap(ctx);
+      drawCar(ctx);
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillRect(0, CANVAS_H / 2 - 70, CANVAS_W, 120);
       ctx.strokeStyle = '#22c55e';
@@ -402,13 +390,9 @@ export function TrafficRunnerGame() {
       return;
     }
 
-    drawMap(ctx, cameraXRef.current, cameraYRef.current);
-    drawCoins(ctx, cameraXRef.current, cameraYRef.current);
-
-    const screenCarX = carXRef.current - cameraXRef.current;
-    const screenCarY = carYRef.current - cameraYRef.current;
-    drawCar(ctx, screenCarX, screenCarY, headingRef.current);
-
+    drawMap(ctx);
+    drawCoins(ctx);
+    drawCar(ctx);
     drawHUD(ctx, s);
 
     // Draw crashed overlay
@@ -460,8 +444,6 @@ export function TrafficRunnerGame() {
     carXRef.current = startRoad.x;
     carYRef.current = startRoad.y;
     headingRef.current = 0;
-    cameraXRef.current = Math.max(0, Math.min(MAP_W - CANVAS_W, carXRef.current - CANVAS_W / 2));
-    cameraYRef.current = Math.max(0, Math.min(MAP_H - CANVAS_H, carYRef.current - CANVAS_H / 2));
     nextTurnTimeRef.current = performance.now() + TURN_INTERVAL_MIN;
     currentScenarioRef.current = Math.floor(Math.random() * SCENARIOS.length);
 
