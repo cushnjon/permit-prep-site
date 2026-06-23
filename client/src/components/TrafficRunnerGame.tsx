@@ -185,6 +185,7 @@ export function TrafficRunnerGame() {
   const currentScenarioRef = useRef(0);
   const atIntersectionRef = useRef<Intersection | null>(null);
   const yieldingRef = useRef(false);
+  const keysRef = useRef<{ left: boolean; right: boolean }>({ left: false, right: false });
 
   // Load map image
   useEffect(() => {
@@ -380,6 +381,16 @@ export function TrafficRunnerGame() {
         ctx.fillStyle = yieldingRef.current ? '#22c55e' : '#ef4444';
         ctx.font = 'bold 10px Arial';
         ctx.fillText(yieldingRef.current ? '✓ YIELDING' : '⚠ AT INTERSECTION', CANVAS_W / 2, CANVAS_H - 8);
+        
+        // Show turn instructions
+        ctx.fillStyle = '#666';
+        ctx.font = '9px Arial';
+        if (atIntersectionRef.current?.allowedTurns.includes('left')) {
+          ctx.fillText('← LEFT', 20, CANVAS_H - 8);
+        }
+        if (atIntersectionRef.current?.allowedTurns.includes('right')) {
+          ctx.fillText('RIGHT →', CANVAS_W - 50, CANVAS_H - 8);
+        }
       }
     }
   }, []);
@@ -404,7 +415,22 @@ export function TrafficRunnerGame() {
       return;
     }
 
-    // Move car forward
+    // Handle intersection-based turns
+    const nearInter = findNearestIntersection(carXRef.current, carYRef.current);
+    atIntersectionRef.current = nearInter;
+    
+    if (nearInter && nearInter.allowedTurns.length > 0) {
+      if (keysRef.current.left && nearInter.allowedTurns.includes('left')) {
+        headingRef.current = (headingRef.current - 1 + 4) % 4;
+        keysRef.current.left = false; // Consume input
+      }
+      if (keysRef.current.right && nearInter.allowedTurns.includes('right')) {
+        headingRef.current = (headingRef.current + 1) % 4;
+        keysRef.current.right = false; // Consume input
+      }
+    }
+
+    // Move car forward (constant movement)
     const moveDistance = CAR_SPEED * deltaTime;
     const dx = [0, moveDistance, 0, -moveDistance][headingRef.current];
     const dy = [-moveDistance, 0, moveDistance, 0][headingRef.current];
@@ -433,9 +459,8 @@ export function TrafficRunnerGame() {
     carXRef.current = newX;
     carYRef.current = newY;
 
-    // Check intersection
-    const nearInter = findNearestIntersection(newX, newY);
-    atIntersectionRef.current = nearInter;
+    // Check intersection (already found above)
+    // nearInter already set from turn handling above
 
     // Check if crossing intersection without yielding
     if (nearInter && !yieldingRef.current) {
@@ -603,6 +628,24 @@ export function TrafficRunnerGame() {
     if (atIntersectionRef.current && atIntersectionRef.current.allowedTurns.includes('right')) {
       headingRef.current = (headingRef.current + 1) % 4;
     }
+  }, []);
+
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') keysRef.current.left = true;
+      if (e.key === 'ArrowRight') keysRef.current.right = true;
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') keysRef.current.left = false;
+      if (e.key === 'ArrowRight') keysRef.current.right = false;
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
