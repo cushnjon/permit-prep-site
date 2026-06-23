@@ -412,7 +412,7 @@ export default function TrafficRunnerGame() {
 
     draw();
     rafRef.current = requestAnimationFrame(loop);
-  }, [draw]);
+  }, [draw, playerStopped]);
 
   // ─── Start / stop RAF ──────────────────────────────────────
   useEffect(() => {
@@ -420,7 +420,7 @@ export default function TrafficRunnerGame() {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [loop]);
+  }, [loop, playerStopped]);
 
   // ─── Button handlers ───────────────────────────────────────
   const handlePlay = useCallback(() => {
@@ -437,7 +437,7 @@ export default function TrafficRunnerGame() {
     g.nextTurnIn = 3 + Math.random() * 2;
     setPhase('playing');
     setPlayerStopped(false);
-  }, []);
+  }, [spawnCoins, spawnAI]);
 
   const handleStop = useCallback(() => {
     const g = gs.current;
@@ -457,9 +457,9 @@ export default function TrafficRunnerGame() {
 
   const handlePause = useCallback(() => {
     if (gs.current.phase === 'playing') {
-      setPlayerStopped(!playerStopped);
+      setPlayerStopped(prev => !prev);
     }
-  }, [playerStopped]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-3">
