@@ -1,133 +1,191 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 
-const CANVAS_W = 320;
-const CANVAS_H = 420;
-const CAR_W = 12;
-const CAR_H = 20;
-const ROAD_WIDTH = 44;
-const INTERSECTION_RADIUS = 48;
-const PLAYER_SPEED = 1.4;
+// ─── Constants ─────────────────────────────────────────────
+const CANVAS_W = 560;
+const CANVAS_H = 500;
+const PLAYER_SPEED = 3.75; // Increased from 2.5 (50% faster)
+const AI_SPEED = 2.5;
+const CAR_W = 14;
+const CAR_H = 10;
+const INTERSECTION_RADIUS = 50;
 
-// ─── Road network (world coords) ──────────────────────────────
-// Each road: array of [x,y] waypoints
-const ROADS: { name: string; pts: [number, number][] }[] = [
-  { name: 'N Lind Ave',      pts: [[100, -300], [100, 700]] },
-  { name: 'N Rogers Ave',    pts: [[160, -300], [160, 700]] },
-  { name: 'W Foster Ave',    pts: [[220, -300], [220, 700]] },
-  { name: 'N Lockwood Ave',  pts: [[40,  -300], [40,  700]] },
-  { name: 'N Liano Ave',     pts: [[280, -300], [280, 700]] },
-  { name: 'W Winona St',     pts: [[-300, 80],  [700, 80]]  },
-  { name: 'W Foster St',     pts: [[-300, 150], [700, 150]] },
-  { name: 'W Lovejoy Ave',   pts: [[-300, 220], [700, 220]] },
-  { name: 'W Liano Ave',     pts: [[-300, 290], [700, 290]] },
-  { name: 'W Carmen Ave',    pts: [[-300, 360], [700, 360]] },
-  { name: 'Diagonal NW-SE',  pts: [[-100, -100],[400, 400]] },
+type Road = 
+  | { type: 'vertical'; x: number; lanes: number }
+  | { type: 'horizontal'; y: number; lanes: number };
+
+// ─── Realistic street map with more roads ─────────────────
+const ROADS: Road[] = [
+  // Vertical roads (north-south)
+  { type: 'vertical', x: 100, lanes: 2 },
+  { type: 'vertical', x: 200, lanes: 2 },
+  { type: 'vertical', x: 300, lanes: 2 },
+  { type: 'vertical', x: 400, lanes: 2 },
+  { type: 'vertical', x: 500, lanes: 2 },
+  
+  // Horizontal roads (east-west)
+  { type: 'horizontal', y: 100, lanes: 2 },
+  { type: 'horizontal', y: 200, lanes: 2 },
+  { type: 'horizontal', y: 300, lanes: 2 },
+  { type: 'horizontal', y: 400, lanes: 2 },
 ];
 
-// ─── Intersections ────────────────────────────────────────────
-const INTERSECTIONS: { x: number; y: number; type: 'light' | 'sign' }[] = [
-  { x: 100, y: 80,  type: 'light' },
-  { x: 160, y: 80,  type: 'sign'  },
-  { x: 220, y: 80,  type: 'light' },
-  { x: 40,  y: 150, type: 'sign'  },
-  { x: 100, y: 150, type: 'light' },
-  { x: 160, y: 150, type: 'sign'  },
-  { x: 220, y: 220, type: 'light' },
-  { x: 100, y: 220, type: 'sign'  },
-  { x: 160, y: 290, type: 'light' },
-  { x: 220, y: 290, type: 'sign'  },
-  { x: 100, y: 360, type: 'light' },
-  { x: 160, y: 360, type: 'sign'  },
+// ─── Intersections with realistic traffic control placement ─
+const INTERSECTIONS = [
+  // Row 1
+  { x: 100, y: 100, hasLight: true, hasStop: false },
+  { x: 200, y: 100, hasLight: false, hasStop: true },
+  { x: 300, y: 100, hasLight: true, hasStop: false },
+  { x: 400, y: 100, hasLight: false, hasStop: true },
+  { x: 500, y: 100, hasLight: true, hasStop: false },
+  
+  // Row 2
+  { x: 100, y: 200, hasLight: false, hasStop: true },
+  { x: 200, y: 200, hasLight: true, hasStop: false },
+  { x: 300, y: 200, hasLight: false, hasStop: true },
+  { x: 400, y: 200, hasLight: true, hasStop: false },
+  { x: 500, y: 200, hasLight: false, hasStop: true },
+  
+  // Row 3
+  { x: 100, y: 300, hasLight: true, hasStop: false },
+  { x: 200, y: 300, hasLight: false, hasStop: true },
+  { x: 300, y: 300, hasLight: true, hasStop: false },
+  { x: 400, y: 300, hasLight: false, hasStop: true },
+  { x: 500, y: 300, hasLight: true, hasStop: false },
+  
+  // Row 4
+  { x: 100, y: 400, hasLight: false, hasStop: true },
+  { x: 200, y: 400, hasLight: true, hasStop: false },
+  { x: 300, y: 400, hasLight: false, hasStop: true },
+  { x: 400, y: 400, hasLight: true, hasStop: false },
+  { x: 500, y: 400, hasLight: false, hasStop: true },
 ];
 
 const SCENARIOS = [
-  { name: 'Unprotected Left Turn',  law: 'Yield to ALL oncoming traffic before turning left' },
-  { name: 'Right Turn—Pedestrian',  law: 'Yield to pedestrians crossing the street' },
-  { name: '4-Way Stop',             law: 'First to stop has right-of-way; yield if equal' },
-  { name: 'Emergency Vehicle',      law: 'Pull over immediately for sirens/lights' },
-  { name: 'T-Intersection',         law: 'Vehicle on main road has right-of-way' },
-  { name: 'Roundabout Entry',       law: 'Yield to traffic already in the roundabout' },
-  { name: 'Driveway Exit',          law: 'Yield to all traffic on the main road' },
-  { name: 'Green Light Left Turn',  law: 'Yield to oncoming traffic even with green light' },
+  'Unprotected Left Turn',
+  'Right Turn—Pedestrian',
+  '4-Way Stop',
+  'Emergency Vehicle',
+  'T-Intersection',
+  'Roundabout Entry',
+  'Driveway Exit',
+  'Green Light Left Turn',
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────
-function ptOnSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
-  const dx = bx - ax, dy = by - ay;
-  const len2 = dx * dx + dy * dy;
-  if (len2 === 0) return { dist: Math.hypot(px - ax, py - ay), cx: ax, cy: ay };
-  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
-  const cx = ax + t * dx, cy = ay + t * dy;
-  return { dist: Math.hypot(px - cx, py - cy), cx, cy };
+interface Coin {
+  x: number;
+  y: number;
+  collected: boolean;
 }
 
-function closestRoad(wx: number, wy: number) {
-  let best = { dist: Infinity, cx: wx, cy: wy, heading: 0 };
+interface AIVehicle {
+  x: number;
+  y: number;
+  heading: number;
+  speed: number;
+}
+
+// ─── Helper: Check if point is on a road ───────────────────
+function isOnRoad(x: number, y: number): boolean {
+  const ROAD_WIDTH = 42;
   for (const road of ROADS) {
-    for (let i = 0; i < road.pts.length - 1; i++) {
-      const [ax, ay] = road.pts[i], [bx, by] = road.pts[i + 1];
-      const r = ptOnSegment(wx, wy, ax, ay, bx, by);
-      if (r.dist < best.dist) {
-        best = { dist: r.dist, cx: r.cx, cy: r.cy, heading: Math.atan2(by - ay, bx - ax) };
-      }
+    if (road.type === 'vertical' && 'x' in road) {
+      if (Math.abs(x - road.x) < ROAD_WIDTH / 2) return true;
+    } else if (road.type === 'horizontal' && 'y' in road) {
+      if (Math.abs(y - road.y) < ROAD_WIDTH / 2) return true;
     }
   }
-  return best;
+  return false;
 }
 
-function isOnRoad(wx: number, wy: number) {
-  return closestRoad(wx, wy).dist < ROAD_WIDTH / 2;
+// ─── Helper: Find closest road point ───────────────────────
+function findClosestRoadPoint(x: number, y: number) {
+  let closest = { x, y, heading: 0 };
+  let minDist = Infinity;
+
+  for (const road of ROADS) {
+    let px, py, heading;
+    if (road.type === 'vertical' && 'x' in road) {
+      px = road.x;
+      py = y;
+      heading = 0;
+    } else if (road.type === 'horizontal' && 'y' in road) {
+      px = x;
+      py = road.y;
+      heading = Math.PI / 2;
+    } else {
+      continue;
+    }
+    const dist = Math.hypot(px - x, py - y);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = { x: px, y: py, heading };
+    }
+  }
+  return closest;
 }
 
-function wrapToRoad(wx: number, wy: number) {
-  const r = closestRoad(wx, wy);
-  return { x: r.cx, y: r.cy, heading: r.heading };
+// ─── Helper: Wrap to road on edge ─────────────────────────
+function wrapToRoad(x: number, y: number) {
+  const WORLD_W = 600;
+  const WORLD_H = 500;
+  let wx = x;
+  let wy = y;
+
+  if (wx < 0) wx += WORLD_W;
+  if (wx > WORLD_W) wx -= WORLD_W;
+  if (wy < 0) wy += WORLD_H;
+  if (wy > WORLD_H) wy -= WORLD_H;
+
+  return findClosestRoadPoint(wx, wy);
 }
 
-// ─── Types ────────────────────────────────────────────────────
-interface Coin { x: number; y: number; collected: boolean }
-interface AIVehicle { x: number; y: number; heading: number; speed: number; roadIdx: number; t: number }
-
+// ─── Spawn coins on roads ─────────────────────────────────
 function spawnCoins(): Coin[] {
   const coins: Coin[] = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 8; i++) {
     const road = ROADS[Math.floor(Math.random() * ROADS.length)];
-    const t = 0.1 + Math.random() * 0.8;
-    const [ax, ay] = road.pts[0], [bx, by] = road.pts[road.pts.length - 1];
-    coins.push({ x: ax + (bx - ax) * t, y: ay + (by - ay) * t, collected: false });
+    let x, y;
+    if (road.type === 'vertical') {
+      x = road.x + (Math.random() - 0.5) * 20;
+      y = Math.random() * 500;
+    } else {
+      x = Math.random() * 600;
+      y = road.y + (Math.random() - 0.5) * 20;
+    }
+    coins.push({ x, y, collected: false });
   }
   return coins;
 }
 
+// ─── Spawn AI vehicles on roads ────────────────────────────
 function spawnAI(): AIVehicle[] {
-  const vehicles: AIVehicle[] = [];
-  for (let i = 0; i < 6; i++) {
-    const roadIdx = Math.floor(Math.random() * ROADS.length);
-    const road = ROADS[roadIdx];
-    const t = Math.random();
-    const [ax, ay] = road.pts[0], [bx, by] = road.pts[road.pts.length - 1];
-    vehicles.push({
-      x: ax + (bx - ax) * t,
-      y: ay + (by - ay) * t,
-      heading: Math.atan2(by - ay, bx - ax),
-      speed: 0.8 + Math.random() * 0.8,
-      roadIdx,
-      t,
-    });
+  const ai: AIVehicle[] = [];
+  for (let i = 0; i < 5; i++) {
+    const road = ROADS[Math.floor(Math.random() * ROADS.length)];
+    let x, y, heading;
+    if (road.type === 'vertical') {
+      x = road.x;
+      y = Math.random() * 500;
+      heading = Math.random() < 0.5 ? -Math.PI / 2 : Math.PI / 2;
+    } else {
+      x = Math.random() * 600;
+      y = road.y;
+      heading = Math.random() < 0.5 ? 0 : Math.PI;
+    }
+    ai.push({ x, y, heading, speed: AI_SPEED });
   }
-  return vehicles;
+  return ai;
 }
 
-// ─── Component ────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────
 export default function TrafficRunnerGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
 
-  // All mutable game state lives in a ref so the RAF loop reads fresh values
   const gs = useRef({
     phase: 'idle' as 'idle' | 'playing' | 'crashed',
-    px: 100, py: 400,          // player world position
-    heading: -Math.PI / 2,     // pointing up (north)
+    px: 100, py: 400,
+    heading: -Math.PI / 2,
     score: 0,
     time: 0,
     coinsCollected: 0,
@@ -135,119 +193,132 @@ export default function TrafficRunnerGame() {
     lightTime: 0,
     coins: [] as Coin[],
     ai: [] as AIVehicle[],
-    // random turn timer
     nextTurnIn: 3 + Math.random() * 2,
     turnTimer: 0,
   });
 
-  // React state only used to force button re-render
   const [phase, setPhase] = useState<'idle' | 'playing' | 'crashed'>('idle');
   const [playerStopped, setPlayerStopped] = useState(false);
 
-  // ─── Draw helpers ──────────────────────────────────────────
+  // ─── Draw function ────────────────────────────────────────
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
     const g = gs.current;
 
-    const ox = CANVAS_W / 2 - g.px;
-    const oy = CANVAS_H / 2 - g.py;
-
-    // Background
+    // Clear
     ctx.fillStyle = '#e8f5e9';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Roads (filled wide)
-    ctx.strokeStyle = '#c8c8c8';
-    ctx.lineWidth = ROAD_WIDTH;
+    // Draw roads (camera-relative)
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 42;
     ctx.lineCap = 'round';
     for (const road of ROADS) {
-      ctx.beginPath();
-      ctx.moveTo(road.pts[0][0] + ox, road.pts[0][1] + oy);
-      for (let i = 1; i < road.pts.length; i++) {
-        ctx.lineTo(road.pts[i][0] + ox, road.pts[i][1] + oy);
+      if (road.type === 'vertical') {
+        ctx.beginPath();
+        ctx.moveTo(CANVAS_W / 2 + (road.x - g.px), 0);
+        ctx.lineTo(CANVAS_W / 2 + (road.x - g.px), CANVAS_H);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_H / 2 + (road.y - g.py));
+        ctx.lineTo(CANVAS_W, CANVAS_H / 2 + (road.y - g.py));
+        ctx.stroke();
       }
-      ctx.stroke();
     }
 
-    // Road center dashes
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 1.5;
+    // Draw road center lines
+    ctx.strokeStyle = '#ffeb3b';
+    ctx.lineWidth = 2;
     ctx.setLineDash([8, 8]);
     for (const road of ROADS) {
-      ctx.beginPath();
-      ctx.moveTo(road.pts[0][0] + ox, road.pts[0][1] + oy);
-      for (let i = 1; i < road.pts.length; i++) {
-        ctx.lineTo(road.pts[i][0] + ox, road.pts[i][1] + oy);
+      if (road.type === 'vertical') {
+        ctx.beginPath();
+        ctx.moveTo(CANVAS_W / 2 + (road.x - g.px), 0);
+        ctx.lineTo(CANVAS_W / 2 + (road.x - g.px), CANVAS_H);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_H / 2 + (road.y - g.py));
+        ctx.lineTo(CANVAS_W, CANVAS_H / 2 + (road.y - g.py));
+        ctx.stroke();
       }
-      ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    // Intersections
-    const isGreen = (g.lightTime % 30) >= 15;
+    // Draw intersections with traffic control
     for (const inter of INTERSECTIONS) {
-      const sx = inter.x + ox, sy = inter.y + oy;
-      if (sx < -20 || sx > CANVAS_W + 20 || sy < -20 || sy > CANVAS_H + 20) continue;
-      if (inter.type === 'light') {
-        // traffic light pole
-        ctx.fillStyle = '#333';
-        ctx.fillRect(sx - 2, sy - 14, 4, 14);
-        // light housing
-        ctx.fillStyle = '#222';
+      const sx = CANVAS_W / 2 + (inter.x - g.px);
+      const sy = CANVAS_H / 2 + (inter.y - g.py);
+
+      // Draw intersection square
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fillRect(sx - 25, sy - 25, 50, 50);
+
+      // Draw traffic lights at all 4 corners
+      if (inter.hasLight) {
+        const isGreen = (g.lightTime % 30) < 15;
+        const corners = [
+          { x: sx - 25, y: sy - 25 }, // top-left
+          { x: sx + 25, y: sy - 25 }, // top-right
+          { x: sx - 25, y: sy + 25 }, // bottom-left
+          { x: sx + 25, y: sy + 25 }, // bottom-right
+        ];
+        for (const corner of corners) {
+          ctx.fillStyle = '#333';
+          ctx.fillRect(corner.x - 6, corner.y - 6, 12, 12);
+          ctx.fillStyle = isGreen ? '#22c55e' : '#ef4444';
+          ctx.beginPath();
+          ctx.arc(corner.x, corner.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Draw stop sign at bottom-right corner
+      if (inter.hasStop) {
+        const sx_br = sx + 25;
+        const sy_br = sy + 25;
+        ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.roundRect(sx - 7, sy - 26, 14, 14, 3);
-        ctx.fill();
-        // light color
-        ctx.fillStyle = isGreen ? '#22c55e' : '#ef4444';
-        ctx.beginPath();
-        ctx.arc(sx, sy - 19, 4, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // stop sign
-        ctx.fillStyle = '#dc2626';
-        ctx.beginPath();
-        const r = 7, sides = 8;
-        for (let i = 0; i < sides; i++) {
-          const a = (i / sides) * Math.PI * 2 - Math.PI / 8;
-          i === 0 ? ctx.moveTo(sx + r * Math.cos(a), sy - 14 + r * Math.sin(a))
-                  : ctx.lineTo(sx + r * Math.cos(a), sy - 14 + r * Math.sin(a));
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const x = sx_br + Math.cos(angle) * 8;
+          const y = sy_br + Math.sin(angle) * 8;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
         }
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 5px Arial';
+        ctx.font = 'bold 6px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('STOP', sx, sy - 11);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('S', sx_br, sy_br);
       }
     }
 
-    // Coins
+    // Draw coins
     for (const coin of g.coins) {
-      if (coin.collected) continue;
-      const sx = coin.x + ox, sy = coin.y + oy;
-      if (sx < -10 || sx > CANVAS_W + 10 || sy < -10 || sy > CANVAS_H + 10) continue;
-      ctx.fillStyle = '#f59e0b';
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(sx, sy, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 5px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('$', sx, sy + 2);
+      if (!coin.collected) {
+        const cx = CANVAS_W / 2 + (coin.x - g.px);
+        const cy = CANVAS_H / 2 + (coin.y - g.py);
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
-    // AI vehicles
+    // Draw AI vehicles
     for (const v of g.ai) {
-      const sx = v.x + ox, sy = v.y + oy;
-      if (sx < -20 || sx > CANVAS_W + 20 || sy < -20 || sy > CANVAS_H + 20) continue;
+      const vx = CANVAS_W / 2 + (v.x - g.px);
+      const vy = CANVAS_H / 2 + (v.y - g.py);
       ctx.save();
-      ctx.translate(sx, sy);
+      ctx.translate(vx, vy);
       ctx.rotate(v.heading + Math.PI / 2);
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
@@ -268,7 +339,6 @@ export default function TrafficRunnerGame() {
     ctx.fill();
     ctx.fillStyle = '#86efac';
     ctx.fillRect(-CAR_W / 2 + 2, -CAR_H / 2 + 2, CAR_W - 4, 4);
-    // headlights
     ctx.fillStyle = '#fef08a';
     ctx.fillRect(-CAR_W / 2 + 1, -CAR_H / 2 - 2, 3, 3);
     ctx.fillRect(CAR_W / 2 - 4, -CAR_H / 2 - 2, 3, 3);
@@ -288,16 +358,13 @@ export default function TrafficRunnerGame() {
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 9px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(scenario.name, CANVAS_W / 2, 14);
-    ctx.fillStyle = '#d1d5db';
-    ctx.font = '8px Arial';
-    ctx.fillText(scenario.law, CANVAS_W / 2, 28);
+    ctx.fillText(`⚠ ${scenario}`, CANVAS_W / 2, 30);
 
     // Idle overlay
     if (g.phase === 'idle') {
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = '#d1fae5';
       ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('Street Navigation', CANVAS_W / 2, CANVAS_H / 2 - 20);
@@ -342,7 +409,6 @@ export default function TrafficRunnerGame() {
         if (g.turnTimer >= g.nextTurnIn) {
           g.turnTimer = 0;
           g.nextTurnIn = 3 + Math.random() * 2;
-          // 50/50 left or right — only at intersections
           const nearInter = INTERSECTIONS.find(
             (inter) => Math.hypot(g.px - inter.x, g.py - inter.y) < INTERSECTION_RADIUS
           );
@@ -362,7 +428,6 @@ export default function TrafficRunnerGame() {
           g.px = nx;
           g.py = ny;
         } else {
-          // Snap back to nearest road and align heading
           const snap = wrapToRoad(g.px, g.py);
           g.px = snap.x;
           g.py = snap.y;
@@ -378,43 +443,44 @@ export default function TrafficRunnerGame() {
           g.score += 10;
         }
       }
-      // Respawn coins if all collected
-      if (g.coins.every((c) => c.collected)) {
-        g.coins = spawnCoins();
+
+      // AI movement
+      for (const ai of g.ai) {
+        ai.x += Math.cos(ai.heading) * ai.speed;
+        ai.y += Math.sin(ai.heading) * ai.speed;
+
+        // Wrap AI
+        if (ai.x < 0) ai.x += 600;
+        if (ai.x > 600) ai.x -= 600;
+        if (ai.y < 0) ai.y += 500;
+        if (ai.y > 500) ai.y -= 500;
+
+        // Random turns at intersections
+        const nearInter = INTERSECTIONS.find(
+          (inter) => Math.hypot(ai.x - inter.x, ai.y - inter.y) < 30
+        );
+        if (nearInter && Math.random() < 0.1) {
+          const turn = Math.random() < 0.5 ? -Math.PI / 2 : Math.PI / 2;
+          ai.heading += turn;
+        }
       }
 
-      // Move AI vehicles
-      for (const v of g.ai) {
-        const road = ROADS[v.roadIdx];
-        v.t += v.speed * dt * 0.08;
-        if (v.t > 1) {
-          v.t = 0;
-          v.roadIdx = Math.floor(Math.random() * ROADS.length);
-        }
-        const [ax, ay] = road.pts[0];
-        const [bx, by] = road.pts[road.pts.length - 1];
-        v.x = ax + (bx - ax) * v.t;
-        v.y = ay + (by - ay) * v.t;
-        v.heading = Math.atan2(by - ay, bx - ax);
-
-        // Collision
-        if (Math.hypot(g.px - v.x, g.py - v.y) < CAR_W + 4) {
+      // Collision detection
+      for (const ai of g.ai) {
+        if (Math.hypot(g.px - ai.x, g.py - ai.y) < 20) {
           g.phase = 'crashed';
           setPhase('crashed');
         }
       }
 
-      // Score for surviving
-      if (Math.floor(g.time) % 5 === 0 && g.time % 1 < dt * 2) {
-        g.score += 1;
-      }
+      // Bonus for survival
+      g.score += 1;
     }
 
     draw();
     rafRef.current = requestAnimationFrame(loop);
   }, [draw, playerStopped]);
 
-  // ─── Start / stop RAF ──────────────────────────────────────
   useEffect(() => {
     rafRef.current = requestAnimationFrame(loop);
     return () => {
@@ -462,32 +528,31 @@ export default function TrafficRunnerGame() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-4">
       <canvas
         ref={canvasRef}
         width={CANVAS_W}
         height={CANVAS_H}
-        className="rounded-lg border border-gray-300 shadow-md block"
+        className="border-4 border-dashed border-yellow-400 bg-green-100 rounded"
       />
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <button
           onClick={handlePlay}
           disabled={phase === 'playing'}
-          className="px-5 py-2 bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white rounded-lg font-bold text-sm transition-colors"
+          className="px-4 py-2 bg-green-500 text-white rounded font-bold hover:bg-green-600 disabled:bg-gray-400"
         >
           ▶ Play Car
         </button>
         <button
           onClick={handlePause}
           disabled={phase !== 'playing'}
-          className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-40 text-white rounded-lg font-bold text-sm transition-colors"
+          className="px-4 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600 disabled:bg-gray-400"
         >
-          {playerStopped ? '▶ Resume' : '⏸ Pause'}
+          ⏸ Pause
         </button>
         <button
           onClick={handleStop}
-          disabled={phase === 'idle'}
-          className="px-5 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white rounded-lg font-bold text-sm transition-colors"
+          className="px-4 py-2 bg-red-500 text-white rounded font-bold hover:bg-red-600"
         >
           ⏹ Stop Car
         </button>
