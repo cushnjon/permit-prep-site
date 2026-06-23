@@ -142,6 +142,7 @@ export default function TrafficRunnerGame() {
 
   // React state only used to force button re-render
   const [phase, setPhase] = useState<'idle' | 'playing' | 'crashed'>('idle');
+  const [playerStopped, setPlayerStopped] = useState(false);
 
   // ─── Draw helpers ──────────────────────────────────────────
   const draw = useCallback(() => {
@@ -335,34 +336,38 @@ export default function TrafficRunnerGame() {
       g.lightTime += dt;
       g.scenarioIdx = Math.floor(g.time / 15);
 
-      // Random turn timer
-      g.turnTimer += dt;
-      if (g.turnTimer >= g.nextTurnIn) {
-        g.turnTimer = 0;
-        g.nextTurnIn = 3 + Math.random() * 2;
-        // 50/50 left or right — only at intersections
-        const nearInter = INTERSECTIONS.find(
-          (inter) => Math.hypot(g.px - inter.x, g.py - inter.y) < INTERSECTION_RADIUS
-        );
-        if (nearInter) {
-          const turn = Math.random() < 0.5 ? -Math.PI / 2 : Math.PI / 2;
-          g.heading += turn;
+      // Random turn timer (only if player not stopped)
+      if (!playerStopped) {
+        g.turnTimer += dt;
+        if (g.turnTimer >= g.nextTurnIn) {
+          g.turnTimer = 0;
+          g.nextTurnIn = 3 + Math.random() * 2;
+          // 50/50 left or right — only at intersections
+          const nearInter = INTERSECTIONS.find(
+            (inter) => Math.hypot(g.px - inter.x, g.py - inter.y) < INTERSECTION_RADIUS
+          );
+          if (nearInter) {
+            const turn = Math.random() < 0.5 ? -Math.PI / 2 : Math.PI / 2;
+            g.heading += turn;
+          }
         }
       }
 
-      // Move forward
-      const nx = g.px + Math.cos(g.heading) * PLAYER_SPEED;
-      const ny = g.py + Math.sin(g.heading) * PLAYER_SPEED;
+      // Move forward (only if player not stopped)
+      if (!playerStopped) {
+        const nx = g.px + Math.cos(g.heading) * PLAYER_SPEED;
+        const ny = g.py + Math.sin(g.heading) * PLAYER_SPEED;
 
-      if (isOnRoad(nx, ny)) {
-        g.px = nx;
-        g.py = ny;
-      } else {
-        // Snap back to nearest road and align heading
-        const snap = wrapToRoad(g.px, g.py);
-        g.px = snap.x;
-        g.py = snap.y;
-        g.heading = snap.heading;
+        if (isOnRoad(nx, ny)) {
+          g.px = nx;
+          g.py = ny;
+        } else {
+          // Snap back to nearest road and align heading
+          const snap = wrapToRoad(g.px, g.py);
+          g.px = snap.x;
+          g.py = snap.y;
+          g.heading = snap.heading;
+        }
       }
 
       // Coin collection
@@ -436,7 +441,12 @@ export default function TrafficRunnerGame() {
   const handleStop = useCallback(() => {
     gs.current.phase = 'idle';
     setPhase('idle');
+    setPlayerStopped(false);
   }, []);
+
+  const handlePause = useCallback(() => {
+    setPlayerStopped(!playerStopped);
+  }, [playerStopped]);
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -453,6 +463,13 @@ export default function TrafficRunnerGame() {
           className="px-5 py-2 bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white rounded-lg font-bold text-sm transition-colors"
         >
           ▶ Play Car
+        </button>
+        <button
+          onClick={handlePause}
+          disabled={phase !== 'playing'}
+          className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-40 text-white rounded-lg font-bold text-sm transition-colors"
+        >
+          {playerStopped ? '▶ Resume' : '⏸ Pause'}
         </button>
         <button
           onClick={handleStop}
