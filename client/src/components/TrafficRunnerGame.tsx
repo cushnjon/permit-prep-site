@@ -3,44 +3,35 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 const TrafficRunnerGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'crashed'>('idle');
-  const [score, setScore] = useState(0);
-  const [time, setTime] = useState(0);
-  const [coins, setCoins] = useState(0);
   const [playerStopped, setPlayerStopped] = useState(false);
-  const stateRef = useRef({ score: 0, time: 0, coins: 0, gameState: 'idle' as const });
+  const gameStateRef = useRef({
+    playerX: 400,
+    playerY: 400,
+    playerHeading: -Math.PI / 2,
+    playerSpeed: 3.75,
+    playerStopped: false,
+    aiVehicles: [] as Array<{ x: number; y: number; heading: number; speed: number }>,
+    coins: [] as Array<{ x: number; y: number; collected: boolean }>,
+    scenarioIndex: 0,
+    scenarioTime: 0,
+    trafficLightTime: 0,
+    gameState: 'idle' as 'idle' | 'playing' | 'crashed',
+    score: 0,
+    time: 0,
+    lastTurnTime: 0,
+  });
   const rafRef = useRef<number | undefined>(undefined);
 
-  // ─── DMV Test Site Map Layout (actual coordinates) ───────────────────
-  // Vertical roads (N-S): N Lind Ave, N Rogers Ave, Foster Ave, N Lockwood Ave, N Liano Ave
-  // Horizontal roads (E-W): W Winona St, W Foster Ave, W Lovejoy Ave, W Liano Ave, W Carmen Ave
-  // Plus diagonal roads and curves
+  // Larger map with 8x8 grid
+  const GRID_SIZE = 100;
+  const GRID_COLS = 8;
+  const GRID_ROWS = 8;
+  const ZOOM = 2;
+  const CANVAS_WIDTH = 800;
+  const CANVAS_HEIGHT = 600;
 
-  const roads = [
-    // Vertical roads (N-S)
-    { x1: 100, y1: 0, x2: 100, y2: 500, name: 'N Lind Ave' },
-    { x1: 200, y1: 0, x2: 200, y2: 500, name: 'N Rogers Ave' },
-    { x1: 300, y1: 0, x2: 300, y2: 500, name: 'Foster Ave' },
-    { x1: 400, y1: 0, x2: 400, y2: 500, name: 'N Lockwood Ave' },
-    { x1: 500, y1: 0, x2: 500, y2: 500, name: 'N Liano Ave' },
-
-    // Horizontal roads (E-W)
-    { x1: 0, y1: 100, x2: 600, y2: 100, name: 'W Winona St' },
-    { x1: 0, y1: 200, x2: 600, y2: 200, name: 'W Foster Ave' },
-    { x1: 0, y1: 300, x2: 600, y2: 300, name: 'W Lovejoy Ave' },
-    { x1: 0, y1: 400, x2: 600, y2: 400, name: 'W Liano Ave' },
-    { x1: 0, y1: 500, x2: 600, y2: 500, name: 'W Carmen Ave' },
-
-    // Diagonal roads (approximation of the actual map)
-    { x1: 150, y1: 0, x2: 50, y2: 200, name: 'Diagonal 1' },
-    { x1: 450, y1: 0, x2: 550, y2: 200, name: 'Diagonal 2' },
-  ];
-
-  const intersections = [
-    { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 100 }, { x: 400, y: 100 }, { x: 500, y: 100 },
-    { x: 100, y: 200 }, { x: 200, y: 200 }, { x: 300, y: 200 }, { x: 400, y: 200 }, { x: 500, y: 200 },
-    { x: 100, y: 300 }, { x: 200, y: 300 }, { x: 300, y: 300 }, { x: 400, y: 300 }, { x: 500, y: 300 },
-    { x: 100, y: 400 }, { x: 200, y: 400 }, { x: 300, y: 400 }, { x: 400, y: 400 }, { x: 500, y: 400 },
-  ];
+  const verticalRoads = Array.from({ length: 7 }, (_, i) => (i + 1) * GRID_SIZE);
+  const horizontalRoads = Array.from({ length: 7 }, (_, i) => (i + 1) * GRID_SIZE);
 
   const scenarios = [
     { name: 'Unprotected Left Turn', law: 'Yield to oncoming traffic' },
@@ -53,41 +44,28 @@ const TrafficRunnerGame: React.FC = () => {
     { name: 'Green Light Left Turn', law: 'Yield to oncoming traffic' },
   ];
 
-  const gameStateRef = useRef({
-    playerX: 300,
-    playerY: 450,
-    playerHeading: 0,
-    playerSpeed: 3.75,
-    playerStopped: false,
-    aiVehicles: [] as Array<{ x: number; y: number; heading: number; speed: number; roadIndex: number }>,
-    coins: [] as Array<{ x: number; y: number; collected: boolean }>,
-    scenarioIndex: 0,
-    scenarioTime: 0,
-    trafficLightStates: new Map<number, 'red' | 'green'>(),
-    trafficLightTime: 0,
-    gameState: 'idle' as 'idle' | 'playing' | 'crashed',
-    score: 0,
-    time: 0,
-  });
-
   const findClosestRoadPoint = (x: number, y: number) => {
     let closest = { x, y, heading: 0 };
     let minDist = Infinity;
 
-    for (const road of roads) {
-      const dx = road.x2 - road.x1;
-      const dy = road.y2 - road.y1;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      const t = Math.max(0, Math.min(1, ((x - road.x1) * dx + (y - road.y1) * dy) / (len * len)));
-      const px = road.x1 + t * dx;
-      const py = road.y1 + t * dy;
-      const dist = Math.hypot(x - px, y - py);
-
+    // Check vertical roads
+    for (const roadX of verticalRoads) {
+      const dist = Math.abs(x - roadX);
       if (dist < minDist) {
         minDist = dist;
-        closest = { x: px, y: py, heading: Math.atan2(dy, dx) };
+        closest = { x: roadX, y, heading: -Math.PI / 2 };
       }
     }
+
+    // Check horizontal roads
+    for (const roadY of horizontalRoads) {
+      const dist = Math.abs(y - roadY);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = { x, y: roadY, heading: 0 };
+      }
+    }
+
     return closest;
   };
 
@@ -103,150 +81,168 @@ const TrafficRunnerGame: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const state = gameStateRef.current;
+
     // Clear canvas
     ctx.fillStyle = '#90EE90';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Calculate camera offset (center on player)
+    const cameraX = state.playerX * ZOOM - CANVAS_WIDTH / 2;
+    const cameraY = state.playerY * ZOOM - CANVAS_HEIGHT / 2;
+
+    ctx.save();
+    ctx.translate(-cameraX, -cameraY);
 
     // Draw roads
     ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 40;
-    for (const road of roads) {
+    ctx.lineWidth = 40 * ZOOM;
+
+    // Vertical roads
+    for (const roadX of verticalRoads) {
       ctx.beginPath();
-      ctx.moveTo(road.x1, road.y1);
-      ctx.lineTo(road.x2, road.y2);
+      ctx.moveTo(roadX * ZOOM, 0);
+      ctx.lineTo(roadX * ZOOM, GRID_SIZE * GRID_ROWS * ZOOM);
+      ctx.stroke();
+    }
+
+    // Horizontal roads
+    for (const roadY of horizontalRoads) {
+      ctx.beginPath();
+      ctx.moveTo(0, roadY * ZOOM);
+      ctx.lineTo(GRID_SIZE * GRID_COLS * ZOOM, roadY * ZOOM);
       ctx.stroke();
     }
 
     // Draw road center lines
     ctx.strokeStyle = '#FFFF00';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([10, 10]);
-    for (const road of roads) {
+    ctx.lineWidth = 2 * ZOOM;
+    ctx.setLineDash([10 * ZOOM, 10 * ZOOM]);
+
+    for (const roadX of verticalRoads) {
       ctx.beginPath();
-      ctx.moveTo(road.x1, road.y1);
-      ctx.lineTo(road.x2, road.y2);
+      ctx.moveTo(roadX * ZOOM, 0);
+      ctx.lineTo(roadX * ZOOM, GRID_SIZE * GRID_ROWS * ZOOM);
       ctx.stroke();
     }
+
+    for (const roadY of horizontalRoads) {
+      ctx.beginPath();
+      ctx.moveTo(0, roadY * ZOOM);
+      ctx.lineTo(GRID_SIZE * GRID_COLS * ZOOM, roadY * ZOOM);
+      ctx.stroke();
+    }
+
     ctx.setLineDash([]);
 
-    // Draw traffic lights at intersections
-    for (let i = 0; i < intersections.length; i++) {
-      const inter = intersections[i];
-      const state = gameStateRef.current.trafficLightStates.get(i) || 'red';
+    // Draw traffic lights and stop signs at intersections
+    for (const roadX of verticalRoads) {
+      for (const roadY of horizontalRoads) {
+        const lightColor = state.trafficLightTime < 15 ? '#FF0000' : '#00FF00';
 
-      // Top-left light
-      ctx.fillStyle = state === 'green' ? '#00FF00' : '#FF0000';
-      ctx.beginPath();
-      ctx.arc(inter.x - 25, inter.y - 25, 8, 0, Math.PI * 2);
-      ctx.fill();
+        // Traffic lights at all 4 corners
+        ctx.fillStyle = lightColor;
+        ctx.beginPath();
+        ctx.arc((roadX - 20) * ZOOM, (roadY - 20) * ZOOM, 8 * ZOOM, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc((roadX + 20) * ZOOM, (roadY - 20) * ZOOM, 8 * ZOOM, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc((roadX - 20) * ZOOM, (roadY + 20) * ZOOM, 8 * ZOOM, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc((roadX + 20) * ZOOM, (roadY + 20) * ZOOM, 8 * ZOOM, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Top-right light
-      ctx.fillStyle = state === 'green' ? '#00FF00' : '#FF0000';
-      ctx.beginPath();
-      ctx.arc(inter.x + 25, inter.y - 25, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottom-left light
-      ctx.fillStyle = state === 'green' ? '#00FF00' : '#FF0000';
-      ctx.beginPath();
-      ctx.arc(inter.x - 25, inter.y + 25, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottom-right light
-      ctx.fillStyle = state === 'green' ? '#00FF00' : '#FF0000';
-      ctx.beginPath();
-      ctx.arc(inter.x + 25, inter.y + 25, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stop sign at bottom-right
-      ctx.fillStyle = '#FF0000';
-      ctx.beginPath();
-      ctx.moveTo(inter.x + 35, inter.y + 30);
-      ctx.lineTo(inter.x + 45, inter.y + 30);
-      ctx.lineTo(inter.x + 45, inter.y + 40);
-      ctx.lineTo(inter.x + 35, inter.y + 40);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '8px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('S', inter.x + 40, inter.y + 37);
+        // Stop sign at bottom-right
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc((roadX + 30) * ZOOM, (roadY + 30) * ZOOM, 10 * ZOOM, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = `${12 * ZOOM}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('S', (roadX + 30) * ZOOM, (roadY + 30) * ZOOM);
+      }
     }
 
     // Draw coins
     ctx.fillStyle = '#FFD700';
-    for (const coin of gameStateRef.current.coins) {
+    for (const coin of state.coins) {
       if (!coin.collected) {
         ctx.beginPath();
-        ctx.arc(coin.x, coin.y, 5, 0, Math.PI * 2);
+        ctx.arc(coin.x * ZOOM, coin.y * ZOOM, 6 * ZOOM, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
     // Draw AI vehicles
     ctx.fillStyle = '#FF0000';
-    for (const vehicle of gameStateRef.current.aiVehicles) {
+    for (const vehicle of state.aiVehicles) {
       ctx.save();
-      ctx.translate(vehicle.x, vehicle.y);
+      ctx.translate(vehicle.x * ZOOM, vehicle.y * ZOOM);
       ctx.rotate(vehicle.heading);
-      ctx.fillRect(-7, -5, 14, 10);
+      ctx.fillRect(-7 * ZOOM, -10 * ZOOM, 14 * ZOOM, 20 * ZOOM);
       ctx.restore();
     }
 
     // Draw player car
     ctx.fillStyle = '#00FF00';
     ctx.save();
-    ctx.translate(gameStateRef.current.playerX, gameStateRef.current.playerY);
-    ctx.rotate(gameStateRef.current.playerHeading);
-    ctx.fillRect(-7, -5, 14, 10);
+    ctx.translate(state.playerX * ZOOM, state.playerY * ZOOM);
+    ctx.rotate(state.playerHeading);
+    ctx.fillRect(-7 * ZOOM, -10 * ZOOM, 14 * ZOOM, 20 * ZOOM);
+    ctx.restore();
+
     ctx.restore();
 
     // Draw HUD
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, 600, 50);
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 120);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '16px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Score: ${gameStateRef.current.score}`, 10, 20);
-    ctx.fillText(`Time: ${gameStateRef.current.time}s`, 150, 20);
-    ctx.fillText(`Coins: ${gameStateRef.current.coins}`, 300, 20);
+    ctx.fillText(`Score: ${state.score}`, 10, 25);
+    ctx.fillText(`Time: ${state.time.toFixed(1)}s`, 150, 25);
+    ctx.fillText(`Coins: ${state.coins.filter(c => !c.collected).length}`, 300, 25);
 
     // Draw scenario
-    const scenario = scenarios[gameStateRef.current.scenarioIndex % scenarios.length];
+    const scenario = scenarios[state.scenarioIndex % scenarios.length];
     ctx.fillStyle = '#FFFF00';
     ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`⚠ ${scenario.name}`, 300, 35);
+    ctx.fillText(`⚠ ${scenario.name}`, CANVAS_WIDTH / 2, 50);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '12px Arial';
-    ctx.fillText(scenario.law, 300, 50);
+    ctx.fillText(scenario.law, CANVAS_WIDTH / 2, 70);
 
     // Draw idle screen
-    if (gameStateRef.current.gameState === 'idle') {
+    if (state.gameState === 'idle') {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillRect(150, 150, 300, 200);
+      ctx.fillRect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 80, 300, 160);
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Street Navigation', 300, 180);
+      ctx.fillText('Street Navigation', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
       ctx.font = '14px Arial';
-      ctx.fillText('Collect coins while driving.', 300, 210);
-      ctx.fillText('Avoid AI traffic to survive.', 300, 230);
-      ctx.fillText('Click Play Car to start.', 300, 250);
+      ctx.fillText('Collect coins while driving.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+      ctx.fillText('Avoid AI traffic to survive.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 5);
+      ctx.fillText('Click Play Car to start.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
     }
 
     // Draw crashed screen
-    if (gameStateRef.current.gameState === 'crashed') {
+    if (state.gameState === 'crashed') {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(0, 0, 600, 500);
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       ctx.fillStyle = '#FF0000';
       ctx.font = 'bold 40px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('CRASHED!', 300, 200);
+      ctx.fillText('CRASHED!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '20px Arial';
-      ctx.fillText(`Final Score: ${gameStateRef.current.score}`, 300, 250);
-      ctx.fillText('Click Play Car to retry', 300, 300);
+      ctx.fillText(`Final Score: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
     }
   }, []);
 
@@ -269,55 +265,99 @@ const TrafficRunnerGame: React.FC = () => {
       if (state.trafficLightTime > 30) {
         state.trafficLightTime = 0;
       }
-      for (let i = 0; i < intersections.length; i++) {
-        state.trafficLightStates.set(i, state.trafficLightTime < 15 ? 'red' : 'green');
-      }
 
       // Player movement
       if (!playerStopped) {
-        const closest = findClosestRoadPoint(state.playerX, state.playerY);
-        state.playerHeading = closest.heading;
-        state.playerX += Math.cos(closest.heading) * state.playerSpeed;
-        state.playerY += Math.sin(closest.heading) * state.playerSpeed;
+        state.playerX += Math.cos(state.playerHeading) * state.playerSpeed;
+        state.playerY += Math.sin(state.playerHeading) * state.playerSpeed;
 
-        // Wrap around
-        if (state.playerX < 0) state.playerX = 600;
-        if (state.playerX > 600) state.playerX = 0;
-        if (state.playerY < 0) state.playerY = 500;
-        if (state.playerY > 500) state.playerY = 0;
+        // 50/50 chance to turn at intersections
+        const nearestVertical = verticalRoads.reduce((prev, curr) =>
+          Math.abs(curr - state.playerX) < Math.abs(prev - state.playerX) ? curr : prev
+        );
+        const nearestHorizontal = horizontalRoads.reduce((prev, curr) =>
+          Math.abs(curr - state.playerY) < Math.abs(prev - state.playerY) ? curr : prev
+        );
+
+        const atIntersection =
+          Math.abs(state.playerX - nearestVertical) < 25 &&
+          Math.abs(state.playerY - nearestHorizontal) < 25;
+
+        if (atIntersection && state.time - state.lastTurnTime > 2) {
+          if (Math.random() < 0.5) {
+            // 50% chance to turn
+            if (Math.random() < 0.5) {
+              state.playerHeading += Math.PI / 2; // Turn right
+            } else {
+              state.playerHeading -= Math.PI / 2; // Turn left
+            }
+            state.lastTurnTime = state.time;
+          }
+        }
+
+        // Wrap around map
+        if (state.playerX < 0) state.playerX = GRID_SIZE * GRID_COLS;
+        if (state.playerX > GRID_SIZE * GRID_COLS) state.playerX = 0;
+        if (state.playerY < 0) state.playerY = GRID_SIZE * GRID_ROWS;
+        if (state.playerY > GRID_SIZE * GRID_ROWS) state.playerY = 0;
       }
 
       // AI vehicle movement
-        if (state.aiVehicles.length === 0) {
+      if (state.aiVehicles.length === 0) {
         for (let i = 0; i < 5; i++) {
-          const roadIndex = Math.floor(Math.random() * roads.length);
-          const road = roads[roadIndex];
-          const t = Math.random();
+          const roadType = Math.random() < 0.5 ? 'vertical' : 'horizontal';
+          let x, y, heading;
+
+          if (roadType === 'vertical') {
+            const roadX = verticalRoads[Math.floor(Math.random() * verticalRoads.length)];
+            x = roadX;
+            y = Math.random() * GRID_SIZE * GRID_ROWS;
+            heading = -Math.PI / 2;
+          } else {
+            x = Math.random() * GRID_SIZE * GRID_COLS;
+            const roadY = horizontalRoads[Math.floor(Math.random() * horizontalRoads.length)];
+            y = roadY;
+            heading = 0;
+          }
+
           state.aiVehicles.push({
-            x: road.x1 + t * (road.x2 - road.x1),
-            y: road.y1 + t * (road.y2 - road.y1),
-            heading: Math.atan2(road.y2 - road.y1, road.x2 - road.x1),
-            speed: 1 + Math.random() * 2,
-            roadIndex,
+            x,
+            y,
+            heading,
+            speed: 1.5 + Math.random() * 1.5,
           });
         }
       }
 
-      for (let i = 0; i < state.aiVehicles.length; i++) {
-        const vehicle = state.aiVehicles[i];
+      for (const vehicle of state.aiVehicles) {
         vehicle.x += Math.cos(vehicle.heading) * vehicle.speed;
         vehicle.y += Math.sin(vehicle.heading) * vehicle.speed;
 
-        // Wrap around
-        if (vehicle.x < 0 || vehicle.x > 600 || vehicle.y < 0 || vehicle.y > 500) {
-          const roadIndex = Math.floor(Math.random() * roads.length);
-          const road = roads[roadIndex];
-          const t = Math.random();
-          vehicle.x = road.x1 + t * (road.x2 - road.x1);
-          vehicle.y = road.y1 + t * (road.y2 - road.y1);
-          vehicle.heading = Math.atan2(road.y2 - road.y1, road.x2 - road.x1);
-          vehicle.roadIndex = roadIndex;
+        // 50/50 chance to turn at intersections
+        const nearestVertical = verticalRoads.reduce((prev, curr) =>
+          Math.abs(curr - vehicle.x) < Math.abs(prev - vehicle.x) ? curr : prev
+        );
+        const nearestHorizontal = horizontalRoads.reduce((prev, curr) =>
+          Math.abs(curr - vehicle.y) < Math.abs(prev - vehicle.y) ? curr : prev
+        );
+
+        const atIntersection =
+          Math.abs(vehicle.x - nearestVertical) < 25 &&
+          Math.abs(vehicle.y - nearestHorizontal) < 25;
+
+        if (atIntersection && Math.random() < 0.02) {
+          if (Math.random() < 0.5) {
+            vehicle.heading += Math.PI / 2;
+          } else {
+            vehicle.heading -= Math.PI / 2;
+          }
         }
+
+        // Wrap around
+        if (vehicle.x < 0) vehicle.x = GRID_SIZE * GRID_COLS;
+        if (vehicle.x > GRID_SIZE * GRID_COLS) vehicle.x = 0;
+        if (vehicle.y < 0) vehicle.y = GRID_SIZE * GRID_ROWS;
+        if (vehicle.y > GRID_SIZE * GRID_ROWS) vehicle.y = 0;
 
         // Collision with player
         if (Math.hypot(state.playerX - vehicle.x, state.playerY - vehicle.y) < 15) {
@@ -327,11 +367,11 @@ const TrafficRunnerGame: React.FC = () => {
 
       // Coin collection
       if (state.coins.length === 0) {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 12; i++) {
           let x, y;
           do {
-            x = Math.random() * 600;
-            y = Math.random() * 500;
+            x = Math.random() * GRID_SIZE * GRID_COLS;
+            y = Math.random() * GRID_SIZE * GRID_ROWS;
           } while (!isOnRoad(x, y));
           state.coins.push({ x, y, collected: false });
         }
@@ -340,15 +380,9 @@ const TrafficRunnerGame: React.FC = () => {
       for (const coin of state.coins) {
         if (!coin.collected && Math.hypot(state.playerX - coin.x, state.playerY - coin.y) < 15) {
           coin.collected = true;
-          state.coins = state.coins.filter(c => !c.collected);
           state.score += 10;
-          state.coins.push({ x: Math.random() * 600, y: Math.random() * 500, collected: false });
         }
       }
-
-      setScore(state.score);
-      setTime(Math.floor(state.time));
-      setCoins(state.coins.filter(c => !c.collected).length);
     }
 
     draw();
@@ -364,16 +398,16 @@ const TrafficRunnerGame: React.FC = () => {
 
   const handlePlay = () => {
     gameStateRef.current.gameState = 'playing';
-    gameStateRef.current.playerX = 300;
-    gameStateRef.current.playerY = 450;
+    gameStateRef.current.playerX = GRID_SIZE * 4;
+    gameStateRef.current.playerY = GRID_SIZE * 4;
+    gameStateRef.current.playerHeading = -Math.PI / 2;
     gameStateRef.current.score = 0;
     gameStateRef.current.time = 0;
     gameStateRef.current.coins = [];
     gameStateRef.current.aiVehicles = [];
+    gameStateRef.current.lastTurnTime = 0;
     setGameState('playing');
-    setScore(0);
-    setTime(0);
-    setCoins(0);
+    setPlayerStopped(false);
   };
 
   const handlePause = () => {
@@ -382,16 +416,13 @@ const TrafficRunnerGame: React.FC = () => {
 
   const handleStop = () => {
     gameStateRef.current.gameState = 'idle';
-    gameStateRef.current.playerX = 300;
-    gameStateRef.current.playerY = 450;
+    gameStateRef.current.playerX = GRID_SIZE * 4;
+    gameStateRef.current.playerY = GRID_SIZE * 4;
     gameStateRef.current.score = 0;
     gameStateRef.current.time = 0;
     gameStateRef.current.coins = [];
     gameStateRef.current.aiVehicles = [];
     setGameState('idle');
-    setScore(0);
-    setTime(0);
-    setCoins(0);
     setPlayerStopped(false);
   };
 
@@ -400,8 +431,8 @@ const TrafficRunnerGame: React.FC = () => {
       <h3 className="text-lg font-bold">Traffic Jam: Intersection Simulator</h3>
       <canvas
         ref={canvasRef}
-        width={600}
-        height={500}
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
         className="border-4 border-yellow-300 rounded-lg bg-green-200 w-full"
       />
       <div className="flex gap-2 justify-center">
@@ -421,7 +452,7 @@ const TrafficRunnerGame: React.FC = () => {
         </button>
         <button
           onClick={handleStop}
-          className="px-6 py-2 bg-red-500 text-white rounded font-bold"
+          className="px-6 py-2 bg-red-500 text-white rounded font-bold disabled:opacity-50"
         >
           ⏹ Stop Car
         </button>
