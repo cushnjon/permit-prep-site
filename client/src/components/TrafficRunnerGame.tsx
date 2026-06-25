@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 const TrafficRunnerGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -8,14 +8,15 @@ const TrafficRunnerGame: React.FC = () => {
 
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = 600;
-  const CAMERA_ZOOM = 4; // Close-up zoom level
-  const MAP_WIDTH = 1600;
-  const MAP_HEIGHT = 1280;
+  const CAMERA_ZOOM = 3; // Close-up zoom level
+  const MAP_WIDTH = 1408;
+  const MAP_HEIGHT = 768;
+  const CAR_SIZE = 12;
 
   const gameStateRef = useRef<{
     playerX: number;
     playerY: number;
-    playerHeading: number;
+    playerHeading: number; // 0=up, 90=right, 180=down, 270=left
     playerSpeed: number;
     score: number;
     time: number;
@@ -27,10 +28,10 @@ const TrafficRunnerGame: React.FC = () => {
     gameState: 'idle' | 'playing' | 'crashed';
     graceTime: number;
   }>({
-    playerX: 800,
-    playerY: 640,
+    playerX: 704,
+    playerY: 384,
     playerHeading: 0,
-    playerSpeed: 3.75,
+    playerSpeed: 2.0,
     score: 0,
     time: 0,
     coins: [] as Array<{ x: number; y: number }>,
@@ -55,114 +56,153 @@ const TrafficRunnerGame: React.FC = () => {
     'Green Light Left Turn',
   ];
 
-  // Road network for pixel-art map
-  const roads = [
-    // Horizontal roads
-    { type: 'horizontal' as const, y: 160, x1: 0, x2: 1600 },
-    { type: 'horizontal' as const, y: 320, x1: 0, x2: 1600 },
-    { type: 'horizontal' as const, y: 480, x1: 0, x2: 1600 },
-    { type: 'horizontal' as const, y: 640, x1: 0, x2: 1600 },
-    { type: 'horizontal' as const, y: 800, x1: 0, x2: 1600 },
-    // Vertical roads
-    { type: 'vertical' as const, x: 320, y1: 0, y2: 1280 },
-    { type: 'vertical' as const, x: 640, y1: 0, y2: 1280 },
-    { type: 'vertical' as const, x: 960, y1: 0, y2: 1280 },
-    { type: 'vertical' as const, x: 1280, y1: 0, y2: 1280 },
+  // Road network - lanes on the city map
+  // Horizontal roads (y-coordinates)
+  const horizontalRoads = [
+    { y: 96, lanes: [80, 112] },      // Top road
+    { y: 224, lanes: [208, 240] },    // Second road
+    { y: 352, lanes: [336, 368] },    // Middle road
+    { y: 480, lanes: [464, 496] },    // Fourth road
+    { y: 608, lanes: [592, 624] },    // Bottom road
   ];
 
-  const isOnRoad = (x: number, y: number): boolean => {
-    const tolerance = 40;
-    for (const road of roads) {
-      if (road.type === 'horizontal') {
-        if (Math.abs(y - road.y) < tolerance && x >= road.x1 && x <= road.x2) return true;
-      } else {
-        if (Math.abs(x - road.x) < tolerance && y >= road.y1 && y <= road.y2) return true;
+  // Vertical roads (x-coordinates)
+  const verticalRoads = [
+    { x: 96, lanes: [80, 112] },      // Left road
+    { x: 224, lanes: [208, 240] },    // Second road
+    { x: 352, lanes: [336, 368] },    // Middle road
+    { x: 480, lanes: [464, 496] },    // Fourth road
+    { x: 608, lanes: [592, 624] },    // Fifth road
+    { x: 736, lanes: [720, 752] },    // Sixth road
+    { x: 864, lanes: [848, 880] },    // Seventh road
+    { x: 992, lanes: [976, 1008] },   // Eighth road
+    { x: 1120, lanes: [1104, 1136] }, // Ninth road
+    { x: 1248, lanes: [1232, 1264] }, // Right road
+  ];
+
+  // Get the current road the car is on
+  const getCurrentRoad = (x: number, y: number, heading: number): { road: any; type: string } | null => {
+    const tolerance = 30;
+    
+    if (heading === 0 || heading === 180) {
+      // Moving vertically - check horizontal roads
+      for (const road of horizontalRoads) {
+        if (Math.abs(y - road.y) < tolerance) {
+          return { road, type: 'horizontal' };
+        }
+      }
+    } else if (heading === 90 || heading === 270) {
+      // Moving horizontally - check vertical roads
+      for (const road of verticalRoads) {
+        if (Math.abs(x - road.x) < tolerance) {
+          return { road, type: 'vertical' };
+        }
       }
     }
-    return false;
+    return null;
   };
 
-  const findClosestRoadPoint = (x: number, y: number): { x: number; y: number; dist: number } => {
-    let closest: { x: number; y: number; dist: number } = { x, y, dist: Infinity };
-    for (const road of roads) {
-      if (road.type === 'horizontal') {
-        const dist = Math.abs(y - road.y);
-        if (dist < closest.dist && x >= road.x1 && x <= road.x2) {
-          closest = { x, y: road.y, dist };
-        }
-      } else {
-        const dist = Math.abs(x - road.x);
-        if (dist < closest.dist && y >= road.y1 && y <= road.y2) {
-          closest = { x: road.x, y, dist };
-        }
-      }
+  // Keep car centered in lane
+  const keepInLane = (x: number, y: number, heading: number): { x: number; y: number } => {
+    const roadInfo = getCurrentRoad(x, y, heading);
+    if (!roadInfo) return { x, y };
+
+    const { road, type } = roadInfo;
+    if (type === 'horizontal') {
+      // Snap to center of lane
+      const centerY = road.y;
+      return { x, y: centerY };
+    } else {
+      // Snap to center of lane
+      const centerX = road.x;
+      return { x: centerX, y };
     }
-    return closest;
+  };
+
+  // Check if can turn at intersection
+  const canTurnAtIntersection = (x: number, y: number): boolean => {
+    const tolerance = 20;
+    let onHorizontal = false;
+    let onVertical = false;
+
+    for (const road of horizontalRoads) {
+      if (Math.abs(y - road.y) < tolerance) onHorizontal = true;
+    }
+    for (const road of verticalRoads) {
+      if (Math.abs(x - road.x) < tolerance) onVertical = true;
+    }
+
+    return onHorizontal && onVertical;
+  };
+
+  // Get next heading after turn
+  const getNextHeading = (currentHeading: number, turnDirection: 'left' | 'right'): number => {
+    if (turnDirection === 'left') {
+      return (currentHeading - 90 + 360) % 360;
+    } else {
+      return (currentHeading + 90) % 360;
+    }
+  };
+
+  // Move car forward
+  const moveForward = (x: number, y: number, heading: number, speed: number): { x: number; y: number } => {
+    const radians = (heading * Math.PI) / 180;
+    const newX: number = x - Math.sin(radians) * speed;
+    const newY: number = y - Math.cos(radians) * speed;
+
+    // Keep in bounds
+    const boundX: number = Math.max(CAR_SIZE, Math.min(MAP_WIDTH - CAR_SIZE, newX));
+    const boundY: number = Math.max(CAR_SIZE, Math.min(MAP_HEIGHT - CAR_SIZE, newY));
+
+    return { x: boundX, y: boundY };
   };
 
   const spawnCoins = (): Array<{ x: number; y: number }> => {
     const coins: Array<{ x: number; y: number }> = [];
     for (let i = 0; i < 15; i++) {
-      let x: number = 0;
-      let y: number = 0;
-      let onRoad = false;
-      while (!onRoad) {
-        x = Math.random() * MAP_WIDTH;
-        y = Math.random() * MAP_HEIGHT;
-        onRoad = isOnRoad(x, y);
+      let x: number = 0, y: number = 0, valid = false;
+      while (!valid) {
+        x = Math.random() * (MAP_WIDTH - 100) + 50;
+        y = Math.random() * (MAP_HEIGHT - 100) + 50;
+        // Place coins on roads
+        const onHorizontal = horizontalRoads.some(r => Math.abs(y - r.y) < 30);
+        const onVertical = verticalRoads.some(r => Math.abs(x - r.x) < 30);
+        valid = onHorizontal || onVertical;
       }
       coins.push({ x, y });
     }
     return coins;
   };
 
-  const spawnAI = () => {
-    const vehicles = [];
-    const playerX = 800;
-    const playerY = 640;
-    const minDistance = 500; // Minimum distance from player (increased for safety)
-    
+  const spawnAI = (): Array<{ x: number; y: number; heading: number; speed: number }> => {
+    const vehicles: Array<{ x: number; y: number; heading: number; speed: number }> = [];
     for (let i = 0; i < 4; i++) {
-      let x: number = 0;
-      let y: number = 0;
-      let heading: number = 0;
-      let validSpawn = false;
-      
-      // Keep trying until we find a valid spawn point
-      while (!validSpawn) {
-        const roadIndex = Math.floor(Math.random() * roads.length);
-        const road = roads[roadIndex];
-        
-        if (road.type === 'horizontal') {
-          x = Math.random() * (road.x2 - road.x1) + road.x1;
-          y = road.y;
-          heading = Math.random() > 0.5 ? 0 : Math.PI;
-        } else {
-          x = road.x;
-          y = Math.random() * (road.y2 - road.y1) + road.y1;
-          heading = Math.random() > 0.5 ? Math.PI / 2 : (3 * Math.PI) / 2;
-        }
-        
-        // Check distance from player
-        const dist = Math.hypot(x - playerX, y - playerY);
-        if (dist > minDistance) {
-          validSpawn = true;
-        }
+      const roadType = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+      let x: number = 0, y: number = 0, heading: number = 0, speed: number = 0;
+
+      if (roadType === 'horizontal') {
+        const road = horizontalRoads[Math.floor(Math.random() * horizontalRoads.length)];
+        x = Math.random() * MAP_WIDTH;
+        y = road.y;
+        heading = Math.random() > 0.5 ? 90 : 270;
+        speed = 0.8 + Math.random() * 0.8;
+      } else {
+        const road = verticalRoads[Math.floor(Math.random() * verticalRoads.length)];
+        x = road.x;
+        y = Math.random() * MAP_HEIGHT;
+        heading = Math.random() > 0.5 ? 0 : 180;
+        speed = 0.8 + Math.random() * 0.8;
       }
-      
-      vehicles.push({
-        x,
-        y,
-        heading,
-        speed: 0.8 + Math.random() * 0.8,
-      });
+
+      vehicles.push({ x, y, heading, speed });
     }
     return vehicles;
   };
 
-  const draw = useCallback(() => {
+  const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -172,165 +212,127 @@ const TrafficRunnerGame: React.FC = () => {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw map with close-up camera
-    if (mapImageRef.current && mapImageRef.current.complete) {
-      const screenX = CANVAS_WIDTH / 2;
-      const screenY = CANVAS_HEIGHT / 2;
-      const mapX = state.playerX * CAMERA_ZOOM - screenX;
-      const mapY = state.playerY * CAMERA_ZOOM - screenY;
+    // Draw map with camera following player
+    if (mapImageRef.current) {
+      const cameraX = state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM);
+      const cameraY = state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM);
 
       ctx.save();
       ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
-      ctx.drawImage(mapImageRef.current, -mapX / CAMERA_ZOOM, -mapY / CAMERA_ZOOM);
+      ctx.drawImage(mapImageRef.current, -cameraX, -cameraY);
       ctx.restore();
     }
 
-    // Draw coins
-    for (const coin of state.coins) {
-      const screenX = (coin.x - state.playerX) * CAMERA_ZOOM + CANVAS_WIDTH / 2;
-      const screenY = (coin.y - state.playerY) * CAMERA_ZOOM + CANVAS_HEIGHT / 2;
-      if (screenX > -20 && screenX < CANVAS_WIDTH + 20 && screenY > -20 && screenY < CANVAS_HEIGHT + 20) {
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
     // Draw AI vehicles
+    ctx.fillStyle = '#ff6b6b';
     for (const vehicle of state.aiVehicles) {
-      const screenX = (vehicle.x - state.playerX) * CAMERA_ZOOM + CANVAS_WIDTH / 2;
-      const screenY = (vehicle.y - state.playerY) * CAMERA_ZOOM + CANVAS_HEIGHT / 2;
-      if (screenX > -40 && screenX < CANVAS_WIDTH + 40 && screenY > -40 && screenY < CANVAS_HEIGHT + 40) {
+      const screenX = (vehicle.x - (state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
+      const screenY = (vehicle.y - (state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
+
+      if (screenX > -20 && screenX < CANVAS_WIDTH + 20 && screenY > -20 && screenY < CANVAS_HEIGHT + 20) {
         ctx.save();
         ctx.translate(screenX, screenY);
-        ctx.rotate(vehicle.heading);
-        ctx.fillStyle = '#FF4444';
-        ctx.fillRect(-12, -8, 24, 16);
+        ctx.rotate((vehicle.heading * Math.PI) / 180);
+        ctx.fillRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
         ctx.restore();
       }
     }
 
-    // Draw player car (centered)
+    // Draw coins
+    ctx.fillStyle = '#ffeb3b';
+    for (const coin of state.coins) {
+      const screenX = (coin.x - (state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
+      const screenY = (coin.y - (state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
+
+      if (screenX > -10 && screenX < CANVAS_WIDTH + 10 && screenY > -10 && screenY < CANVAS_HEIGHT + 10) {
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Draw player car (green)
+    ctx.fillStyle = '#4caf50';
     ctx.save();
     ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-    ctx.rotate(state.playerHeading);
-    ctx.fillStyle = '#00FF00';
-    ctx.fillRect(-10, -6, 20, 12);
+    ctx.rotate((state.playerHeading * Math.PI) / 180);
+    ctx.fillRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
     ctx.restore();
 
     // Draw HUD
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, 100);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Score: ${state.score}`, 10, 25);
-    ctx.fillText(`Time: ${state.time.toFixed(1)}s`, 200, 25);
-    ctx.fillText(`Coins: ${state.coins.length}`, 400, 25);
-    ctx.fillText(`Scenario: ${scenarios[state.scenarioIndex]}`, 10, 50);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 300, 80);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(`Score: ${state.score}`, 10, 20);
+    ctx.fillText(`Time: ${(state.time / 60).toFixed(1)}s`, 10, 40);
+    ctx.fillText(`Coins: ${state.coins.length - Math.floor(state.score / 10)}`, 10, 60);
 
-    // Draw crashed overlay
-    if (state.gameState === 'crashed') {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 32px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('CRASHED!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-      ctx.font = '20px Arial';
-      ctx.fillText(`Final Score: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
-    }
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(`Scenario: ${scenarios[state.scenarioIndex]}`, 10, 75);
+  };
 
-    // Draw idle overlay
-    if (state.gameState === 'idle') {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillRect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 80, 300, 160);
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Pixel-Art City Driving', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
-      ctx.font = '14px Arial';
-      ctx.fillText('Collect coins and avoid traffic.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-      ctx.fillText('Close-up camera view.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 5);
-      ctx.fillText('Click Play Car to start.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
-    }
-  }, []);
-
-  const loop = useCallback(() => {
+  const loop = () => {
     const state = gameStateRef.current;
 
-    if (state.gameState === 'playing') {
-      state.time += 1 / 60;
-
-      // Update scenario
+    if (state.gameState === 'playing' && !playerStopped) {
+      // Update time
+      state.time += 1;
+      state.graceTime += 1 / 60;
       state.scenarioTime += 1 / 60;
+
+      // Rotate scenario every 15 seconds
       if (state.scenarioTime > 15) {
         state.scenarioIndex = (state.scenarioIndex + 1) % scenarios.length;
         state.scenarioTime = 0;
       }
 
-      // Player movement
-      if (!playerStopped) {
-        state.playerX += Math.cos(state.playerHeading) * state.playerSpeed;
-        state.playerY += Math.sin(state.playerHeading) * state.playerSpeed;
+      // Move player car forward
+      let newPos = moveForward(state.playerX, state.playerY, state.playerHeading, state.playerSpeed);
+      newPos = keepInLane(newPos.x, newPos.y, state.playerHeading);
+      state.playerX = newPos.x;
+      state.playerY = newPos.y;
 
-        // 50/50 random turns at intersections
-        state.lastTurnTime += 1 / 60;
-        if (state.lastTurnTime > 2 + Math.random() * 3) {
-          const rand = Math.random();
-          if (rand < 0.33) {
-            state.playerHeading -= Math.PI / 2;
-          } else if (rand < 0.66) {
-            state.playerHeading += Math.PI / 2;
-          }
-          state.lastTurnTime = 0;
-        }
-
-        // Wrap around map
-        if (state.playerX < 0) state.playerX = MAP_WIDTH;
-        if (state.playerX > MAP_WIDTH) state.playerX = 0;
-        if (state.playerY < 0) state.playerY = MAP_HEIGHT;
-        if (state.playerY > MAP_HEIGHT) state.playerY = 0;
-
-        // Keep on road
-        const closest = findClosestRoadPoint(state.playerX, state.playerY);
-        if (closest.dist > 40) {
-          state.playerX = closest.x;
-          state.playerY = closest.y;
+      // Random turns at intersections (50% chance every 2 seconds)
+      if (state.time % 120 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
+        if (Math.random() > 0.5) {
+          state.playerHeading = getNextHeading(state.playerHeading, 'left');
+        } else {
+          state.playerHeading = getNextHeading(state.playerHeading, 'right');
         }
       }
 
-      // AI vehicle movement
+      // Move AI vehicles
       for (const vehicle of state.aiVehicles) {
-        vehicle.x += Math.cos(vehicle.heading) * vehicle.speed;
-        vehicle.y += Math.sin(vehicle.heading) * vehicle.speed;
+        let aiPos = moveForward(vehicle.x, vehicle.y, vehicle.heading, vehicle.speed);
 
-        // Wrap around
-        if (vehicle.x < 0) vehicle.x = MAP_WIDTH;
-        if (vehicle.x > MAP_WIDTH) vehicle.x = 0;
-        if (vehicle.y < 0) vehicle.y = MAP_HEIGHT;
-        if (vehicle.y > MAP_HEIGHT) vehicle.y = 0;
+        // Random turns at intersections
+        if (Math.random() > 0.98 && canTurnAtIntersection(aiPos.x, aiPos.y)) {
+          vehicle.heading = getNextHeading(vehicle.heading, Math.random() > 0.5 ? 'left' : 'right');
+        }
 
-        // Random turns
-        if (Math.random() < 0.01) {
-          if (Math.random() < 0.5) {
-            vehicle.heading -= Math.PI / 2;
-          } else {
-            vehicle.heading += Math.PI / 2;
-          }
+        // Keep in bounds
+        if (aiPos.x < 0 || aiPos.x > MAP_WIDTH || aiPos.y < 0 || aiPos.y > MAP_HEIGHT) {
+          vehicle.x = Math.random() * MAP_WIDTH;
+          vehicle.y = Math.random() * MAP_HEIGHT;
+        } else {
+          vehicle.x = aiPos.x;
+          vehicle.y = aiPos.y;
         }
       }
 
       // Coin collection
-      for (let i = state.coins.length - 1; i >= 0; i--) {
-        const coin = state.coins[i];
+      state.coins = state.coins.filter(coin => {
         const dist = Math.hypot(coin.x - state.playerX, coin.y - state.playerY);
-        if (dist < 30) {
-          state.coins.splice(i, 1);
+        if (dist < 20) {
           state.score += 10;
+          return false;
         }
-      }
+        return true;
+      });
 
       // Collision detection (only if not paused and grace period is over)
       if (!playerStopped && state.graceTime > 2) {
@@ -341,25 +343,15 @@ const TrafficRunnerGame: React.FC = () => {
           }
         }
       }
-      
-      // Update grace time
-      state.graceTime += 1 / 60;
     }
 
     draw();
     rafRef.current = requestAnimationFrame(loop);
-  }, [draw, playerStopped]);
-
-  useEffect(() => {
-    rafRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [loop]);
+  };
 
   useEffect(() => {
     const img = new Image();
-    img.src = '/manus-storage/90_ca1fa21b.png';
+    img.src = '/manus-storage/city-map_781596a2.png';
     img.onload = () => {
       mapImageRef.current = img;
     };
@@ -367,8 +359,8 @@ const TrafficRunnerGame: React.FC = () => {
 
   const handlePlay = () => {
     gameStateRef.current.gameState = 'playing';
-    gameStateRef.current.playerX = 800;
-    gameStateRef.current.playerY = 640;
+    gameStateRef.current.playerX = 704;
+    gameStateRef.current.playerY = 384;
     gameStateRef.current.playerHeading = 0;
     gameStateRef.current.score = 0;
     gameStateRef.current.time = 0;
@@ -390,34 +382,43 @@ const TrafficRunnerGame: React.FC = () => {
     setPlayerStopped(false);
   };
 
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-bold">Traffic Jam: Pixel-Art City</h3>
-      <canvas
-        ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        className="border-4 border-yellow-300 rounded-lg bg-black w-full"
-      />
-      <div className="flex gap-2 justify-center">
+    <div className="w-full bg-gray-900 rounded-lg overflow-hidden">
+      <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
+        <canvas
+          ref={canvasRef}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          className="w-full h-full"
+        />
+      </div>
+
+      <div className="flex gap-2 p-4 bg-gray-800 justify-center">
         <button
           onClick={handlePlay}
           disabled={gameState === 'playing'}
-          className="px-6 py-2 bg-green-500 text-white font-bold rounded disabled:opacity-50"
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
         >
           ▶ Play Car
         </button>
         <button
           onClick={handlePause}
           disabled={gameState !== 'playing'}
-          className="px-6 py-2 bg-yellow-500 text-white font-bold rounded disabled:opacity-50"
+          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
         >
           ⏸ Pause
         </button>
         <button
           onClick={handleStop}
           disabled={gameState === 'idle'}
-          className="px-6 py-2 bg-red-500 text-white font-bold rounded disabled:opacity-50"
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
         >
           ⏹ Stop Car
         </button>
