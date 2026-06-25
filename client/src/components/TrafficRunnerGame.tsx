@@ -28,8 +28,8 @@ const TrafficRunnerGame: React.FC = () => {
     gameState: 'idle' | 'playing' | 'crashed';
     graceTime: number;
   }>({
-    playerX: 704,
-    playerY: 384,
+    playerX: 200,
+    playerY: 96,
     playerHeading: 0,
     playerSpeed: 2.0,
     score: 0,
@@ -359,8 +359,8 @@ const TrafficRunnerGame: React.FC = () => {
 
   const handlePlay = () => {
     gameStateRef.current.gameState = 'playing';
-    gameStateRef.current.playerX = 704;
-    gameStateRef.current.playerY = 384;
+    gameStateRef.current.playerX = 200;
+    gameStateRef.current.playerY = 96;
     gameStateRef.current.playerHeading = 0;
     gameStateRef.current.score = 0;
     gameStateRef.current.time = 0;
