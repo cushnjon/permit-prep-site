@@ -121,7 +121,7 @@ const TrafficRunnerGame: React.FC = () => {
 
   // Check if can turn at intersection
   const canTurnAtIntersection = (x: number, y: number): boolean => {
-    const tolerance = 20;
+    const tolerance = 50; // Increased tolerance for easier turning
     let onHorizontal = false;
     let onVertical = false;
 
@@ -296,12 +296,14 @@ const TrafficRunnerGame: React.FC = () => {
       state.playerX = newPos.x;
       state.playerY = newPos.y;
 
-      // Random turns at intersections (50% chance every 2 seconds)
-      if (state.time % 120 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
+      // Random turns at intersections (50% chance every 1 second)
+      if (state.time % 60 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
         if (Math.random() > 0.5) {
           state.playerHeading = getNextHeading(state.playerHeading, 'left');
+          state.lastTurnTime = state.time;
         } else {
           state.playerHeading = getNextHeading(state.playerHeading, 'right');
+          state.lastTurnTime = state.time;
         }
       }
 
