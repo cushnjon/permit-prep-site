@@ -1,53 +1,170 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 
+// ─── Map constants ───────────────────────────────────────────────────────────
+const CANVAS_W = 800;
+const CANVAS_H = 600;
+const MAP_W = 1408;
+const MAP_H = 768;
+const ZOOM = 3;
+const CAR_W = 10;
+const CAR_H = 18;
+const SPEED = 2.2; // px per frame
+
+// ─── Waypoint graph ───────────────────────────────────────────────────────────
+// Each node is an intersection (x, y) on the actual map image.
+// Edges list which nodes you can reach from each node.
+// Coordinates were measured from the 1408×768 pixel-art city map.
+// Columns (vertical roads):  ~96, ~224, ~352, ~480, ~608, ~736, ~864, ~992, ~1120, ~1248
+// Rows    (horizontal roads): ~96, ~224, ~352, ~480, ~608
+
+type Node = { id: number; x: number; y: number };
+type Edge = { from: number; to: number };
+
+const NODES: Node[] = [
+  // Row 0  (y≈96)
+  { id:  0, x:  96, y:  96 },
+  { id:  1, x: 224, y:  96 },
+  { id:  2, x: 352, y:  96 },
+  { id:  3, x: 480, y:  96 },
+  { id:  4, x: 608, y:  96 },
+  { id:  5, x: 736, y:  96 },
+  { id:  6, x: 864, y:  96 },
+  { id:  7, x: 992, y:  96 },
+  { id:  8, x:1120, y:  96 },
+  { id:  9, x:1248, y:  96 },
+  // Row 1  (y≈224)
+  { id: 10, x:  96, y: 224 },
+  { id: 11, x: 224, y: 224 },
+  { id: 12, x: 352, y: 224 },
+  { id: 13, x: 480, y: 224 },
+  { id: 14, x: 608, y: 224 },
+  { id: 15, x: 736, y: 224 },
+  { id: 16, x: 864, y: 224 },
+  { id: 17, x: 992, y: 224 },
+  { id: 18, x:1120, y: 224 },
+  { id: 19, x:1248, y: 224 },
+  // Row 2  (y≈352)
+  { id: 20, x:  96, y: 352 },
+  { id: 21, x: 224, y: 352 },
+  { id: 22, x: 352, y: 352 },
+  { id: 23, x: 480, y: 352 },
+  { id: 24, x: 608, y: 352 },
+  { id: 25, x: 736, y: 352 },
+  { id: 26, x: 864, y: 352 },
+  { id: 27, x: 992, y: 352 },
+  { id: 28, x:1120, y: 352 },
+  { id: 29, x:1248, y: 352 },
+  // Row 3  (y≈480)
+  { id: 30, x:  96, y: 480 },
+  { id: 31, x: 224, y: 480 },
+  { id: 32, x: 352, y: 480 },
+  { id: 33, x: 480, y: 480 },
+  { id: 34, x: 608, y: 480 },
+  { id: 35, x: 736, y: 480 },
+  { id: 36, x: 864, y: 480 },
+  { id: 37, x: 992, y: 480 },
+  { id: 38, x:1120, y: 480 },
+  { id: 39, x:1248, y: 480 },
+  // Row 4  (y≈608)
+  { id: 40, x:  96, y: 608 },
+  { id: 41, x: 224, y: 608 },
+  { id: 42, x: 352, y: 608 },
+  { id: 43, x: 480, y: 608 },
+  { id: 44, x: 608, y: 608 },
+  { id: 45, x: 736, y: 608 },
+  { id: 46, x: 864, y: 608 },
+  { id: 47, x: 992, y: 608 },
+  { id: 48, x:1120, y: 608 },
+  { id: 49, x:1248, y: 608 },
+];
+
+// Build adjacency: every node connects to its horizontal and vertical neighbours
+function buildAdj(): Map<number, number[]> {
+  const adj = new Map<number, number[]>();
+  NODES.forEach(n => adj.set(n.id, []));
+
+  // Horizontal edges (same row = same y)
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 9; col++) {
+      const a = row * 10 + col;
+      const b = row * 10 + col + 1;
+      adj.get(a)!.push(b);
+      adj.get(b)!.push(a);
+    }
+  }
+  // Vertical edges (same column = same x)
+  for (let col = 0; col < 10; col++) {
+    for (let row = 0; row < 4; row++) {
+      const a = row * 10 + col;
+      const b = (row + 1) * 10 + col;
+      adj.get(a)!.push(b);
+      adj.get(b)!.push(a);
+    }
+  }
+  return adj;
+}
+
+const ADJ = buildAdj();
+
+function nodeById(id: number): Node {
+  return NODES[id];
+}
+
+// Pick a random neighbour, preferring to continue straight (avoid U-turns)
+function nextNode(currentId: number, prevId: number | null): number {
+  const neighbours = ADJ.get(currentId)!;
+  // Filter out the node we just came from (no U-turns)
+  const forward = neighbours.filter(id => id !== prevId);
+  const pool = forward.length > 0 ? forward : neighbours;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ─── AI vehicle type ──────────────────────────────────────────────────────────
+type AIVehicle = {
+  x: number; y: number;
+  targetId: number; prevId: number | null;
+  speed: number;
+  angle: number; // radians, for drawing
+};
+
+function spawnAI(): AIVehicle[] {
+  const vehicles: AIVehicle[] = [];
+  for (let i = 0; i < 5; i++) {
+    const startId = Math.floor(Math.random() * NODES.length);
+    const n = nodeById(startId);
+    vehicles.push({
+      x: n.x, y: n.y,
+      targetId: nextNode(startId, null),
+      prevId: null,
+      speed: 1.0 + Math.random() * 1.2,
+      angle: 0,
+    });
+  }
+  return vehicles;
+}
+
+function spawnCoins(): Array<{ x: number; y: number }> {
+  const coins: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < 12; i++) {
+    const n = NODES[Math.floor(Math.random() * NODES.length)];
+    // Offset slightly so coins aren't exactly on nodes
+    coins.push({ x: n.x + (Math.random() - 0.5) * 80, y: n.y + (Math.random() - 0.5) * 80 });
+  }
+  return coins;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 const TrafficRunnerGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mapImageRef = useRef<HTMLImageElement | null>(null);
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'crashed'>('idle');
-  const [playerStopped, setPlayerStopped] = useState(false);
-
-  const CANVAS_WIDTH = 800;
-  const CANVAS_HEIGHT = 600;
-  const CAMERA_ZOOM = 3; // Close-up zoom level
-  const MAP_WIDTH = 1408;
-  const MAP_HEIGHT = 768;
-  const CAR_SIZE = 12;
-
-  const gameStateRef = useRef<{
-    playerX: number;
-    playerY: number;
-    playerHeading: number; // 0=up, 90=right, 180=down, 270=left
-    playerSpeed: number;
-    score: number;
-    time: number;
-    coins: Array<{ x: number; y: number }>;
-    aiVehicles: Array<{ x: number; y: number; heading: number; speed: number }>;
-    scenarioIndex: number;
-    scenarioTime: number;
-    lastTurnTime: number;
-    gameState: 'idle' | 'playing' | 'crashed';
-    graceTime: number;
-  }>({
-    playerX: 200,
-    playerY: 96,
-    playerHeading: 0,
-    playerSpeed: 2.0,
-    score: 0,
-    time: 0,
-    coins: [] as Array<{ x: number; y: number }>,
-    aiVehicles: [] as Array<{ x: number; y: number; heading: number; speed: number }>,
-    scenarioIndex: 0,
-    scenarioTime: 0,
-    lastTurnTime: 0,
-    gameState: 'idle' as 'idle' | 'playing' | 'crashed',
-    graceTime: 0,
-  });
-
-  const rafRef = useRef<number | undefined>(undefined);
+  const mapImgRef = useRef<HTMLImageElement | null>(null);
+  const [uiState, setUiState] = useState<'idle' | 'playing' | 'paused'>('idle');
+  const [score, setScore] = useState(0);
+  const [scenarioLabel, setScenarioLabel] = useState('');
+  const rafRef = useRef<number | null>(null);
 
   const scenarios = [
     'Unprotected Left Turn',
-    'Right Turn—Pedestrian',
+    'Right Turn — Pedestrian',
     '4-Way Stop',
     'Emergency Vehicle',
     'T-Intersection',
@@ -56,371 +173,277 @@ const TrafficRunnerGame: React.FC = () => {
     'Green Light Left Turn',
   ];
 
-  // Road network - lanes on the city map
-  // Horizontal roads (y-coordinates)
-  const horizontalRoads = [
-    { y: 96, lanes: [80, 112] },      // Top road
-    { y: 224, lanes: [208, 240] },    // Second road
-    { y: 352, lanes: [336, 368] },    // Middle road
-    { y: 480, lanes: [464, 496] },    // Fourth road
-    { y: 608, lanes: [592, 624] },    // Bottom road
-  ];
+  // ── Mutable game state (NOT React state, to avoid re-render jank) ──────────
+  const gs = useRef({
+    playing: false,
+    paused: false,
+    // Player
+    px: 200, py: 96,          // current position
+    targetId: 1,               // waypoint we're heading to
+    prevId: 0 as number | null,
+    angle: 0,                  // radians
+    scoreVal: 0,
+    // Scenario
+    scenarioIdx: 0,
+    scenarioTimer: 0,
+    // Entities
+    coins: [] as Array<{ x: number; y: number }>,
+    ai: [] as AIVehicle[],
+    // Grace period (no collision for first 2s)
+    graceTimer: 0,
+    // Time
+    frameCount: 0,
+  });
 
-  // Vertical roads (x-coordinates)
-  const verticalRoads = [
-    { x: 96, lanes: [80, 112] },      // Left road
-    { x: 224, lanes: [208, 240] },    // Second road
-    { x: 352, lanes: [336, 368] },    // Middle road
-    { x: 480, lanes: [464, 496] },    // Fourth road
-    { x: 608, lanes: [592, 624] },    // Fifth road
-    { x: 736, lanes: [720, 752] },    // Sixth road
-    { x: 864, lanes: [848, 880] },    // Seventh road
-    { x: 992, lanes: [976, 1008] },   // Eighth road
-    { x: 1120, lanes: [1104, 1136] }, // Ninth road
-    { x: 1248, lanes: [1232, 1264] }, // Right road
-  ];
+  // ── Load map image once ────────────────────────────────────────────────────
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/manus-storage/city-map_781596a2.png';
+    img.onload = () => { mapImgRef.current = img; };
+  }, []);
 
-  // Get the current road the car is on
-  const getCurrentRoad = (x: number, y: number, heading: number): { road: any; type: string } | null => {
-    const tolerance = 30;
-    
-    if (heading === 0 || heading === 180) {
-      // Moving vertically - check horizontal roads
-      for (const road of horizontalRoads) {
-        if (Math.abs(y - road.y) < tolerance) {
-          return { road, type: 'horizontal' };
-        }
-      }
-    } else if (heading === 90 || heading === 270) {
-      // Moving horizontally - check vertical roads
-      for (const road of verticalRoads) {
-        if (Math.abs(x - road.x) < tolerance) {
-          return { road, type: 'vertical' };
-        }
-      }
-    }
-    return null;
-  };
+  // ── Move a waypoint-follower one frame ────────────────────────────────────
+  function stepWaypoint(
+    x: number, y: number,
+    targetId: number, prevId: number | null,
+    speed: number
+  ): { x: number; y: number; targetId: number; prevId: number | null; angle: number; arrived: boolean } {
+    const target = nodeById(targetId);
+    const dx = target.x - x;
+    const dy = target.y - y;
+    const dist = Math.hypot(dx, dy);
+    const angle = Math.atan2(dx, -dy); // atan2(east, north) → 0=up
 
-  // Keep car centered in lane
-  const keepInLane = (x: number, y: number, heading: number): { x: number; y: number } => {
-    const roadInfo = getCurrentRoad(x, y, heading);
-    if (!roadInfo) return { x, y };
-
-    const { road, type } = roadInfo;
-    if (type === 'horizontal') {
-      // Snap to center of lane
-      const centerY = road.y;
-      return { x, y: centerY };
-    } else {
-      // Snap to center of lane
-      const centerX = road.x;
-      return { x: centerX, y };
-    }
-  };
-
-  // Check if can turn at intersection
-  const canTurnAtIntersection = (x: number, y: number): boolean => {
-    const tolerance = 50; // Increased tolerance for easier turning
-    let onHorizontal = false;
-    let onVertical = false;
-
-    for (const road of horizontalRoads) {
-      if (Math.abs(y - road.y) < tolerance) onHorizontal = true;
-    }
-    for (const road of verticalRoads) {
-      if (Math.abs(x - road.x) < tolerance) onVertical = true;
+    if (dist <= speed + 0.5) {
+      // Snap to node, pick next
+      const newPrev = targetId;
+      const newTarget = nextNode(targetId, prevId);
+      return { x: target.x, y: target.y, targetId: newTarget, prevId: newPrev, angle, arrived: true };
     }
 
-    return onHorizontal && onVertical;
-  };
+    const nx = x + (dx / dist) * speed;
+    const ny = y + (dy / dist) * speed;
+    return { x: nx, y: ny, targetId, prevId, angle, arrived: false };
+  }
 
-  // Get next heading after turn
-  const getNextHeading = (currentHeading: number, turnDirection: 'left' | 'right'): number => {
-    if (turnDirection === 'left') {
-      return (currentHeading - 90 + 360) % 360;
-    } else {
-      return (currentHeading + 90) % 360;
-    }
-  };
-
-  // Move car forward
-  const moveForward = (x: number, y: number, heading: number, speed: number): { x: number; y: number } => {
-    const radians = (heading * Math.PI) / 180;
-    const newX: number = x - Math.sin(radians) * speed;
-    const newY: number = y - Math.cos(radians) * speed;
-
-    // Keep in bounds
-    const boundX: number = Math.max(CAR_SIZE, Math.min(MAP_WIDTH - CAR_SIZE, newX));
-    const boundY: number = Math.max(CAR_SIZE, Math.min(MAP_HEIGHT - CAR_SIZE, newY));
-
-    return { x: boundX, y: boundY };
-  };
-
-  const spawnCoins = (): Array<{ x: number; y: number }> => {
-    const coins: Array<{ x: number; y: number }> = [];
-    for (let i = 0; i < 15; i++) {
-      let x: number = 0, y: number = 0, valid = false;
-      while (!valid) {
-        x = Math.random() * (MAP_WIDTH - 100) + 50;
-        y = Math.random() * (MAP_HEIGHT - 100) + 50;
-        // Place coins on roads
-        const onHorizontal = horizontalRoads.some(r => Math.abs(y - r.y) < 30);
-        const onVertical = verticalRoads.some(r => Math.abs(x - r.x) < 30);
-        valid = onHorizontal || onVertical;
-      }
-      coins.push({ x, y });
-    }
-    return coins;
-  };
-
-  const spawnAI = (): Array<{ x: number; y: number; heading: number; speed: number }> => {
-    const vehicles: Array<{ x: number; y: number; heading: number; speed: number }> = [];
-    for (let i = 0; i < 4; i++) {
-      const roadType = Math.random() > 0.5 ? 'horizontal' : 'vertical';
-      let x: number = 0, y: number = 0, heading: number = 0, speed: number = 0;
-
-      if (roadType === 'horizontal') {
-        const road = horizontalRoads[Math.floor(Math.random() * horizontalRoads.length)];
-        x = Math.random() * MAP_WIDTH;
-        y = road.y;
-        heading = Math.random() > 0.5 ? 90 : 270;
-        speed = 0.8 + Math.random() * 0.8;
-      } else {
-        const road = verticalRoads[Math.floor(Math.random() * verticalRoads.length)];
-        x = road.x;
-        y = Math.random() * MAP_HEIGHT;
-        heading = Math.random() > 0.5 ? 0 : 180;
-        speed = 0.8 + Math.random() * 0.8;
-      }
-
-      vehicles.push({ x, y, heading, speed });
-    }
-    return vehicles;
-  };
-
-  const draw = () => {
+  // ── Draw one frame ─────────────────────────────────────────────────────────
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    const s = gs.current;
 
-    const state = gameStateRef.current;
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Clear canvas
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Background
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Draw map with camera following player
-    if (mapImageRef.current) {
-      const cameraX = state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM);
-      const cameraY = state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM);
+    // Camera: player is centred on screen
+    const camX = s.px - CANVAS_W / (2 * ZOOM);
+    const camY = s.py - CANVAS_H / (2 * ZOOM);
 
+    // Map
+    if (mapImgRef.current) {
       ctx.save();
-      ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
-      ctx.drawImage(mapImageRef.current, -cameraX, -cameraY);
+      ctx.scale(ZOOM, ZOOM);
+      ctx.drawImage(mapImgRef.current, -camX, -camY);
       ctx.restore();
     }
 
-    // Draw AI vehicles
-    ctx.fillStyle = '#ff6b6b';
-    for (const vehicle of state.aiVehicles) {
-      const screenX = (vehicle.x - (state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
-      const screenY = (vehicle.y - (state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
+    // Helper: world → screen
+    const wx = (wx: number) => (wx - camX) * ZOOM;
+    const wy = (wy: number) => (wy - camY) * ZOOM;
 
-      if (screenX > -20 && screenX < CANVAS_WIDTH + 20 && screenY > -20 && screenY < CANVAS_HEIGHT + 20) {
-        ctx.save();
-        ctx.translate(screenX, screenY);
-        ctx.rotate((vehicle.heading * Math.PI) / 180);
-        ctx.fillRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
-        ctx.restore();
-      }
+    // Coins
+    for (const c of s.coins) {
+      const sx = wx(c.x), sy = wy(c.y);
+      if (sx < -10 || sx > CANVAS_W + 10 || sy < -10 || sy > CANVAS_H + 10) continue;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sx, sy, 5 * ZOOM / 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.restore();
     }
 
-    // Draw coins
-    ctx.fillStyle = '#ffeb3b';
-    for (const coin of state.coins) {
-      const screenX = (coin.x - (state.playerX - CANVAS_WIDTH / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
-      const screenY = (coin.y - (state.playerY - CANVAS_HEIGHT / (2 * CAMERA_ZOOM))) * CAMERA_ZOOM;
-
-      if (screenX > -10 && screenX < CANVAS_WIDTH + 10 && screenY > -10 && screenY < CANVAS_HEIGHT + 10) {
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // AI vehicles
+    for (const v of s.ai) {
+      const sx = wx(v.x), sy = wy(v.y);
+      if (sx < -30 || sx > CANVAS_W + 30 || sy < -30 || sy > CANVAS_H + 30) continue;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(v.angle);
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
+      ctx.restore();
     }
 
-    // Draw player car (green)
-    ctx.fillStyle = '#4caf50';
+    // Player car (always screen centre)
     ctx.save();
-    ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-    ctx.rotate((state.playerHeading * Math.PI) / 180);
-    ctx.fillRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
+    ctx.translate(CANVAS_W / 2, CANVAS_H / 2);
+    ctx.rotate(s.angle);
+    ctx.fillStyle = '#2ecc71';
+    ctx.fillRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
-    ctx.strokeRect(-CAR_SIZE / 2, -CAR_SIZE, CAR_SIZE, CAR_SIZE * 2);
+    ctx.strokeRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
     ctx.restore();
 
-    // Draw HUD
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 300, 80);
+    // HUD
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillRect(0, 0, 280, 68);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText(`Score: ${state.score}`, 10, 20);
-    ctx.fillText(`Time: ${(state.time / 60).toFixed(1)}s`, 10, 40);
-    ctx.fillText(`Coins: ${state.coins.length - Math.floor(state.score / 10)}`, 10, 60);
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(`Score: ${s.scoreVal}`, 10, 20);
+    ctx.fillText(`Time:  ${(s.frameCount / 60).toFixed(1)}s`, 10, 38);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText(`Scenario: ${scenarios[s.scenarioIdx]}`, 10, 56);
 
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText(`Scenario: ${scenarios[state.scenarioIndex]}`, 10, 75);
-  };
+    // Idle overlay
+    if (!s.playing) {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('▶ Click Play Car to start', CANVAS_W / 2, CANVAS_H / 2);
+      ctx.textAlign = 'left';
+    }
 
-  const loop = () => {
-    const state = gameStateRef.current;
+    // Paused overlay
+    if (s.playing && s.paused) {
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 28px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('⏸ PAUSED', CANVAS_W / 2, CANVAS_H / 2);
+      ctx.textAlign = 'left';
+    }
+  }, []);
 
-    if (state.gameState === 'playing' && !playerStopped) {
-      // Update time
-      state.time += 1;
-      state.graceTime += 1 / 60;
-      state.scenarioTime += 1 / 60;
+  // ── Game loop ──────────────────────────────────────────────────────────────
+  const loop = useCallback(() => {
+    const s = gs.current;
 
-      // Rotate scenario every 15 seconds
-      if (state.scenarioTime > 15) {
-        state.scenarioIndex = (state.scenarioIndex + 1) % scenarios.length;
-        state.scenarioTime = 0;
+    if (s.playing && !s.paused) {
+      s.frameCount++;
+      s.graceTimer += 1 / 60;
+      s.scenarioTimer += 1 / 60;
+
+      // Rotate scenario every 15 s
+      if (s.scenarioTimer >= 15) {
+        s.scenarioIdx = (s.scenarioIdx + 1) % scenarios.length;
+        s.scenarioTimer = 0;
+        setScenarioLabel(scenarios[s.scenarioIdx]);
       }
 
-      // Move player car forward
-      let newPos = moveForward(state.playerX, state.playerY, state.playerHeading, state.playerSpeed);
-      newPos = keepInLane(newPos.x, newPos.y, state.playerHeading);
-      state.playerX = newPos.x;
-      state.playerY = newPos.y;
+      // ── Move player ──────────────────────────────────────────────────────
+      const pr = stepWaypoint(s.px, s.py, s.targetId, s.prevId, SPEED);
+      s.px = pr.x;
+      s.py = pr.y;
+      s.angle = pr.angle;
+      s.targetId = pr.targetId;
+      s.prevId = pr.prevId;
 
-      // Random turns at intersections (50% chance every 1 second)
-      if (state.time % 60 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
-        if (Math.random() > 0.5) {
-          state.playerHeading = getNextHeading(state.playerHeading, 'left');
-          state.lastTurnTime = state.time;
-        } else {
-          state.playerHeading = getNextHeading(state.playerHeading, 'right');
-          state.lastTurnTime = state.time;
-        }
+      // ── Move AI ──────────────────────────────────────────────────────────
+      for (const v of s.ai) {
+        const r = stepWaypoint(v.x, v.y, v.targetId, v.prevId, v.speed);
+        v.x = r.x; v.y = r.y;
+        v.angle = r.angle;
+        v.targetId = r.targetId;
+        v.prevId = r.prevId;
       }
 
-      // Move AI vehicles
-      for (const vehicle of state.aiVehicles) {
-        let aiPos = moveForward(vehicle.x, vehicle.y, vehicle.heading, vehicle.speed);
-
-        // Random turns at intersections
-        if (Math.random() > 0.98 && canTurnAtIntersection(aiPos.x, aiPos.y)) {
-          vehicle.heading = getNextHeading(vehicle.heading, Math.random() > 0.5 ? 'left' : 'right');
-        }
-
-        // Keep in bounds
-        if (aiPos.x < 0 || aiPos.x > MAP_WIDTH || aiPos.y < 0 || aiPos.y > MAP_HEIGHT) {
-          vehicle.x = Math.random() * MAP_WIDTH;
-          vehicle.y = Math.random() * MAP_HEIGHT;
-        } else {
-          vehicle.x = aiPos.x;
-          vehicle.y = aiPos.y;
-        }
-      }
-
-      // Coin collection
-      state.coins = state.coins.filter(coin => {
-        const dist = Math.hypot(coin.x - state.playerX, coin.y - state.playerY);
-        if (dist < 20) {
-          state.score += 10;
+      // ── Coin collection ───────────────────────────────────────────────────
+      s.coins = s.coins.filter(c => {
+        if (Math.hypot(c.x - s.px, c.y - s.py) < 22) {
+          s.scoreVal += 10;
+          setScore(s.scoreVal);
           return false;
         }
         return true;
       });
-
-      // Collision detection (only if not paused and grace period is over)
-      if (!playerStopped && state.graceTime > 2) {
-        for (const vehicle of state.aiVehicles) {
-          const dist = Math.hypot(vehicle.x - state.playerX, vehicle.y - state.playerY);
-          if (dist < 40) {
-            state.gameState = 'crashed';
-          }
-        }
-      }
+      // Respawn coins if all collected
+      if (s.coins.length === 0) s.coins = spawnCoins();
     }
 
     draw();
     rafRef.current = requestAnimationFrame(loop);
-  };
+  }, [draw]);
 
+  // Start/stop RAF
   useEffect(() => {
-    const img = new Image();
-    img.src = '/manus-storage/city-map_781596a2.png';
-    img.onload = () => {
-      mapImageRef.current = img;
-    };
-  }, []);
+    rafRef.current = requestAnimationFrame(loop);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [loop]);
 
+  // ── Controls ───────────────────────────────────────────────────────────────
   const handlePlay = () => {
-    gameStateRef.current.gameState = 'playing';
-    gameStateRef.current.playerX = 200;
-    gameStateRef.current.playerY = 96;
-    gameStateRef.current.playerHeading = 0;
-    gameStateRef.current.score = 0;
-    gameStateRef.current.time = 0;
-    gameStateRef.current.coins = spawnCoins();
-    gameStateRef.current.aiVehicles = spawnAI();
-    gameStateRef.current.lastTurnTime = 0;
-    gameStateRef.current.graceTime = 0;
-    setGameState('playing');
-    setPlayerStopped(false);
+    const s = gs.current;
+    // Start from node 3 (480, 96) heading right toward node 4
+    s.px = 480; s.py = 96;
+    s.targetId = 4; s.prevId = 3;
+    s.angle = 0;
+    s.scoreVal = 0; s.frameCount = 0;
+    s.scenarioIdx = 0; s.scenarioTimer = 0;
+    s.graceTimer = 0;
+    s.coins = spawnCoins();
+    s.ai = spawnAI();
+    s.playing = true; s.paused = false;
+    setScore(0);
+    setScenarioLabel(scenarios[0]);
+    setUiState('playing');
   };
 
   const handlePause = () => {
-    setPlayerStopped(!playerStopped);
+    const s = gs.current;
+    s.paused = !s.paused;
+    setUiState(s.paused ? 'paused' : 'playing');
   };
 
   const handleStop = () => {
-    gameStateRef.current.gameState = 'idle';
-    setGameState('idle');
-    setPlayerStopped(false);
+    const s = gs.current;
+    s.playing = false; s.paused = false;
+    setUiState('idle');
   };
-
-  useEffect(() => {
-    rafRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
 
   return (
     <div className="w-full bg-gray-900 rounded-lg overflow-hidden">
       <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
         <canvas
           ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={CANVAS_W}
+          height={CANVAS_H}
           className="w-full h-full"
         />
       </div>
-
-      <div className="flex gap-2 p-4 bg-gray-800 justify-center">
+      <div className="flex gap-2 p-3 bg-gray-800 justify-center">
         <button
           onClick={handlePlay}
-          disabled={gameState === 'playing'}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+          disabled={uiState === 'playing'}
+          className="px-4 py-2 bg-green-500 text-white rounded font-bold hover:bg-green-600 disabled:opacity-40 transition-all active:scale-95"
         >
           ▶ Play Car
         </button>
         <button
           onClick={handlePause}
-          disabled={gameState !== 'playing'}
-          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
+          disabled={uiState === 'idle'}
+          className="px-4 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600 disabled:opacity-40 transition-all active:scale-95"
         >
-          ⏸ Pause
+          {uiState === 'paused' ? '▶ Resume' : '⏸ Pause'}
         </button>
         <button
           onClick={handleStop}
-          disabled={gameState === 'idle'}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+          disabled={uiState === 'idle'}
+          className="px-4 py-2 bg-red-500 text-white rounded font-bold hover:bg-red-600 disabled:opacity-40 transition-all active:scale-95"
         >
           ⏹ Stop Car
         </button>
