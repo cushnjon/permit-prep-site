@@ -434,6 +434,17 @@ const TrafficRunnerGame: React.FC = () => {
         s.scenarioTimer = 0;
       }
 
+      // While brake is held, ramp up to 100% over 2 seconds even without drag
+      if (brakeActive.current && brakeHoldStart.current !== null) {
+        const elapsed = (performance.now() - brakeHoldStart.current) / 2000;
+        const timeRamp = Math.min(1, elapsed);
+        const newVal = Math.min(1, 0.5 + timeRamp * 0.5);
+        if (newVal > s.brakeForce) {
+          s.brakeForce = newVal;
+          setBrakeVal(newVal);
+        }
+      }
+
       // Speed physics: accelerate toward maxSpeed, brake reduces it
       const target = s.maxSpeed * (1 - s.brakeForce);
       const accel = s.brakeForce > 0.05 ? -0.12 * s.brakeForce : 0.04;
@@ -471,15 +482,20 @@ const TrafficRunnerGame: React.FC = () => {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [loop]);
 
-  // ── Brake slider interaction ───────────────────────────────────────────────
+  // ── Brake interaction ────────────────────────────────────────────────────────
+  // Tap = instant 50%. Hold & slide down = remaining 50% builds over 2 seconds.
+  // Release = spring back to 0.
   const brakeActive = useRef(false);
-  const brakeStartY = useRef(0);
-  const brakeStartVal = useRef(0);
+  const brakeHoldStart = useRef<number | null>(null); // timestamp when press began
+  const brakeStartClientY = useRef(0);
 
   const onBrakeStart = useCallback((clientY: number) => {
     brakeActive.current = true;
-    brakeStartY.current = clientY;
-    brakeStartVal.current = gs.current.brakeForce;
+    brakeHoldStart.current = performance.now();
+    brakeStartClientY.current = clientY;
+    // Instant 50% on tap
+    gs.current.brakeForce = 0.5;
+    setBrakeVal(0.5);
   }, []);
 
   const onBrakeMove = useCallback((clientY: number) => {
@@ -487,16 +503,24 @@ const TrafficRunnerGame: React.FC = () => {
     const el = brakeRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    // Normalise: top = 0 (no brake), bottom = 1 (full brake)
-    const rel = (clientY - rect.top) / rect.height;
-    const val = Math.max(0, Math.min(1, rel));
+    // How far down from the press start point (0 = no extra, 1 = full extra)
+    const dragDelta = (clientY - brakeStartClientY.current) / (rect.height * 0.5);
+    const dragExtra = Math.max(0, Math.min(1, dragDelta)); // 0–1 for the upper half of track
+    // Time-based ramp: 0→1 over 2 seconds while held
+    const elapsed = brakeHoldStart.current !== null
+      ? (performance.now() - brakeHoldStart.current) / 2000
+      : 0;
+    const timeRamp = Math.min(1, elapsed);
+    // Extra 50% = max of drag position OR time ramp
+    const extra = Math.max(dragExtra, timeRamp) * 0.5;
+    const val = Math.min(1, 0.5 + extra);
     gs.current.brakeForce = val;
     setBrakeVal(val);
   }, []);
 
   const onBrakeEnd = useCallback(() => {
     brakeActive.current = false;
-    // Spring back to 0 over next frames (handled in loop via accel)
+    brakeHoldStart.current = null;
     gs.current.brakeForce = 0;
     setBrakeVal(0);
   }, []);
