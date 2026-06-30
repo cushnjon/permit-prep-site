@@ -1,122 +1,145 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 
-// ─── Map constants ───────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 const CANVAS_W = 800;
 const CANVAS_H = 600;
 const MAP_W = 1408;
 const MAP_H = 768;
-const ZOOM = 3;
-const CAR_W = 10;
-const CAR_H = 18;
-const SPEED = 2.2; // px per frame
+const ZOOM = 2.1;          // 30% less than old 3.0
+const SPEED = 2.2;
+const LANE_OFFSET = 14;    // pixels — right-side lane offset from node centre
 
 // ─── Waypoint graph ───────────────────────────────────────────────────────────
-// Each node is an intersection (x, y) on the actual map image.
-// Edges list which nodes you can reach from each node.
-// Coordinates were measured from the 1408×768 pixel-art city map.
-// Columns (vertical roads):  ~96, ~224, ~352, ~480, ~608, ~736, ~864, ~992, ~1120, ~1248
-// Rows    (horizontal roads): ~96, ~224, ~352, ~480, ~608
-
+// 50 nodes: 5 rows × 10 columns matching the city map intersections
+// Row y-values: 96, 224, 352, 480, 608
+// Col x-values: 96, 224, 352, 480, 608, 736, 864, 992, 1120, 1248
 type Node = { id: number; x: number; y: number };
-type Edge = { from: number; to: number };
 
-const NODES: Node[] = [
-  // Row 0  (y≈96)
-  { id:  0, x:  96, y:  96 },
-  { id:  1, x: 224, y:  96 },
-  { id:  2, x: 352, y:  96 },
-  { id:  3, x: 480, y:  96 },
-  { id:  4, x: 608, y:  96 },
-  { id:  5, x: 736, y:  96 },
-  { id:  6, x: 864, y:  96 },
-  { id:  7, x: 992, y:  96 },
-  { id:  8, x:1120, y:  96 },
-  { id:  9, x:1248, y:  96 },
-  // Row 1  (y≈224)
-  { id: 10, x:  96, y: 224 },
-  { id: 11, x: 224, y: 224 },
-  { id: 12, x: 352, y: 224 },
-  { id: 13, x: 480, y: 224 },
-  { id: 14, x: 608, y: 224 },
-  { id: 15, x: 736, y: 224 },
-  { id: 16, x: 864, y: 224 },
-  { id: 17, x: 992, y: 224 },
-  { id: 18, x:1120, y: 224 },
-  { id: 19, x:1248, y: 224 },
-  // Row 2  (y≈352)
-  { id: 20, x:  96, y: 352 },
-  { id: 21, x: 224, y: 352 },
-  { id: 22, x: 352, y: 352 },
-  { id: 23, x: 480, y: 352 },
-  { id: 24, x: 608, y: 352 },
-  { id: 25, x: 736, y: 352 },
-  { id: 26, x: 864, y: 352 },
-  { id: 27, x: 992, y: 352 },
-  { id: 28, x:1120, y: 352 },
-  { id: 29, x:1248, y: 352 },
-  // Row 3  (y≈480)
-  { id: 30, x:  96, y: 480 },
-  { id: 31, x: 224, y: 480 },
-  { id: 32, x: 352, y: 480 },
-  { id: 33, x: 480, y: 480 },
-  { id: 34, x: 608, y: 480 },
-  { id: 35, x: 736, y: 480 },
-  { id: 36, x: 864, y: 480 },
-  { id: 37, x: 992, y: 480 },
-  { id: 38, x:1120, y: 480 },
-  { id: 39, x:1248, y: 480 },
-  // Row 4  (y≈608)
-  { id: 40, x:  96, y: 608 },
-  { id: 41, x: 224, y: 608 },
-  { id: 42, x: 352, y: 608 },
-  { id: 43, x: 480, y: 608 },
-  { id: 44, x: 608, y: 608 },
-  { id: 45, x: 736, y: 608 },
-  { id: 46, x: 864, y: 608 },
-  { id: 47, x: 992, y: 608 },
-  { id: 48, x:1120, y: 608 },
-  { id: 49, x:1248, y: 608 },
-];
+const ROWS = [96, 224, 352, 480, 608];
+const COLS = [96, 224, 352, 480, 608, 736, 864, 992, 1120, 1248];
 
-// Build adjacency: every node connects to its horizontal and vertical neighbours
+const NODES: Node[] = [];
+for (let r = 0; r < 5; r++) {
+  for (let c = 0; c < 10; c++) {
+    NODES.push({ id: r * 10 + c, x: COLS[c], y: ROWS[r] });
+  }
+}
+
 function buildAdj(): Map<number, number[]> {
   const adj = new Map<number, number[]>();
   NODES.forEach(n => adj.set(n.id, []));
-
-  // Horizontal edges (same row = same y)
-  for (let row = 0; row < 5; row++) {
-    for (let col = 0; col < 9; col++) {
-      const a = row * 10 + col;
-      const b = row * 10 + col + 1;
-      adj.get(a)!.push(b);
-      adj.get(b)!.push(a);
+  // Horizontal
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 9; c++) {
+      const a = r * 10 + c, b = r * 10 + c + 1;
+      adj.get(a)!.push(b); adj.get(b)!.push(a);
     }
   }
-  // Vertical edges (same column = same x)
-  for (let col = 0; col < 10; col++) {
-    for (let row = 0; row < 4; row++) {
-      const a = row * 10 + col;
-      const b = (row + 1) * 10 + col;
-      adj.get(a)!.push(b);
-      adj.get(b)!.push(a);
+  // Vertical
+  for (let c = 0; c < 10; c++) {
+    for (let r = 0; r < 4; r++) {
+      const a = r * 10 + c, b = (r + 1) * 10 + c;
+      adj.get(a)!.push(b); adj.get(b)!.push(a);
     }
   }
   return adj;
 }
-
 const ADJ = buildAdj();
 
-function nodeById(id: number): Node {
-  return NODES[id];
-}
+function nodeById(id: number): Node { return NODES[id]; }
 
-// Pick a random neighbour, preferring to continue straight (avoid U-turns)
 function nextNode(currentId: number, prevId: number | null): number {
   const neighbours = ADJ.get(currentId)!;
-  // Filter out the node we just came from (no U-turns)
   const forward = neighbours.filter(id => id !== prevId);
   const pool = forward.length > 0 ? forward : neighbours;
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ─── Lane offset helper ───────────────────────────────────────────────────────
+// Given the direction of travel (angle in radians, 0=up), offset the car to
+// the right-side lane so it drives on the correct side of the road.
+function laneOffset(angle: number): { dx: number; dy: number } {
+  // Perpendicular-right of travel direction
+  return {
+    dx:  Math.cos(angle) * LANE_OFFSET,
+    dy: -Math.sin(angle) * LANE_OFFSET,
+  };
+}
+
+// ─── Realistic car drawing ────────────────────────────────────────────────────
+function drawCar(
+  ctx: CanvasRenderingContext2D,
+  sx: number, sy: number,
+  angle: number,
+  color: string,
+  scale: number = 1
+) {
+  const W = 10 * scale;
+  const H = 18 * scale;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(angle);
+
+  // Body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-W / 2, -H / 2, W, H, 2 * scale);
+  ctx.fill();
+
+  // Roof / cabin (darker)
+  ctx.fillStyle = shadeColor(color, -30);
+  ctx.beginPath();
+  ctx.roundRect(-W * 0.35, -H * 0.25, W * 0.7, H * 0.38, 1.5 * scale);
+  ctx.fill();
+
+  // Windshield (front)
+  ctx.fillStyle = 'rgba(180,220,255,0.75)';
+  ctx.beginPath();
+  ctx.roundRect(-W * 0.3, -H * 0.45, W * 0.6, H * 0.16, 1 * scale);
+  ctx.fill();
+
+  // Rear window
+  ctx.fillStyle = 'rgba(180,220,255,0.55)';
+  ctx.beginPath();
+  ctx.roundRect(-W * 0.28, H * 0.12, W * 0.56, H * 0.12, 1 * scale);
+  ctx.fill();
+
+  // Headlights (front)
+  ctx.fillStyle = '#fffde7';
+  ctx.beginPath(); ctx.ellipse(-W * 0.28, -H * 0.46, W * 0.1, H * 0.045, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( W * 0.28, -H * 0.46, W * 0.1, H * 0.045, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Tail lights (rear)
+  ctx.fillStyle = '#e53935';
+  ctx.beginPath(); ctx.ellipse(-W * 0.28, H * 0.46, W * 0.1, H * 0.04, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( W * 0.28, H * 0.46, W * 0.1, H * 0.04, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Wheels (4 corners)
+  ctx.fillStyle = '#222';
+  const wx = W * 0.42, wy = H * 0.32;
+  const ww = W * 0.22, wh = H * 0.13;
+  [[-wx, -wy], [wx, -wy], [-wx, wy], [wx, wy]].forEach(([cx, cy]) => {
+    ctx.beginPath();
+    ctx.roundRect(cx - ww / 2, cy - wh / 2, ww, wh, 1);
+    ctx.fill();
+  });
+
+  // Outline
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 0.8 * scale;
+  ctx.beginPath();
+  ctx.roundRect(-W / 2, -H / 2, W, H, 2 * scale);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function shadeColor(hex: string, pct: number): string {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, Math.min(255, ((n >> 16) & 0xff) + pct));
+  const g = Math.max(0, Math.min(255, ((n >> 8)  & 0xff) + pct));
+  const b = Math.max(0, Math.min(255, ( n        & 0xff) + pct));
+  return `rgb(${r},${g},${b})`;
 }
 
 // ─── AI vehicle type ──────────────────────────────────────────────────────────
@@ -124,33 +147,35 @@ type AIVehicle = {
   x: number; y: number;
   targetId: number; prevId: number | null;
   speed: number;
-  angle: number; // radians, for drawing
+  angle: number;
+  color: string;
 };
 
+const AI_COLORS = ['#e74c3c','#3498db','#f39c12','#9b59b6','#1abc9c'];
+
 function spawnAI(): AIVehicle[] {
-  const vehicles: AIVehicle[] = [];
-  for (let i = 0; i < 5; i++) {
+  return Array.from({ length: 5 }, (_, i) => {
     const startId = Math.floor(Math.random() * NODES.length);
     const n = nodeById(startId);
-    vehicles.push({
-      x: n.x, y: n.y,
-      targetId: nextNode(startId, null),
-      prevId: null,
+    const tgt = nextNode(startId, null);
+    const tn = nodeById(tgt);
+    const ang = Math.atan2(tn.x - n.x, -(tn.y - n.y));
+    const lo = laneOffset(ang);
+    return {
+      x: n.x + lo.dx, y: n.y + lo.dy,
+      targetId: tgt, prevId: startId,
       speed: 1.0 + Math.random() * 1.2,
-      angle: 0,
-    });
-  }
-  return vehicles;
+      angle: ang,
+      color: AI_COLORS[i % AI_COLORS.length],
+    };
+  });
 }
 
 function spawnCoins(): Array<{ x: number; y: number }> {
-  const coins: Array<{ x: number; y: number }> = [];
-  for (let i = 0; i < 12; i++) {
+  return Array.from({ length: 12 }, () => {
     const n = NODES[Math.floor(Math.random() * NODES.length)];
-    // Offset slightly so coins aren't exactly on nodes
-    coins.push({ x: n.x + (Math.random() - 0.5) * 80, y: n.y + (Math.random() - 0.5) * 80 });
-  }
-  return coins;
+    return { x: n.x + (Math.random() - 0.5) * 80, y: n.y + (Math.random() - 0.5) * 80 };
+  });
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -158,8 +183,6 @@ const TrafficRunnerGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mapImgRef = useRef<HTMLImageElement | null>(null);
   const [uiState, setUiState] = useState<'idle' | 'playing' | 'paused'>('idle');
-  const [score, setScore] = useState(0);
-  const [scenarioLabel, setScenarioLabel] = useState('');
   const rafRef = useRef<number | null>(null);
 
   const scenarios = [
@@ -173,60 +196,71 @@ const TrafficRunnerGame: React.FC = () => {
     'Green Light Left Turn',
   ];
 
-  // ── Mutable game state (NOT React state, to avoid re-render jank) ──────────
   const gs = useRef({
     playing: false,
     paused: false,
-    // Player
-    px: 200, py: 96,          // current position
-    targetId: 1,               // waypoint we're heading to
-    prevId: 0 as number | null,
-    angle: 0,                  // radians
-    scoreVal: 0,
-    // Scenario
-    scenarioIdx: 0,
-    scenarioTimer: 0,
-    // Entities
+    // Player world position (lane-offset applied)
+    px: 0, py: 0,
+    // Waypoint state
+    targetId: 4, prevId: 3 as number | null,
+    angle: 0,
+    // Score / time
+    scoreVal: 0, frameCount: 0,
+    scenarioIdx: 0, scenarioTimer: 0,
     coins: [] as Array<{ x: number; y: number }>,
     ai: [] as AIVehicle[],
-    // Grace period (no collision for first 2s)
-    graceTimer: 0,
-    // Time
-    frameCount: 0,
   });
 
-  // ── Load map image once ────────────────────────────────────────────────────
   useEffect(() => {
     const img = new Image();
     img.src = '/manus-storage/city-map_781596a2.png';
     img.onload = () => { mapImgRef.current = img; };
   }, []);
 
-  // ── Move a waypoint-follower one frame ────────────────────────────────────
+  // ── Waypoint step ──────────────────────────────────────────────────────────
   function stepWaypoint(
     x: number, y: number,
     targetId: number, prevId: number | null,
-    speed: number
-  ): { x: number; y: number; targetId: number; prevId: number | null; angle: number; arrived: boolean } {
+    speed: number,
+    applyLaneOffset: boolean
+  ): { x: number; y: number; targetId: number; prevId: number | null; angle: number } {
     const target = nodeById(targetId);
-    const dx = target.x - x;
-    const dy = target.y - y;
-    const dist = Math.hypot(dx, dy);
-    const angle = Math.atan2(dx, -dy); // atan2(east, north) → 0=up
+    // Target position: node centre + lane offset
+    let tx = target.x, ty = target.y;
+    // Compute direction to raw node to get angle
+    const rawDx = target.x - (applyLaneOffset ? x - laneOffset(gs.current.angle).dx : x);
+    const rawDy = target.y - (applyLaneOffset ? y - laneOffset(gs.current.angle).dy : y);
+    const angle = Math.atan2(target.x - x, -(target.y - y));
 
-    if (dist <= speed + 0.5) {
-      // Snap to node, pick next
-      const newPrev = targetId;
-      const newTarget = nextNode(targetId, prevId);
-      return { x: target.x, y: target.y, targetId: newTarget, prevId: newPrev, angle, arrived: true };
+    if (applyLaneOffset) {
+      const lo = laneOffset(angle);
+      tx = target.x + lo.dx;
+      ty = target.y + lo.dy;
     }
 
-    const nx = x + (dx / dist) * speed;
-    const ny = y + (dy / dist) * speed;
-    return { x: nx, y: ny, targetId, prevId, angle, arrived: false };
+    const dx = tx - x, dy = ty - y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist <= speed + 1) {
+      const newPrev = targetId;
+      const newTarget = nextNode(targetId, prevId);
+      const nt = nodeById(newTarget);
+      const newAngle = Math.atan2(nt.x - target.x, -(nt.y - target.y));
+      const lo2 = applyLaneOffset ? laneOffset(newAngle) : { dx: 0, dy: 0 };
+      return {
+        x: target.x + lo2.dx, y: target.y + lo2.dy,
+        targetId: newTarget, prevId: newPrev, angle: newAngle,
+      };
+    }
+
+    return {
+      x: x + (dx / dist) * speed,
+      y: y + (dy / dist) * speed,
+      targetId, prevId, angle,
+    };
   }
 
-  // ── Draw one frame ─────────────────────────────────────────────────────────
+  // ── Draw ───────────────────────────────────────────────────────────────────
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -235,16 +269,12 @@ const TrafficRunnerGame: React.FC = () => {
     const s = gs.current;
 
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-    // Background
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Camera: player is centred on screen
     const camX = s.px - CANVAS_W / (2 * ZOOM);
     const camY = s.py - CANVAS_H / (2 * ZOOM);
 
-    // Map
     if (mapImgRef.current) {
       ctx.save();
       ctx.scale(ZOOM, ZOOM);
@@ -252,9 +282,8 @@ const TrafficRunnerGame: React.FC = () => {
       ctx.restore();
     }
 
-    // Helper: world → screen
-    const wx = (wx: number) => (wx - camX) * ZOOM;
-    const wy = (wy: number) => (wy - camY) * ZOOM;
+    const wx = (v: number) => (v - camX) * ZOOM;
+    const wy = (v: number) => (v - camY) * ZOOM;
 
     // Coins
     for (const c of s.coins) {
@@ -262,10 +291,10 @@ const TrafficRunnerGame: React.FC = () => {
       if (sx < -10 || sx > CANVAS_W + 10 || sy < -10 || sy > CANVAS_H + 10) continue;
       ctx.save();
       ctx.beginPath();
-      ctx.arc(sx, sy, 5 * ZOOM / 3, 0, Math.PI * 2);
+      ctx.arc(sx, sy, 5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffd700';
       ctx.shadowColor = '#ffd700';
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 8;
       ctx.fill();
       ctx.restore();
     }
@@ -273,40 +302,24 @@ const TrafficRunnerGame: React.FC = () => {
     // AI vehicles
     for (const v of s.ai) {
       const sx = wx(v.x), sy = wy(v.y);
-      if (sx < -30 || sx > CANVAS_W + 30 || sy < -30 || sy > CANVAS_H + 30) continue;
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(v.angle);
-      ctx.fillStyle = '#e74c3c';
-      ctx.fillRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 0.8;
-      ctx.strokeRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
-      ctx.restore();
+      if (sx < -40 || sx > CANVAS_W + 40 || sy < -40 || sy > CANVAS_H + 40) continue;
+      drawCar(ctx, sx, sy, v.angle, v.color, ZOOM / 3);
     }
 
     // Player car (always screen centre)
-    ctx.save();
-    ctx.translate(CANVAS_W / 2, CANVAS_H / 2);
-    ctx.rotate(s.angle);
-    ctx.fillStyle = '#2ecc71';
-    ctx.fillRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(-CAR_W / 2 * ZOOM / 3, -CAR_H / 2 * ZOOM / 3, CAR_W * ZOOM / 3, CAR_H * ZOOM / 3);
-    ctx.restore();
+    drawCar(ctx, CANVAS_W / 2, CANVAS_H / 2, s.angle, '#2ecc71', ZOOM / 3);
 
     // HUD
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, 0, 280, 68);
+    ctx.fillRect(0, 0, 290, 62);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 13px monospace';
     ctx.fillText(`Score: ${s.scoreVal}`, 10, 20);
     ctx.fillText(`Time:  ${(s.frameCount / 60).toFixed(1)}s`, 10, 38);
     ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 11px monospace';
     ctx.fillText(`Scenario: ${scenarios[s.scenarioIdx]}`, 10, 56);
 
-    // Idle overlay
     if (!s.playing) {
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -317,7 +330,6 @@ const TrafficRunnerGame: React.FC = () => {
       ctx.textAlign = 'left';
     }
 
-    // Paused overlay
     if (s.playing && s.paused) {
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -335,43 +347,33 @@ const TrafficRunnerGame: React.FC = () => {
 
     if (s.playing && !s.paused) {
       s.frameCount++;
-      s.graceTimer += 1 / 60;
       s.scenarioTimer += 1 / 60;
-
-      // Rotate scenario every 15 s
       if (s.scenarioTimer >= 15) {
         s.scenarioIdx = (s.scenarioIdx + 1) % scenarios.length;
         s.scenarioTimer = 0;
-        setScenarioLabel(scenarios[s.scenarioIdx]);
       }
 
-      // ── Move player ──────────────────────────────────────────────────────
-      const pr = stepWaypoint(s.px, s.py, s.targetId, s.prevId, SPEED);
-      s.px = pr.x;
-      s.py = pr.y;
+      // Move player
+      const pr = stepWaypoint(s.px, s.py, s.targetId, s.prevId, SPEED, true);
+      s.px = pr.x; s.py = pr.y;
       s.angle = pr.angle;
-      s.targetId = pr.targetId;
-      s.prevId = pr.prevId;
+      s.targetId = pr.targetId; s.prevId = pr.prevId;
 
-      // ── Move AI ──────────────────────────────────────────────────────────
+      // Move AI
       for (const v of s.ai) {
-        const r = stepWaypoint(v.x, v.y, v.targetId, v.prevId, v.speed);
-        v.x = r.x; v.y = r.y;
-        v.angle = r.angle;
-        v.targetId = r.targetId;
-        v.prevId = r.prevId;
+        const r = stepWaypoint(v.x, v.y, v.targetId, v.prevId, v.speed, true);
+        v.x = r.x; v.y = r.y; v.angle = r.angle;
+        v.targetId = r.targetId; v.prevId = r.prevId;
       }
 
-      // ── Coin collection ───────────────────────────────────────────────────
+      // Coins
       s.coins = s.coins.filter(c => {
         if (Math.hypot(c.x - s.px, c.y - s.py) < 22) {
           s.scoreVal += 10;
-          setScore(s.scoreVal);
           return false;
         }
         return true;
       });
-      // Respawn coins if all collected
       if (s.coins.length === 0) s.coins = spawnCoins();
     }
 
@@ -379,7 +381,6 @@ const TrafficRunnerGame: React.FC = () => {
     rafRef.current = requestAnimationFrame(loop);
   }, [draw]);
 
-  // Start/stop RAF
   useEffect(() => {
     rafRef.current = requestAnimationFrame(loop);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
@@ -388,18 +389,20 @@ const TrafficRunnerGame: React.FC = () => {
   // ── Controls ───────────────────────────────────────────────────────────────
   const handlePlay = () => {
     const s = gs.current;
-    // Start from node 3 (480, 96) heading right toward node 4
-    s.px = 480; s.py = 96;
+    // Start at node 3 (480,96), heading right toward node 4 (608,96)
+    const startNode = nodeById(3);
+    const tgtNode = nodeById(4);
+    const ang = Math.atan2(tgtNode.x - startNode.x, -(tgtNode.y - startNode.y));
+    const lo = laneOffset(ang);
+    s.px = startNode.x + lo.dx;
+    s.py = startNode.y + lo.dy;
     s.targetId = 4; s.prevId = 3;
-    s.angle = 0;
+    s.angle = ang;
     s.scoreVal = 0; s.frameCount = 0;
     s.scenarioIdx = 0; s.scenarioTimer = 0;
-    s.graceTimer = 0;
     s.coins = spawnCoins();
     s.ai = spawnAI();
     s.playing = true; s.paused = false;
-    setScore(0);
-    setScenarioLabel(scenarios[0]);
     setUiState('playing');
   };
 
@@ -409,6 +412,7 @@ const TrafficRunnerGame: React.FC = () => {
     setUiState(s.paused ? 'paused' : 'playing');
   };
 
+  // Stop immediately — no popup, no confirmation
   const handleStop = () => {
     const s = gs.current;
     s.playing = false; s.paused = false;
