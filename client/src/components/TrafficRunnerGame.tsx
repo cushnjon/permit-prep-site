@@ -28,8 +28,8 @@ const TrafficRunnerGame: React.FC = () => {
     gameState: 'idle' | 'playing' | 'crashed';
     graceTime: number;
   }>({
-    playerX: 200,
-    playerY: 96,
+    playerX: 704,
+    playerY: 384,
     playerHeading: 0,
     playerSpeed: 2.0,
     score: 0,
@@ -121,7 +121,7 @@ const TrafficRunnerGame: React.FC = () => {
 
   // Check if can turn at intersection
   const canTurnAtIntersection = (x: number, y: number): boolean => {
-    const tolerance = 50; // Increased tolerance for easier turning
+    const tolerance = 20;
     let onHorizontal = false;
     let onVertical = false;
 
@@ -296,14 +296,12 @@ const TrafficRunnerGame: React.FC = () => {
       state.playerX = newPos.x;
       state.playerY = newPos.y;
 
-      // Random turns at intersections (50% chance every 1 second)
-      if (state.time % 60 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
+      // Random turns at intersections (50% chance every 2 seconds)
+      if (state.time % 120 === 0 && canTurnAtIntersection(state.playerX, state.playerY)) {
         if (Math.random() > 0.5) {
           state.playerHeading = getNextHeading(state.playerHeading, 'left');
-          state.lastTurnTime = state.time;
         } else {
           state.playerHeading = getNextHeading(state.playerHeading, 'right');
-          state.lastTurnTime = state.time;
         }
       }
 
@@ -361,8 +359,8 @@ const TrafficRunnerGame: React.FC = () => {
 
   const handlePlay = () => {
     gameStateRef.current.gameState = 'playing';
-    gameStateRef.current.playerX = 200;
-    gameStateRef.current.playerY = 96;
+    gameStateRef.current.playerX = 704;
+    gameStateRef.current.playerY = 384;
     gameStateRef.current.playerHeading = 0;
     gameStateRef.current.score = 0;
     gameStateRef.current.time = 0;
