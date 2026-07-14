@@ -225,23 +225,26 @@ export default function TrafficSnap() {
           <div className="lg:col-span-2 flex flex-col gap-4">
             {/* ── SHAPE SWIPE PHASE ── */}
             {showShape && !showSign && (
-              <Card className="p-8 bg-white border-2 border-blue-300 text-center">
-                <h3 className="text-lg font-semibold text-gray-700 mb-6">
+              <Card className="overflow-hidden bg-white border-2 border-blue-300">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3 px-6 pt-6">
                   Swipe to reveal the sign shape
                 </h3>
-                <div className="flex justify-center mb-6">
-                  <img
+                {/* Widescreen container for shape image */}
+                <div className="px-6 pb-4">
+                  <CinematicSignImage
                     src={currentSign.shapeImage}
                     alt={currentSign.shape}
-                    className="h-40 w-40 object-contain"
+                    isAnswered={false}
                   />
                 </div>
-                <Button
-                  onClick={handleShapeSwipe}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                >
-                  <ChevronRight className="mr-2" /> Swipe to Reveal
-                </Button>
+                <div className="px-6 pb-6 text-center">
+                  <Button
+                    onClick={handleShapeSwipe}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                  >
+                    <ChevronRight className="mr-2" /> Swipe to Reveal
+                  </Button>
+                </div>
               </Card>
             )}
 
