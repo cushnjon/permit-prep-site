@@ -27,6 +27,7 @@ const GAME_LOGOS = {
 };
 
 export default function Home() {
+  const [, setLocation] = useLocation();
   const [gameState, setGameState] = useState<GameState>({
     currentZoneIndex: 0,
     currentQuestionIndex: 0,
@@ -250,6 +251,27 @@ export default function Home() {
             )}
           </GameSection>
 
+          {/* Traffic Snap Section */}
+          <GameSection
+            title="Traffic Snap: Sign & Shape"
+            logo={GAME_LOGOS.textDrive}
+            speedTier="25 MPH"
+            isExpanded={gameState.expandedSection === 1}
+            onToggle={() => toggleSection(1)}
+            progress={0}
+          >
+            {gameState.expandedSection === 1 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">Identify traffic signs by shape and learn their real-world applications.</p>
+                <button
+                  onClick={() => setLocation("/traffic-snap")}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                >
+                  Play Traffic Snap
+                </button>
+              </div>
+            )}
+          </GameSection>
 
         </div>
       </main>
