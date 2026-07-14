@@ -427,6 +427,11 @@ function TextDriveGame({
             {/* Left: Reading Text */}
             <div className="lg:col-span-1">
               <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
+                {question.image && (
+                  <div className="mb-4 rounded-lg overflow-hidden">
+                    <img src={question.image} alt="Question illustration" className="w-full h-auto object-cover rounded-lg" />
+                  </div>
+                )}
                 <h4 className="text-sm font-semibold text-primary mb-3">Question</h4>
                 <p className="text-base leading-relaxed text-foreground">{question.prompt}</p>
               </div>

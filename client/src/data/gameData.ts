@@ -20,6 +20,7 @@ export interface Question {
     summary: string;
   };
   glossary?: GlossaryItem[];
+  image?: string;
 }
 
 export interface Zone {
@@ -43,6 +44,7 @@ export const gameData: Zone[] = [
         c: "To automatically plead guilty to minor mechanical and equipment violations.",
         d: "To always cooperate with traffic officers and show your physical license upon request.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp",
         correct_side_note: "10 POINTS: Spot on. Implied Consent explicitly ties your signature on your license to an advance agreement to submit to chemical screenings if lawfully requested by an officer. Refusal triggers independent, immediate administrative penalties.",
         semi_correct_side_note: "5 POINTS: Close, but incomplete. While showing your physical license and cooperating are standard legal obligations of an operator, they do not satisfy the specific statutory mandate of the 'Implied Consent' chemical testing clause.",
         extended_reading: {
@@ -83,6 +85,7 @@ export const gameData: Zone[] = [
         c: "You must assertively take it to keep traffic flowing smoothly.",
         d: "It belongs strictly to whichever vehicle is larger or heavier.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-pedestrian-Sqsh7YBAP349njwpJBZJuq.webp",
         correct_side_note: "10 POINTS: Perfectly answered. The vehicle code is written entirely around who must *yield* the right-of-way. The law never gives you the right to forcefully claim a patch of asphalt.",
         semi_correct_side_note: "5 POINTS: Incorrect application of physical realities. While a larger commercial truck can cause massive physical damage due to momentum laws, it does not possess a legal right-of-way exemption in suburban zoning blocks.",
         extended_reading: {
@@ -106,6 +109,7 @@ export const gameData: Zone[] = [
         c: "Come to a mandatory 3-second stop regardless of current traffic flow.",
         d: "Slow down slightly while continuing through the lane without looking.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-signals-Yn5RzquhCbz5KTpAkDYgzq.webp",
         correct_side_note: "10 POINTS: Exactly right. A yield sign requires you to defer your path to others. If cross-traffic is present, that slow down must turn into a full, legal stop.",
         semi_correct_side_note: "5 POINTS: Dangerous practice. Reducing your speed slightly (coasting) without scanning the oncoming corridors or pedestrian lines fails the basic standard of a proactive yield check.",
         extended_reading: {
@@ -129,6 +133,7 @@ export const gameData: Zone[] = [
         c: "It is monitored continuously by automated municipal speed cameras.",
         d: "It is any standard junction located within city or business limits.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-signals-Yn5RzquhCbz5KTpAkDYgzq.webp",
         correct_side_note: "10 POINTS: Excellent. Control requires active, regulatory traffic devices (lights, signage) that legally dictate vehicle cadence and movement sequences.",
         semi_correct_side_note: "5 POINTS: Too broad. While city and business districts contain a high concentration of controlled junctions, simply being inside municipal limits does not automatically make an un-signaled street corner 'controlled'.",
         extended_reading: {
