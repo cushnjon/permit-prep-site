@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
-import MotionBasedGame from "@/components/MotionBasedGame";
-import TrafficRunnerGame from "@/components/TrafficRunnerGame";
+
 
 interface GameState {
   currentZoneIndex: number;
@@ -207,33 +206,7 @@ export default function Home() {
             )}
           </GameSection>
 
-          {/* Traffic Jam Runner Section */}
-          <GameSection
-            title="Traffic Jam: Intersection Simulator"
-            logo={GAME_LOGOS.colorClash}
-            speedTier="25 MPH"
-            isExpanded={gameState.expandedSection === 1}
-            onToggle={() => toggleSection(1)}
-            onRandomQuestion={handleRandomQuestion}
-          >
-            {gameState.expandedSection === 1 && (
-              <TrafficRunnerGame />
-            )}
-          </GameSection>
 
-          {/* Right-of-Way Roulette Section */}
-          <GameSection
-            title="Right-of-Way Roulette"
-            logo={GAME_LOGOS.rightOfWay}
-            speedTier="45 MPH"
-            isExpanded={gameState.expandedSection === 2}
-            onToggle={() => toggleSection(2)}
-            onRandomQuestion={handleRandomQuestion}
-          >
-            {gameState.expandedSection === 2 && (
-              <MotionBasedGame />
-            )}
-          </GameSection>
         </div>
       </main>
     </div>
