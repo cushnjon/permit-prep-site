@@ -14,6 +14,7 @@ interface GameState {
   expandedSection: number | null;
   answersCollapsed: boolean;
   showGlossary: boolean;
+  answeredQuestions: Record<string, boolean>;
 }
 
 const GAME_LOGOS = {
@@ -34,6 +35,7 @@ export default function Home() {
     expandedSection: 0, // Start with Text Drive expanded
     answersCollapsed: false,
     showGlossary: false,
+    answeredQuestions: {},
   });
 
   // Timer effect
@@ -52,10 +54,11 @@ export default function Home() {
   const currentQuestion = currentZone.questions[gameState.currentQuestionIndex];
 
   const handleAnswerClick = (answer: "a" | "b" | "c" | "d") => {
-    if (gameState.selectedAnswer) return; // Prevent changing answer
+    if (gameState.selectedAnswer) return;
 
     const isCorrect = answer === currentQuestion.correct_answer;
     const points = isCorrect ? 10 : 5;
+    const questionId = currentQuestion.id;
 
     setGameState(prev => ({
       ...prev,
@@ -63,6 +66,10 @@ export default function Home() {
       score: prev.score + points,
       showArticle: true,
       answersCollapsed: true,
+      answeredQuestions: {
+        ...prev.answeredQuestions,
+        [questionId]: true,
+      },
     }));
   };
 
@@ -147,6 +154,19 @@ export default function Home() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getZoneProgress = (zoneIndex: number) => {
+    const zone = gameData[zoneIndex];
+    const totalQuestions = zone.questions.length;
+    const answeredCount = zone.questions.filter(q => gameState.answeredQuestions[q.id]).length;
+    return Math.round((answeredCount / totalQuestions) * 100);
+  };
+
+  const getTotalProgress = () => {
+    const totalQuestions = gameData.reduce((sum, zone) => sum + zone.questions.length, 0);
+    const answeredCount = Object.keys(gameState.answeredQuestions).length;
+    return Math.round((answeredCount / totalQuestions) * 100);
+  };
+
   const getSideNote = () => {
     if (!gameState.selectedAnswer) return null;
     const isCorrect = gameState.selectedAnswer === currentQuestion.correct_answer;
@@ -171,6 +191,19 @@ export default function Home() {
               <Zap className="h-5 w-5 text-accent" />
               <span className="font-bold text-lg text-primary">{gameState.score}</span>
             </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Progress: {getTotalProgress()}%</span>
+            </div>
+          </div>
+        </div>
+        <div className="container px-0 pb-2">
+          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-accent to-primary"
+              initial={{ width: 0 }}
+              animate={{ width: getTotalProgress() + "%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
           </div>
         </div>
       </header>
@@ -186,6 +219,7 @@ export default function Home() {
             isExpanded={gameState.expandedSection === 0}
             onToggle={() => toggleSection(0)}
             onRandomQuestion={handleRandomQuestion}
+            progress={getZoneProgress(0)}
           >
             {gameState.expandedSection === 0 && (
               <TextDriveGame
@@ -220,10 +254,11 @@ interface GameSectionProps {
   isExpanded: boolean;
   onToggle: () => void;
   onRandomQuestion?: () => void;
+  progress?: number;
   children: React.ReactNode;
 }
 
-function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, children }: GameSectionProps) {
+function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, progress = 0, children }: GameSectionProps) {
   return (
     <motion.div
       className="glow-border rounded-lg overflow-hidden drop-shadow-medium"
@@ -267,6 +302,22 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
           </motion.div>
         </div>
       </button>
+
+      {/* Progress Bar */}
+      <div className="px-3 py-2 bg-card/30">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-muted-foreground">Zone Progress</span>
+          <span className="text-xs font-bold text-accent">{progress}%</span>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-accent to-primary"
+            initial={{ width: 0 }}
+            animate={{ width: progress + "%" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+        </div>
+      </div>
 
       {/* Content */}
       <AnimatePresence>
