@@ -85,7 +85,7 @@ export const gameData: Zone[] = [
         c: "You can never legally take it; you can only yield it to others.",
         d: "It belongs strictly to whichever vehicle is larger or heavier.",
         correct_answer: "c",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-yield-sign-QDkDjNzuExCXSKYVWYuC24.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-right-of-way-Yfz6BX8rfRmkWEHqfut7fV.webp",
         correct_side_note: "10 POINTS: Perfectly answered. The vehicle code is written entirely around who must *yield* the right-of-way. The law never gives you the right to forcefully claim a patch of asphalt.",
         semi_correct_side_note: "5 POINTS: Incorrect application of physical realities. While a larger commercial truck can cause massive physical damage due to momentum laws, it does not possess a legal right-of-way exemption in suburban zoning blocks.",
         extended_reading: {
@@ -109,7 +109,7 @@ export const gameData: Zone[] = [
         c: "Slow down slightly while continuing through the lane without looking.",
         d: "Slow down or stop completely to let cross traffic or pedestrians pass first.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-yield-sign-QDkDjNzuExCXSKYVWYuC24.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q3-controlled-intersection-DqoogBzVp9BexpBwUEZh47.webp",
         correct_side_note: "10 POINTS: Exactly right. A yield sign requires you to defer your path to others. If cross-traffic is present, that slow down must turn into a full, legal stop.",
         semi_correct_side_note: "5 POINTS: Dangerous practice. Reducing your speed slightly (coasting) without scanning the oncoming corridors or pedestrian lines fails the basic standard of a proactive yield check.",
         extended_reading: {
@@ -133,7 +133,7 @@ export const gameData: Zone[] = [
         c: "It is any standard junction located within city or business limits.",
         d: "It is regulated actively by traffic lights, stop signs, or yield signs.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-controlled-intersection-RTDT7SKkKMLHJ5uGZenoL3.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q4-uncontrolled-intersection-GzCCtfNra3zEqCJ7ESXi2k.webp",
         correct_side_note: "10 POINTS: Excellent. Control requires active, regulatory traffic devices (lights, signage) that legally dictate vehicle cadence and movement sequences.",
         semi_correct_side_note: "5 POINTS: Too broad. While city and business districts contain a high concentration of controlled junctions, simply being inside municipal limits does not automatically make an un-signaled street corner 'controlled'.",
         extended_reading: {
@@ -157,7 +157,7 @@ export const gameData: Zone[] = [
         c: "Whichever vehicle signals their intention first is allowed to proceed.",
         d: "The vehicle arriving on your right has the legal right-of-way.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-uncontrolled-intersection-AWeWo55N9ickiXJUwdD5RK.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q5-blind-spot-9jnn848pexZCtZv5dEWCGo.webp",
         correct_side_note: "10 POINTS: Correct. The 'rule of the right' dictates that when two vehicles meet simultaneously at an unmarked grid, you must yield to the driver on your right side.",
         semi_correct_side_note: "5 POINTS: Incorrect. Turning on an electronic indicator lamp merely shows intent; it never grants you legal priority over a vehicle positioned to your right at a dead stop.",
         extended_reading: {
@@ -181,7 +181,7 @@ export const gameData: Zone[] = [
         c: "Check your side-view mirrors twice before signaling and moving.",
         d: "Physically turn your head and look directly over your shoulder.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-backing-up-jXok22RnWaf7tgB5LBFe9Q.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q6-basic-speed-law-MKwxMn7me3djNtQLXhy9Hg.webp",
         correct_side_note: "10 POINTS: Perfect. Convex and flat side-view mirrors cannot capture the distinct pocket alongside your vehicle's rear quarters. A physical head-turn is non-negotiable.",
         semi_correct_side_note: "5 POINTS: Safe habit, but flawed. Checking mirrors multiple times narrows your field of view down the side, but it still fails to reveal objects hidden parallel to your B-and-C pillars.",
         extended_reading: {
@@ -212,7 +212,7 @@ export const gameData: Zone[] = [
         c: "Turn on your hazard lights and continue driving at the normal speed limit.",
         d: "Slow down below the posted limit to match what is safe for current conditions.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-highway-driving-VGPh7J7tzfVC45K8mpKkPj.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q7-hydroplaning-NKcdUaQyuugJYxh8qUZpPF.webp",
         correct_side_note: "10 POINTS: Spot on. The Basic Speed Law dictates that your velocity must always be reasonable and prudent for the environment, regardless of what is printed on the speed sign.",
         semi_correct_side_note: "5 POINTS: Dangerous logic. Running your amber hazards while refusing to drop your speed to match reduced friction coefficients creates an unpredictable moving hazard on high-speed roads.",
         extended_reading: {
@@ -236,7 +236,7 @@ export const gameData: Zone[] = [
         c: "Your brakes lose partial pressure, increasing your general stopping distance.",
         d: "Tires ride on a layer of water, causing a total loss of traction and steering.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q7-hydroplaning-MxQerx9PMekRt6T53CXysb.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q8-left-turn-oncoming-mcZ5rxjezxjZZmD4U7SJf3.webp",
         correct_side_note: "10 POINTS: Exactly. Hydroplaning occurs when fluid hydrodynamic pressure matches the vertical load of your vehicle, lifting the rubber completely off the pavement onto a water wedge.",
         semi_correct_side_note: "5 POINTS: Misdiagnoses the core failure. Hydroplaning compromises your tires' contact patch, not the hydraulic fluid inside your brake lines. You lose steering control before braking even matters.",
         extended_reading: {
@@ -260,7 +260,7 @@ export const gameData: Zone[] = [
         c: "Maintain a tight 1-to-2 second gap when driving in ideal weather conditions.",
         d: "Keep a safe distance of at least three full vehicle lengths on the highway.",
         correct_answer: "a",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-UHFPSgDMBRdEtmL5AhKrPh.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q9-right-turn-red-light-5u93Qf2aBVWVCQy8LSHFLG.webp",
         correct_side_note: "10 POINTS: Correct. Time-based tracking (seconds) scales automatically as your speed increases, ensuring an adequate spatial safety buffer regardless of velocity.",
         semi_correct_side_note: "5 POINTS: Outdated metric. Measuring by arbitrary 'car lengths' is incredibly inaccurate at 45+ MPH because drivers consistently misjudge physical linear distances while moving.",
         extended_reading: {
@@ -284,7 +284,7 @@ export const gameData: Zone[] = [
         c: "They show mileage and exit destinations; colored green, blue, or brown.",
         d: "They provide basic legal speed rules for specific highways and cities.",
         correct_answer: "a",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-hvCpm6GAcFTfJZ7xXm3qbh.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q10-pedestrian-crosswalk-ZFFehsCtYWzrKm9H78YUzX.webp",
         correct_side_note: "10 POINTS: Perfect. Regulatory signs represent actual laws. Disobeying a red, white, or black sign (like a Stop or Speed Limit sign) is an immediate moving violation.",
         semi_correct_side_note: "5 POINTS: Too limited. While speed limit panels are a prominent subset of regulatory signage, these markers govern everything from turn tracking and lane restrictions to wrong-way mandates.",
         extended_reading: {
@@ -308,7 +308,7 @@ export const gameData: Zone[] = [
         c: "They are designed as equilateral triangles pointing directly downward.",
         d: "They are bright orange and used exclusively to highlight highway zones.",
         correct_answer: "a",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-sign-KmL9pQr2wXvZ5tN3jH8kY2.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q11-emergency-vehicle-UmbPuYsUKzVZJwFhdothn2.webp",
         correct_side_note: "10 POINTS: Spot on. Yellow diamonds alert operators to changing physical road conditions, upcoming curves, lane mergers, or environmental hazards ahead.",
         semi_correct_side_note: "5 POINTS: Confuses distinct classes. Orange signs are temporary warning markers explicitly reserved for road construction and maintenance zones, not standard perpetual warnings.",
         extended_reading: {
@@ -332,7 +332,7 @@ export const gameData: Zone[] = [
         c: "Active road construction warning lines and temporary flagger instructions.",
         d: "Helpful updates about changing lane layouts and upcoming toll bridges.",
         correct_answer: "a",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-PGjsAgY85Zs4JpnXEbSRcC.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-MPt3HJZo96zNQdnaqtSMaT.webp",
         correct_side_note: "10 POINTS: Correct. Guide signs are informational pillars—green for routes/miles, blue for services, and brown for public parks or recreation.",
         semi_correct_side_note: "5 POINTS: Incomplete. While toll notices or structural lane layout maps do fall under informational guidance, they represent a minor fragment of the overall destination and tracking matrix.",
         extended_reading: {
@@ -356,6 +356,7 @@ export const gameData: Zone[] = [
         c: "Marked by broken white lines; reserved for high-speed commercial cargo trucks.",
         d: "Marked by a solid white boundary; reserved for buses and motorcycles only.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q13-backing-up-safely-WtkpkUEVtFmvP25RCq4wGm.webp",
         correct_side_note: "10 POINTS: Perfectly answered. High-Occupancy Vehicle lanes use the white diamond pavement marker to keep high-capacity commuter traffic flowing efficiently.",
         semi_correct_side_note: "5 POINTS: Partially correct depending on local context. Many states allow transit buses and solo motorcycles to utilize HOV diamond lanes for safety, but this completely overlooks the main carpool occupancy rules.",
         extended_reading: {
@@ -386,6 +387,7 @@ export const gameData: Zone[] = [
         c: "0.05% or higher for all drivers regardless of age due to federal mandate.",
         d: "0.08% for adults; any trace amount that visibly impairs driving for minors.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-2nvnGGCWKpw8DCQKRPZeuV.webp",
         correct_side_note: "10 POINTS: Absolutely. Per statutory law, a 0.08% BAC is the per se legal limit for adult criminal impairment. For minors under 21, Zero Tolerance dictates that any measurable alcohol (0.00% - 0.02% depending on state equipment tolerances) results in immediate legal action.",
         semi_correct_side_note: "5 POINTS: Close, but legally weak. While visible physical impairment is heavily prosecuted, the state does not require a minor to 'look drunk' to charge them; the mere chemical presence of alcohol violates the Zero Tolerance statute.",
         extended_reading: {
@@ -409,6 +411,7 @@ export const gameData: Zone[] = [
         c: "Using rapid lane changes to stay clear of large commercial vehicle clusters.",
         d: "Driving significantly below the speed limit to maximize reaction time.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-safety-fgviySu7tQmPgYuSPku9zk.webp",
         correct_side_note: "10 POINTS: Outstanding. Defensive driving requires constant scanning, mapping hazard vectors 12-15 seconds ahead, and assuming other drivers will make critical errors.",
         semi_correct_side_note: "5 POINTS: Overly cautious and disruptive. While slowing down increases your buffer, traveling significantly below the normal flow of high-speed highway traffic creates an artificial bottleneck that forces dangerous swerving behind you.",
         extended_reading: {
