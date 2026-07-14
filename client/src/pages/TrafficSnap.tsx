@@ -37,7 +37,7 @@ export function CinematicSignImage({
     }
     intervalRef.current = setInterval(() => {
       setPanIndex((prev) => (prev + 1) % PAN_POSITIONS.length);
-    }, 2400);
+    }, 7200);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -72,7 +72,7 @@ export function CinematicSignImage({
             : `scale(1.25) translate(${pos.x * 2}px, ${pos.y * 2}px)`,
           transition: isAnswered
             ? "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)"
-            : "transform 2.4s cubic-bezier(0.45, 0, 0.55, 1)",
+            : "transform 7.2s cubic-bezier(0.45, 0, 0.55, 1)",
           willChange: "transform",
         }}
       />
