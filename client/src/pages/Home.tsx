@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen } from "lucide-react";
+import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
+import { useLocation } from "wouter";
 
 
 interface GameState {
@@ -21,7 +22,7 @@ const GAME_LOGOS = {
   textDrive: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/text-drive-logo-mDpj2YC2UyZJS7qt2cXdzB.webp",
   colorClash: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/color-clash-logo-beDiurXgdr5mkHHHnZfk5j.webp",
   rightOfWay: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/right-of-way-logo-54nHdo2xbsfvenwHcw9zrj.webp",
-  permitPrepLogo: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/permit-prep-logo-mDpj2YC2UyZJS7qt2cXdzB.webp"
+  permitPrepLogo: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/permit-prep-logo-XMhL8jQs23DFMwyCQ3gV8G.webp"
 };
 
 export default function Home() {
@@ -186,6 +187,10 @@ export default function Home() {
             <a href="/gallery" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
               Gallery
+            </a>
+            <a href="/traffic-snap" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
+              <TrafficIcon className="h-4 w-4" />
+              Traffic Snap
             </a>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-5 w-5 text-accent" />
