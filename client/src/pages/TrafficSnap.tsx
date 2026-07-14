@@ -17,7 +17,7 @@ const PAN_POSITIONS = [
   { x: 0, y: 0 },
 ];
 
-function CinematicSignImage({
+export function CinematicSignImage({
   src,
   alt,
   isAnswered,
