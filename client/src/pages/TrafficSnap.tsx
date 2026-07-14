@@ -56,7 +56,7 @@ export function CinematicSignImage({
       className="relative w-full overflow-hidden rounded-xl bg-gray-900"
       style={{ aspectRatio: "16 / 7" }}
     >
-      {/* Zoomed + panning image */}
+      {/* Full-size image clipped by container, then zoomed + panned inside */}
       <img
         src={src}
         alt={alt}
@@ -65,11 +65,11 @@ export function CinematicSignImage({
           inset: 0,
           width: "100%",
           height: "100%",
-          objectFit: "contain",
+          objectFit: "cover",
           // 125% zoom + pan offset — smooth transition between positions
           transform: isAnswered
-            ? "scale(1) translate(0%, 0%)"
-            : `scale(1.25) translate(${pos.x}%, ${pos.y}%)`,
+            ? "scale(1) translate(0, 0)"
+            : `scale(1.25) translate(${pos.x * 2}px, ${pos.y * 2}px)`,
           transition: isAnswered
             ? "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)"
             : "transform 2.4s cubic-bezier(0.45, 0, 0.55, 1)",
