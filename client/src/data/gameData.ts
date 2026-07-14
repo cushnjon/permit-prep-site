@@ -236,7 +236,7 @@ export const gameData: Zone[] = [
         c: "Your brakes lose partial pressure, increasing your general stopping distance.",
         d: "Tires ride on a layer of water, causing a total loss of traction and steering.",
         correct_answer: "d",
-        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-highway-driving-VGPh7J7tzfVC45K8mpKkPj.webp",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q7-hydroplaning-MxQerx9PMekRt6T53CXysb.webp",
         correct_side_note: "10 POINTS: Exactly. Hydroplaning occurs when fluid hydrodynamic pressure matches the vertical load of your vehicle, lifting the rubber completely off the pavement onto a water wedge.",
         semi_correct_side_note: "5 POINTS: Misdiagnoses the core failure. Hydroplaning compromises your tires' contact patch, not the hydraulic fluid inside your brake lines. You lose steering control before braking even matters.",
         extended_reading: {
@@ -260,6 +260,7 @@ export const gameData: Zone[] = [
         c: "Maintain a tight 1-to-2 second gap when driving in ideal weather conditions.",
         d: "Keep a safe distance of at least three full vehicle lengths on the highway.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-UHFPSgDMBRdEtmL5AhKrPh.webp",
         correct_side_note: "10 POINTS: Correct. Time-based tracking (seconds) scales automatically as your speed increases, ensuring an adequate spatial safety buffer regardless of velocity.",
         semi_correct_side_note: "5 POINTS: Outdated metric. Measuring by arbitrary 'car lengths' is incredibly inaccurate at 45+ MPH because drivers consistently misjudge physical linear distances while moving.",
         extended_reading: {
@@ -283,6 +284,7 @@ export const gameData: Zone[] = [
         c: "They show mileage and exit destinations; colored green, blue, or brown.",
         d: "They provide basic legal speed rules for specific highways and cities.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-hvCpm6GAcFTfJZ7xXm3qbh.webp",
         correct_side_note: "10 POINTS: Perfect. Regulatory signs represent actual laws. Disobeying a red, white, or black sign (like a Stop or Speed Limit sign) is an immediate moving violation.",
         semi_correct_side_note: "5 POINTS: Too limited. While speed limit panels are a prominent subset of regulatory signage, these markers govern everything from turn tracking and lane restrictions to wrong-way mandates.",
         extended_reading: {
@@ -306,6 +308,7 @@ export const gameData: Zone[] = [
         c: "They are designed as equilateral triangles pointing directly downward.",
         d: "They are bright orange and used exclusively to highlight highway zones.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-sign-KmL9pQr2wXvZ5tN3jH8kY2.webp",
         correct_side_note: "10 POINTS: Spot on. Yellow diamonds alert operators to changing physical road conditions, upcoming curves, lane mergers, or environmental hazards ahead.",
         semi_correct_side_note: "5 POINTS: Confuses distinct classes. Orange signs are temporary warning markers explicitly reserved for road construction and maintenance zones, not standard perpetual warnings.",
         extended_reading: {
@@ -329,6 +332,7 @@ export const gameData: Zone[] = [
         c: "Active road construction warning lines and temporary flagger instructions.",
         d: "Helpful updates about changing lane layouts and upcoming toll bridges.",
         correct_answer: "a",
+        image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-PGjsAgY85Zs4JpnXEbSRcC.webp",
         correct_side_note: "10 POINTS: Correct. Guide signs are informational pillars—green for routes/miles, blue for services, and brown for public parks or recreation.",
         semi_correct_side_note: "5 POINTS: Incomplete. While toll notices or structural lane layout maps do fall under informational guidance, they represent a minor fragment of the overall destination and tracking matrix.",
         extended_reading: {
