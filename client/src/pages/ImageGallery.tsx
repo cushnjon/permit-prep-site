@@ -17,13 +17,15 @@ export default function ImageGallery() {
   const galleryImages: GalleryImage[] = [];
   gameData.forEach((zone) => {
     zone.questions.forEach((question) => {
-      if (question.image) {
-        galleryImages.push({
-          id: question.id,
-          title: question.id.replace(/_/g, " "),
-          url: question.image,
-          questionText: question.prompt,
-          zone: zone.zone,
+      if (question.images && question.images.length > 0) {
+        question.images.forEach((img) => {
+          galleryImages.push({
+            id: question.id,
+            title: question.id.replace(/_/g, " "),
+            url: img,
+            questionText: question.prompt,
+            zone: zone.zone,
+          });
         });
       }
     });
