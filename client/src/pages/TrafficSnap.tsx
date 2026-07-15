@@ -42,13 +42,14 @@ export function CinematicSignImage({
           src={src}
           alt={alt}
           className="absolute w-full h-full object-cover"
+          initial={{ scale: 1 }}
           animate={{
             x: isAnswered ? 0 : panPositions[panPosition],
             scale: isAnswered ? 1 : 1.35,
           }}
           transition={{
-            duration: isAnswered ? 0.6 : intervalDuration / 1000,
-            ease: isAnswered ? "easeOut" : "linear",
+            scale: panPosition === 0 && !isAnswered ? { duration: 2, ease: "easeOut" } : { duration: isAnswered ? 0.6 : intervalDuration / 1000, ease: isAnswered ? "easeOut" : "linear" },
+            x: { duration: isAnswered ? 0.6 : intervalDuration / 1000, ease: isAnswered ? "easeOut" : "linear" },
           }}
         />
 
