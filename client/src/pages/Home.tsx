@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
-import { CinematicSignImage } from "./TrafficSnap";
+
 
 
 interface GameState {
@@ -261,14 +261,23 @@ export default function Home() {
             progress={0}
           >
             {gameState.expandedSection === 1 && (
-              <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">Identify traffic signs by shape and learn their real-world applications.</p>
-                <button
-                  onClick={() => setLocation("/traffic-snap")}
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
-                >
-                  Play Traffic Snap
-                </button>
+              <div className="space-y-6">
+                <div className="rounded-xl overflow-hidden shadow-lg">
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/all-traffic-signs-collection-ABfZqE94PcY8kqcmLCdrLc.webp"
+                    alt="All Traffic Signs"
+                    className="w-full h-auto"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">Learn all traffic signs with interactive flip cards</p>
+                  <button
+                    onClick={() => setLocation("/traffic-snap")}
+                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                  >
+                    Play Traffic Snap
+                  </button>
+                </div>
               </div>
             )}
           </GameSection>
@@ -512,10 +521,10 @@ function TextDriveGame({
               <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
                 {question.images && question.images.length > 0 && (
                   <div className="mb-4 rounded-lg overflow-hidden">
-                    <CinematicSignImage
+                    <img
                       src={question.images[0]}
                       alt="Question illustration"
-                      isAnswered={!!selectedAnswer}
+                      className="w-full h-auto rounded-lg"
                     />
                   </div>
                 )}
