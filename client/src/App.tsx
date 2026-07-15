@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ImageGallery from "./pages/ImageGallery";
 import TrafficSnap from "./pages/TrafficSnap";
+import GameDev from "./pages/GameDev";
 
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/gallery"} component={ImageGallery} />
       <Route path={"/traffic-snap"} component={TrafficSnap} />
+      <Route path={"/game-dev"} component={GameDev} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
