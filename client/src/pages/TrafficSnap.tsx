@@ -1,5 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+
+// Cinematic Sign Image Component for Text Drive
+export function CinematicSignImage({
+  src,
+  alt,
+  isAnswered,
+}: {
+  src: string;
+  alt: string;
+  isAnswered: boolean;
+}) {
+  const [panPosition, setPanPosition] = useState(0);
+
+  // Pan animation positions (5 positions over 7.2 seconds)
+  const panPositions = [0, -15, 15, -10, 10];
+  const panDuration = 7200; // 7.2 seconds
+  const intervalDuration = panDuration / panPositions.length;
+
+  useEffect(() => {
+    if (isAnswered) return;
+
+    const interval = setInterval(() => {
+      setPanPosition((prev) => (prev + 1) % panPositions.length);
+    }, intervalDuration);
+
+    return () => clearInterval(interval);
+  }, [isAnswered, intervalDuration]);
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-lg bg-black/5">
+      {/* Widescreen container 16:7 aspect ratio */}
+      <div className="relative w-full" style={{ aspectRatio: "16 / 7" }}>
+        {/* Clipped image with pan animation */}
+        <motion.img
+          src={src}
+          alt={alt}
+          className="absolute w-full h-full object-cover"
+          animate={{
+            x: isAnswered ? 0 : panPositions[panPosition],
+            scale: isAnswered ? 1 : 1.25,
+          }}
+          transition={{
+            duration: isAnswered ? 0.6 : intervalDuration / 1000,
+            ease: isAnswered ? "easeOut" : "linear",
+          }}
+        />
+
+        {/* Vignette overlay */}
+        {!isAnswered && (
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none" />
+        )}
+
+        {/* Identify badge */}
+        {!isAnswered && (
+          <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-semibold">
+            IDENTIFY
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface TrafficSign {
   id: string;
