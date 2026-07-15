@@ -111,24 +111,24 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [currentIndex, answered]);
 
-  // Auto-advance after 7 seconds
+  // Auto-advance after 8 seconds
   useEffect(() => {
     if (!answered) return;
 
     const timer = setTimeout(() => {
       nextSign();
-    }, 7000);
+    }, 8000);
 
     return () => clearTimeout(timer);
   }, [answered]);
 
-  // Show description card after 4 seconds (if correct)
+  // Show description card after 2 seconds (if correct)
   useEffect(() => {
     if (!answered || !isCorrect) return;
 
     const timer = setTimeout(() => {
       setShowDescription(true);
-    }, 4000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
@@ -268,7 +268,7 @@ export default function TrafficSnap() {
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                7 seconds
+                8 seconds
               </motion.span>
             </div>
           </motion.div>
