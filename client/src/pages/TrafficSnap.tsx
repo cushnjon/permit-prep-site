@@ -122,13 +122,13 @@ export default function TrafficSnap() {
     return () => clearTimeout(timer);
   }, [answered]);
 
-  // Show description card after 2 seconds (if correct)
+  // Show description card after 0.5 seconds (if correct)
   useEffect(() => {
     if (!answered || !isCorrect) return;
 
     const timer = setTimeout(() => {
       setShowDescription(true);
-    }, 2000);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
