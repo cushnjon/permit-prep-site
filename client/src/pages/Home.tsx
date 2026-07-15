@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
-
+import { CinematicSignImage } from "./TrafficSnap";
 
 
 interface GameState {
@@ -512,10 +512,10 @@ function TextDriveGame({
               <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
                 {question.images && question.images.length > 0 && (
                   <div className="mb-4 rounded-lg overflow-hidden">
-                    <img
+                    <CinematicSignImage
                       src={question.images[0]}
                       alt="Question illustration"
-                      className="w-full h-auto rounded-lg"
+                      isAnswered={!!selectedAnswer}
                     />
                   </div>
                 )}
