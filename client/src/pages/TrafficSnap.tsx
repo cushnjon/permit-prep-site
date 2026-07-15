@@ -12,10 +12,15 @@ export function CinematicSignImage({
   isAnswered: boolean;
 }) {
   const [panPosition, setPanPosition] = useState(0);
+  const [panDirections] = useState(() => {
+    // Generate random pan directions for each position
+    return Array(5).fill(0).map(() => Math.random() > 0.5 ? 1 : -1);
+  });
 
-  // Pan animation positions (5 positions over 12 seconds - slower pan)
-  const panPositions = [0, -20, 20, -15, 15];
-  const panDuration = 12000; // 12 seconds for slower pan
+  // Pan animation positions (5 positions over 36 seconds - 3x slower)
+  const basePanValues = [0, 20, 20, 15, 15];
+  const panPositions = basePanValues.map((val, idx) => idx === 0 ? 0 : val * panDirections[idx]);
+  const panDuration = 36000; // 36 seconds for 3x slower pan
   const intervalDuration = panDuration / panPositions.length;
 
   useEffect(() => {
