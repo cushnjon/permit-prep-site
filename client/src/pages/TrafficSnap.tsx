@@ -13,9 +13,9 @@ export function CinematicSignImage({
 }) {
   const [panPosition, setPanPosition] = useState(0);
 
-  // Pan animation positions (5 positions over 7.2 seconds)
-  const panPositions = [0, -15, 15, -10, 10];
-  const panDuration = 7200; // 7.2 seconds
+  // Pan animation positions (5 positions over 12 seconds - slower pan)
+  const panPositions = [0, -20, 20, -15, 15];
+  const panDuration = 12000; // 12 seconds for slower pan
   const intervalDuration = panDuration / panPositions.length;
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function CinematicSignImage({
           className="absolute w-full h-full object-cover"
           animate={{
             x: isAnswered ? 0 : panPositions[panPosition],
-            scale: isAnswered ? 1 : 1.25,
+            scale: isAnswered ? 1 : 1.35,
           }}
           transition={{
             duration: isAnswered ? 0.6 : intervalDuration / 1000,
