@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Cinematic Sign Image Component for Text Drive
 export function CinematicSignImage({
@@ -187,17 +187,27 @@ const TRAFFIC_SIGNS: TrafficSign[] = [
 ];
 
 interface FlipCardProps {
-  sign: TrafficSign;
+  sign: TrafficSign | null;
   isFlipped: boolean;
   onFlip: () => void;
+  isCorrect: boolean;
+  showResult: boolean;
 }
 
-function FlipCard({ sign, isFlipped, onFlip }: FlipCardProps) {
+function FlipCard({ sign, isFlipped, onFlip, isCorrect, showResult }: FlipCardProps) {
+  if (!sign) {
+    return (
+      <motion.div className="h-80 bg-gray-300 rounded-xl flex items-center justify-center text-gray-500 font-semibold">
+        Empty
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       className="h-80 cursor-pointer perspective"
       onClick={onFlip}
-      whileHover={{ scale: 1.05 }}
+      whileHover={!showResult ? { scale: 1.05 } : {}}
     >
       <motion.div
         className="relative w-full h-full"
@@ -208,14 +218,22 @@ function FlipCard({ sign, isFlipped, onFlip }: FlipCardProps) {
       >
         {/* Front */}
         <div
-          className="absolute w-full h-full bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
+          className={`absolute w-full h-full rounded-xl p-6 flex flex-col justify-between items-center shadow-lg ${
+            showResult
+              ? isCorrect
+                ? "bg-gradient-to-br from-green-500 to-green-700"
+                : "bg-gradient-to-br from-red-500 to-red-700"
+              : "bg-gradient-to-br from-green-500 to-green-700"
+          }`}
           style={{ backfaceVisibility: "hidden" }}
         >
           <div className="text-white text-center">
             <p className="text-sm font-semibold opacity-75">Traffic Sign</p>
             <p className="text-2xl font-bold mt-2">{sign.name}</p>
           </div>
-          <p className="text-white text-xs text-center opacity-75">Click or swipe to reveal</p>
+          <p className="text-white text-xs text-center opacity-75">
+            {showResult ? (isCorrect ? "✓ Correct!" : "✗ Wrong") : "Click to reveal"}
+          </p>
         </div>
 
         {/* Back */}
@@ -233,7 +251,7 @@ function FlipCard({ sign, isFlipped, onFlip }: FlipCardProps) {
               <p className="text-sm">{sign.realWorldApplication}</p>
             </div>
           </div>
-          <p className="text-white text-xs text-center opacity-75">Click or swipe to flip back</p>
+          <p className="text-white text-xs text-center opacity-75">Click to flip back</p>
         </div>
       </motion.div>
     </motion.div>
@@ -241,36 +259,56 @@ function FlipCard({ sign, isFlipped, onFlip }: FlipCardProps) {
 }
 
 export default function TrafficSnap() {
-  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentSignIndex, setCurrentSignIndex] = useState(0);
+  const [correctCardPosition, setCorrectCardPosition] = useState(0);
+  const [flipped, setFlipped] = useState<Record<number, boolean>>({});
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
 
-  const toggleFlip = (id: string) => {
-    setFlipped((prev) => ({ ...prev, [id]: !prev[id] }));
+  const currentSign = TRAFFIC_SIGNS[currentSignIndex % TRAFFIC_SIGNS.length];
+
+  // Get visible signs - correct sign in random position, others null
+  const getVisibleSigns = (): (TrafficSign | null)[] => {
+    const signs: (TrafficSign | null)[] = [null, null, null];
+    signs[correctCardPosition] = currentSign;
+    return signs;
   };
 
-  const getVisibleSigns = () => {
-    return [
-      TRAFFIC_SIGNS[currentIndex % TRAFFIC_SIGNS.length],
-      TRAFFIC_SIGNS[(currentIndex + 1) % TRAFFIC_SIGNS.length],
-      TRAFFIC_SIGNS[(currentIndex + 2) % TRAFFIC_SIGNS.length],
-    ];
+  const handleCardFlip = (position: number) => {
+    if (answered) return;
+    setFlipped((prev) => ({ ...prev, [position]: !prev[position] }));
   };
 
-  const nextSet = () => {
-    setCurrentIndex((prev) => prev + 3);
+  const handleCardClick = (position: number) => {
+    if (answered) return;
+    setSelectedPosition(position);
+    setAnswered(true);
+
+    if (position === correctCardPosition) {
+      setScore((prev) => prev + 1);
+    }
   };
 
-  const prevSet = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 3));
+  const nextSign = () => {
+    const newPosition = Math.floor(Math.random() * 3);
+    setCorrectCardPosition(newPosition);
+    setCurrentSignIndex((prev) => (prev + 1) % TRAFFIC_SIGNS.length);
+    setFlipped({});
+    setAnswered(false);
+    setSelectedPosition(null);
   };
+
+  const visibleSigns = getVisibleSigns();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
       <div className="container mx-auto px-4 space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-slate-900">Traffic Snap</h1>
-          <p className="text-slate-600">Learn all traffic signs at a glance</p>
+          <h1 className="text-4xl font-bold text-slate-900">Traffic Snap: Sign & Shape</h1>
+          <p className="text-slate-600">Identify the correct traffic sign</p>
+          <p className="text-lg font-semibold text-slate-700">Score: {score}</p>
         </div>
 
         {/* Top: All Signs Image */}
@@ -282,39 +320,52 @@ export default function TrafficSnap() {
           />
         </div>
 
+        {/* Current Challenge */}
+        <div className="bg-white rounded-lg p-6 shadow-md">
+          <p className="text-center text-slate-700 font-semibold mb-2">Find this sign:</p>
+          <p className="text-center text-3xl font-bold text-slate-900">{currentSign.name}</p>
+        </div>
+
         {/* Bottom: Flip Cards */}
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-8">
-            {getVisibleSigns().map((sign) => (
-              <FlipCard
-                key={sign.id}
-                sign={sign}
-                isFlipped={flipped[sign.id] || false}
-                onFlip={() => toggleFlip(sign.id)}
-              />
-            ))}
+            <AnimatePresence mode="wait">
+              {visibleSigns.map((sign, position) => (
+                <motion.div
+                  key={position}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => handleCardClick(position)}
+                >
+                  <FlipCard
+                    sign={sign}
+                    isFlipped={flipped[position] || false}
+                    onFlip={() => handleCardFlip(position)}
+                    isCorrect={position === correctCardPosition}
+                    showResult={answered && selectedPosition === position}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
 
-          {/* Navigation */}
-          <div className="flex justify-center gap-4 items-center">
-            <button
-              onClick={prevSet}
-              disabled={currentIndex === 0}
-              className="px-6 py-2 bg-slate-800 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition"
+          {/* Next Button */}
+          {answered && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center"
             >
-              ← Previous
-            </button>
-            <span className="text-slate-600 font-semibold">
-              {Math.floor(currentIndex / 3) + 1} / {Math.ceil(TRAFFIC_SIGNS.length / 3)}
-            </span>
-            <button
-              onClick={nextSet}
-              disabled={currentIndex + 3 >= TRAFFIC_SIGNS.length}
-              className="px-6 py-2 bg-slate-800 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition"
-            >
-              Next →
-            </button>
-          </div>
+              <button
+                onClick={nextSign}
+                className="px-8 py-3 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition"
+              >
+                Next Sign →
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
