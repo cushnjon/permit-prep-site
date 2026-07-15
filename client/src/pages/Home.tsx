@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
-
+import { CinematicSignImage } from "./TrafficSnap";
 
 
 interface GameState {
@@ -251,7 +251,27 @@ export default function Home() {
             )}
           </GameSection>
 
-
+          {/* Traffic Snap Section */}
+          <GameSection
+            title="Traffic Snap: Sign & Shape"
+            logo={GAME_LOGOS.textDrive}
+            speedTier="25 MPH"
+            isExpanded={gameState.expandedSection === 1}
+            onToggle={() => toggleSection(1)}
+            progress={0}
+          >
+            {gameState.expandedSection === 1 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">Identify traffic signs by shape and learn their real-world applications.</p>
+                <button
+                  onClick={() => setLocation("/traffic-snap")}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                >
+                  Play Traffic Snap
+                </button>
+              </div>
+            )}
+          </GameSection>
 
         </div>
       </main>
@@ -492,10 +512,10 @@ function TextDriveGame({
               <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
                 {question.images && question.images.length > 0 && (
                   <div className="mb-4 rounded-lg overflow-hidden">
-                    <img
+                    <CinematicSignImage
                       src={question.images[0]}
                       alt="Question illustration"
-                      className="w-full h-auto rounded-lg"
+                      isAnswered={!!selectedAnswer}
                     />
                   </div>
                 )}
