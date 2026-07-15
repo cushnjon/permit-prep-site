@@ -81,6 +81,7 @@ export default function TrafficSnap() {
   const [panX, setPanX] = useState(0);
   const [showDescription, setShowDescription] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const currentSign = shuffledSigns[currentIndex % shuffledSigns.length];
 
@@ -111,15 +112,35 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [currentIndex, answered]);
 
-  // Auto-advance after 8 seconds
+  // Auto-advance after 8 seconds with countdown
   useEffect(() => {
     if (!answered) return;
+
+    // Show countdown for last 3 seconds
+    const countdownStart = setTimeout(() => {
+      setCountdown(3);
+    }, 5000);
+
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     const timer = setTimeout(() => {
       nextSign();
     }, 8000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(countdownStart);
+      clearTimeout(timer);
+      clearInterval(countdownInterval);
+    };
   }, [answered]);
 
   // Show description card after 0.5 seconds (if correct)
@@ -150,6 +171,7 @@ export default function TrafficSnap() {
     setSelectedCard(null);
     setShowDescription(false);
     setIsCorrect(false);
+    setCountdown(null);
   };
 
   const getCardStyle = (cardIndex: number) => {
@@ -256,21 +278,24 @@ export default function TrafficSnap() {
           </div>
         )}
 
-        {/* Timer indicator */}
-        {answered && (
+        {/* Countdown display */}
+        {answered && countdown !== null && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="fixed inset-0 flex items-center justify-center pointer-events-none"
           >
-            <div className="text-slate-600 text-sm font-semibold">
-              Next question in <motion.span
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                8 seconds
-              </motion.span>
-            </div>
+            <motion.div
+              key={countdown}
+              initial={{ opacity: 0, scale: 0.3 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.5 }}
+              transition={{ duration: 0.3 }}
+              className="text-9xl font-black text-red-600 drop-shadow-2xl"
+            >
+              {countdown}
+            </motion.div>
           </motion.div>
         )}
       </div>
