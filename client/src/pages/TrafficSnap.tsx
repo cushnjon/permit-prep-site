@@ -1,364 +1,253 @@
-import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { trafficSnapData } from "@/data/trafficSnapData";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
-// Cinematic pan keyframes: moves the 125%-zoomed image around in a slow loop
-// We cycle through 5 pan positions over ~12 seconds
-const PAN_POSITIONS = [
-  { x: 0, y: 0 },
-  { x: 8, y: -6 },
-  { x: -8, y: 6 },
-  { x: 6, y: 8 },
-  { x: -6, y: -8 },
-  { x: 0, y: 0 },
+interface TrafficSign {
+  id: string;
+  name: string;
+  description: string;
+  realWorldApplication: string;
+}
+
+const TRAFFIC_SIGNS: TrafficSign[] = [
+  {
+    id: "stop",
+    name: "STOP",
+    description: "Come to a complete stop and yield to other traffic",
+    realWorldApplication: "Used at intersections to control traffic flow and prevent collisions",
+  },
+  {
+    id: "yield",
+    name: "YIELD",
+    description: "Slow down and be prepared to stop if necessary",
+    realWorldApplication: "Used at intersections where traffic merges or has reduced priority",
+  },
+  {
+    id: "speed-limit",
+    name: "SPEED LIMIT",
+    description: "Maximum legal speed on this road",
+    realWorldApplication: "Posted on roads to maintain safe speeds based on road conditions",
+  },
+  {
+    id: "do-not-enter",
+    name: "DO NOT ENTER",
+    description: "Do not proceed in this direction",
+    realWorldApplication: "Used on one-way streets and divided highways to prevent wrong-way traffic",
+  },
+  {
+    id: "one-way",
+    name: "ONE WAY",
+    description: "Traffic flows in the direction of the arrow only",
+    realWorldApplication: "Indicates traffic direction on one-way streets",
+  },
+  {
+    id: "no-parking",
+    name: "NO PARKING",
+    description: "Parking is not permitted in this area",
+    realWorldApplication: "Used to keep traffic lanes clear and manage parking",
+  },
+  {
+    id: "pedestrian",
+    name: "PEDESTRIAN CROSSING",
+    description: "Pedestrians may cross the road at this location",
+    realWorldApplication: "Warns drivers to watch for pedestrians crossing the street",
+  },
+  {
+    id: "school-zone",
+    name: "SCHOOL ZONE",
+    description: "Reduced speed limit near schools during school hours",
+    realWorldApplication: "Protects children by reducing vehicle speeds near schools",
+  },
+  {
+    id: "curve-ahead",
+    name: "CURVE AHEAD",
+    description: "Road curves sharply ahead",
+    realWorldApplication: "Warns drivers to reduce speed and be prepared for sharp turns",
+  },
+  {
+    id: "slippery-road",
+    name: "SLIPPERY ROAD",
+    description: "Road surface may be slippery",
+    realWorldApplication: "Warns drivers of wet, icy, or loose gravel conditions",
+  },
+  {
+    id: "merge",
+    name: "MERGE",
+    description: "Traffic lanes are merging",
+    realWorldApplication: "Indicates where traffic from two lanes must combine into one",
+  },
+  {
+    id: "deer-crossing",
+    name: "DEER CROSSING",
+    description: "Wildlife may cross the road",
+    realWorldApplication: "Warns drivers of animal crossing areas to prevent collisions",
+  },
+  {
+    id: "exit",
+    name: "EXIT",
+    description: "Exit ramp ahead",
+    realWorldApplication: "Directs drivers to upcoming exit on highways",
+  },
+  {
+    id: "hospital",
+    name: "HOSPITAL",
+    description: "Hospital or medical facility nearby",
+    realWorldApplication: "Directs drivers to emergency medical services",
+  },
+  {
+    id: "rest-area",
+    name: "REST AREA",
+    description: "Rest stop with facilities ahead",
+    realWorldApplication: "Indicates location of rest stops on long highways",
+  },
+  {
+    id: "gas-station",
+    name: "GAS STATION",
+    description: "Fuel services available",
+    realWorldApplication: "Directs drivers to nearby gas stations",
+  },
+  {
+    id: "handicap",
+    name: "HANDICAP",
+    description: "Accessible parking or facilities",
+    realWorldApplication: "Indicates accessible parking and facilities for disabled persons",
+  },
+  {
+    id: "lodging",
+    name: "LODGING",
+    description: "Hotel or motel nearby",
+    realWorldApplication: "Directs travelers to nearby accommodations",
+  },
 ];
 
-export function CinematicSignImage({
-  src,
-  alt,
-  isAnswered,
-}: {
-  src: string;
-  alt: string;
-  isAnswered: boolean;
-}) {
-  const [panIndex, setPanIndex] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+interface FlipCardProps {
+  sign: TrafficSign;
+  isFlipped: boolean;
+  onFlip: () => void;
+}
 
-  // Advance pan position every 2.4 seconds while not answered
-  useEffect(() => {
-    if (isAnswered) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
-    }
-    intervalRef.current = setInterval(() => {
-      setPanIndex((prev) => (prev + 1) % PAN_POSITIONS.length);
-    }, 7200);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isAnswered]);
-
-  // Reset pan when sign changes
-  useEffect(() => {
-    setPanIndex(0);
-  }, [src]);
-
-  const pos = PAN_POSITIONS[panIndex];
-
+function FlipCard({ sign, isFlipped, onFlip }: FlipCardProps) {
   return (
-    // Widescreen container — 16:9 aspect ratio, clips the zoomed image
-    <div
-      className="relative w-full overflow-hidden rounded-xl bg-gray-900"
-      style={{ aspectRatio: "16 / 7" }}
+    <motion.div
+      className="h-80 cursor-pointer perspective"
+      onClick={onFlip}
+      whileHover={{ scale: 1.05 }}
     >
-      {/* Full-size image clipped by container, then zoomed + panned inside */}
-      <img
-        src={src}
-        alt={alt}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          // 125% zoom + pan offset — smooth transition between positions
-          transform: isAnswered
-            ? "scale(1) translate(0, 0)"
-            : `scale(1.25) translate(${pos.x * 2}px, ${pos.y * 2}px)`,
-          transition: isAnswered
-            ? "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)"
-            : "transform 7.2s cubic-bezier(0.45, 0, 0.55, 1)",
-          willChange: "transform",
-        }}
-      />
-
-      {/* Subtle vignette overlay for cinematic feel */}
-      {!isAnswered && (
+      <motion.div
+        className="relative w-full h-full"
+        initial={false}
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Front */}
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
-          }}
-        />
-      )}
+          className="absolute w-full h-full bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <div className="text-white text-center">
+            <p className="text-sm font-semibold opacity-75">Traffic Sign</p>
+            <p className="text-2xl font-bold mt-2">{sign.name}</p>
+          </div>
+          <p className="text-white text-xs text-center opacity-75">Click or swipe to reveal</p>
+        </div>
 
-      {/* "Live" badge while panning */}
-      {!isAnswered && (
-        <span className="absolute top-2 right-2 bg-black/60 text-white text-xs font-bold px-2 py-0.5 rounded-full tracking-widest uppercase">
-          Identify
-        </span>
-      )}
-    </div>
+        {/* Back */}
+        <div
+          className="absolute w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 flex flex-col justify-between shadow-lg"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <div className="text-white text-sm space-y-3">
+            <div>
+              <p className="font-semibold text-xs opacity-75 uppercase">Description</p>
+              <p className="text-sm">{sign.description}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-xs opacity-75 uppercase">Real-World Use</p>
+              <p className="text-sm">{sign.realWorldApplication}</p>
+            </div>
+          </div>
+          <p className="text-white text-xs text-center opacity-75">Click or swipe to flip back</p>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export default function TrafficSnap() {
-  const [, setLocation] = useLocation();
-  const [currentZoneIndex, setCurrentZoneIndex] = useState(0);
-  const [currentSignIndex, setCurrentSignIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showShape, setShowShape] = useState(true);
-  const [showSign, setShowSign] = useState(false);
-  const [showQuestion, setShowQuestion] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const currentZone = trafficSnapData[currentZoneIndex];
-  const currentSign = currentZone.signs[currentSignIndex];
-  const totalSigns = trafficSnapData.reduce((sum, z) => sum + z.signs.length, 0);
-  const progressPercentage = (totalAnswered / totalSigns) * 100;
+  const toggleFlip = (id: string) => {
+    setFlipped((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-  const generateMultipleChoice = (correctName: string) => {
-    const allSigns = trafficSnapData.flatMap((z) => z.signs);
-    const otherSigns = allSigns
-      .filter((s) => s.name !== correctName)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
+  const getVisibleSigns = () => {
     return [
-      { text: correctName, isCorrect: true },
-      ...otherSigns.map((s) => ({ text: s.name, isCorrect: false })),
-    ].sort(() => Math.random() - 0.5);
+      TRAFFIC_SIGNS[currentIndex % TRAFFIC_SIGNS.length],
+      TRAFFIC_SIGNS[(currentIndex + 1) % TRAFFIC_SIGNS.length],
+      TRAFFIC_SIGNS[(currentIndex + 2) % TRAFFIC_SIGNS.length],
+    ];
   };
 
-  const [choices, setChoices] = useState(() =>
-    generateMultipleChoice(currentSign.name)
-  );
-
-  useEffect(() => {
-    setChoices(generateMultipleChoice(currentSign.name));
-    setAnswered(false);
-    setSelectedAnswer(null);
-    setShowShape(true);
-    setShowSign(false);
-    setShowQuestion(false);
-  }, [currentSignIndex, currentZoneIndex]);
-
-  const handleShapeSwipe = () => {
-    setShowShape(false);
-    setShowSign(true);
-    setTimeout(() => setShowQuestion(true), 350);
+  const nextSet = () => {
+    setCurrentIndex((prev) => prev + 3);
   };
 
-  const handleAnswerSelect = (choice: { text: string; isCorrect: boolean }) => {
-    if (answered) return;
-    setSelectedAnswer(choice.text);
-    setAnswered(true);
-    setTotalAnswered((t) => t + 1);
-    if (choice.isCorrect) {
-      setScore((s) => s + 10);
-      setCorrectAnswers((c) => c + 1);
-    }
+  const prevSet = () => {
+    setCurrentIndex((prev) => Math.max(0, prev - 3));
   };
-
-  const handleNext = () => {
-    if (currentSignIndex < currentZone.signs.length - 1) {
-      setCurrentSignIndex((i) => i + 1);
-    } else if (currentZoneIndex < trafficSnapData.length - 1) {
-      setCurrentZoneIndex((z) => z + 1);
-      setCurrentSignIndex(0);
-    } else {
-      setLocation("/");
-    }
-  };
-
-  const handleReset = () => {
-    setCurrentZoneIndex(0);
-    setCurrentSignIndex(0);
-    setScore(0);
-    setCorrectAnswers(0);
-    setTotalAnswered(0);
-    setAnswered(false);
-    setSelectedAnswer(null);
-    setShowShape(true);
-    setShowSign(false);
-    setShowQuestion(false);
-  };
-
-  const isCorrect = choices.find((c) => c.text === selectedAnswer)?.isCorrect;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50 p-4">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-3xl font-bold text-green-700">
-            Traffic Snap: Sign &amp; Shape
-          </h1>
-          <div className="flex items-center gap-4 text-lg font-semibold">
-            <span className="text-blue-700">Score: {score}</span>
-            <span className="text-green-700">
-              Progress: {Math.round(progressPercentage)}%
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
+      <div className="container mx-auto px-4 space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold text-slate-900">Traffic Snap</h1>
+          <p className="text-slate-600">Learn all traffic signs at a glance</p>
+        </div>
+
+        {/* Top: All Signs Image */}
+        <div className="rounded-xl overflow-hidden shadow-lg">
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/all-traffic-signs-collection-ABfZqE94PcY8kqcmLCdrLc.webp"
+            alt="All Traffic Signs"
+            className="w-full h-auto"
+          />
+        </div>
+
+        {/* Bottom: Flip Cards */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-3 gap-8">
+            {getVisibleSigns().map((sign) => (
+              <FlipCard
+                key={sign.id}
+                sign={sign}
+                isFlipped={flipped[sign.id] || false}
+                onFlip={() => toggleFlip(sign.id)}
+              />
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-center gap-4 items-center">
+            <button
+              onClick={prevSet}
+              disabled={currentIndex === 0}
+              className="px-6 py-2 bg-slate-800 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition"
+            >
+              ← Previous
+            </button>
+            <span className="text-slate-600 font-semibold">
+              {Math.floor(currentIndex / 3) + 1} / {Math.ceil(TRAFFIC_SIGNS.length / 3)}
             </span>
+            <button
+              onClick={nextSet}
+              disabled={currentIndex + 3 >= TRAFFIC_SIGNS.length}
+              className="px-6 py-2 bg-slate-800 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition"
+            >
+              Next →
+            </button>
           </div>
-        </div>
-        <Progress value={progressPercentage} className="h-2" />
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Zone Info */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 bg-white border-2 border-green-200">
-              <h2 className="text-xl font-bold text-green-700 mb-2">
-                {currentZone.zone}
-              </h2>
-              <p className="text-sm text-gray-700 mb-4">
-                {currentZone.description}
-              </p>
-              <div className="text-sm font-semibold text-blue-700">
-                Sign {currentSignIndex + 1} of {currentZone.signs.length}
-              </div>
-            </Card>
-          </div>
-
-          {/* Center: Game Area */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            {/* ── SHAPE SWIPE PHASE ── */}
-            {showShape && !showSign && (
-              <Card className="overflow-hidden bg-white border-2 border-blue-300">
-                <h3 className="text-lg font-semibold text-gray-700 mb-3 px-6 pt-6">
-                  Swipe to reveal the sign shape
-                </h3>
-                {/* Widescreen container for shape image */}
-                <div className="px-6 pb-4">
-                  <CinematicSignImage
-                    src={currentSign.shapeImage}
-                    alt={currentSign.shape}
-                    isAnswered={false}
-                  />
-                </div>
-                <div className="px-6 pb-6 text-center">
-                  <Button
-                    onClick={handleShapeSwipe}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                  >
-                    <ChevronRight className="mr-2" /> Swipe to Reveal
-                  </Button>
-                </div>
-              </Card>
-            )}
-
-            {/* ── SIGN + QUESTION PHASE ── */}
-            {showSign && (
-              <Card className="overflow-hidden bg-white border-2 border-green-300">
-                {/* Widescreen cinematic image — always visible once sign is shown */}
-                <CinematicSignImage
-                  src={currentSign.signImage}
-                  alt={currentSign.name}
-                  isAnswered={answered}
-                />
-
-                {/* Shape label strip */}
-                <div className="px-6 pt-3 pb-1">
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                    {currentSign.shape} shape
-                  </span>
-                </div>
-
-                {/* Question + choices */}
-                {showQuestion && (
-                  <div className="px-6 pb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">
-                      What is this sign?
-                    </h3>
-
-                    <div className="space-y-3 mb-4">
-                      {choices.map((choice, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleAnswerSelect(choice)}
-                          disabled={answered}
-                          className={[
-                            "w-full py-3 px-4 text-left font-semibold rounded-lg border transition-all duration-150",
-                            !answered
-                              ? "bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300 active:scale-[0.98]"
-                              : selectedAnswer === choice.text
-                              ? choice.isCorrect
-                                ? "bg-green-500 text-white border-green-600"
-                                : "bg-red-500 text-white border-red-600"
-                              : choice.isCorrect
-                              ? "bg-green-500 text-white border-green-600"
-                              : "bg-gray-100 text-gray-500 border-gray-200",
-                          ].join(" ")}
-                        >
-                          {choice.text}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Feedback panel */}
-                    {answered && (
-                      <div
-                        className={`p-4 rounded-lg mb-4 border-2 ${
-                          isCorrect
-                            ? "bg-green-50 border-green-400"
-                            : "bg-red-50 border-red-400"
-                        }`}
-                      >
-                        <p
-                          className={`font-bold text-base mb-1 ${
-                            isCorrect ? "text-green-700" : "text-red-700"
-                          }`}
-                        >
-                          {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-                        </p>
-                        <p className="text-sm text-gray-700 mb-1">
-                          <strong>Description:</strong>{" "}
-                          {currentSign.description}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <strong>Real-World Application:</strong>{" "}
-                          {currentSign.realWorldApplication}
-                        </p>
-                      </div>
-                    )}
-
-                    {answered && (
-                      <div className="flex justify-center">
-                        <Button
-                          onClick={handleNext}
-                          className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg font-semibold"
-                        >
-                          Next <ChevronRight className="ml-2" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Controls */}
-        <div className="mt-8 flex justify-between items-center">
-          <Button
-            onClick={() => setLocation("/")}
-            variant="outline"
-            className="px-6 py-2 rounded-lg font-semibold"
-          >
-            <ChevronLeft className="mr-2" /> Back to Home
-          </Button>
-          <div className="text-sm font-semibold text-gray-700">
-            Correct: {correctAnswers} / {totalAnswered}
-          </div>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            className="px-6 py-2 rounded-lg font-semibold"
-          >
-            <RotateCcw className="mr-2" /> Reset
-          </Button>
         </div>
       </div>
     </div>
