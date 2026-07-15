@@ -79,6 +79,8 @@ export default function TrafficSnap() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [panX, setPanX] = useState(0);
+  const [showDescription, setShowDescription] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
 
   const currentSign = shuffledSigns[currentIndex % shuffledSigns.length];
 
@@ -109,11 +111,35 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [currentIndex, answered]);
 
+  // Auto-advance after 7 seconds
+  useEffect(() => {
+    if (!answered) return;
+
+    const timer = setTimeout(() => {
+      nextSign();
+    }, 7000);
+
+    return () => clearTimeout(timer);
+  }, [answered]);
+
+  // Show description card after 4 seconds (if correct)
+  useEffect(() => {
+    if (!answered || !isCorrect) return;
+
+    const timer = setTimeout(() => {
+      setShowDescription(true);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [answered, isCorrect]);
+
   const handleCardClick = (cardIndex: number) => {
     if (answered) return;
     setSelectedCard(cardIndex);
     setAnswered(true);
-    if (cardOptions[cardIndex].id === currentSign.id) {
+    const correct = cardOptions[cardIndex].id === currentSign.id;
+    setIsCorrect(correct);
+    if (correct) {
       setScore((prev) => prev + 1);
     }
   };
@@ -122,6 +148,8 @@ export default function TrafficSnap() {
     setCurrentIndex((prev) => (prev + 1) % shuffledSigns.length);
     setAnswered(false);
     setSelectedCard(null);
+    setShowDescription(false);
+    setIsCorrect(false);
   };
 
   const getCardStyle = (cardIndex: number) => {
@@ -146,89 +174,103 @@ export default function TrafficSnap() {
           </div>
         </div>
 
-        {/* Sign Tile: square, zoomed, panning left to right */}
+        {/* Sign Tile OR Description Card */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSign.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.4 }}
-            className="relative mx-auto overflow-hidden rounded-2xl shadow-xl bg-black"
-            style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
-          >
-            <motion.img
-              src={currentSign.signImage}
-              alt={currentSign.name}
-              className="absolute inset-0 w-full h-full object-cover"
-              animate={{ x: answered ? 0 : panX, scale: answered ? 1 : 1.35 }}
-              transition={{ duration: answered ? 0.5 : 0.05, ease: "linear" }}
-            />
-            {/* Vignette */}
-            {!answered && (
-              <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30 pointer-events-none" />
-            )}
-            {/* Badge */}
-            {!answered && (
-              <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
-                IDENTIFY
+          {!answered || !showDescription ? (
+            <motion.div
+              key={`sign-${currentSign.id}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              className="relative mx-auto overflow-hidden rounded-2xl shadow-xl bg-black"
+              style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
+            >
+              <motion.img
+                src={currentSign.signImage}
+                alt={currentSign.name}
+                className="absolute inset-0 w-full h-full object-cover"
+                animate={{ x: answered ? 0 : panX, scale: answered ? 1 : 1.35 }}
+                transition={{ duration: answered ? 0.5 : 0.05, ease: "linear" }}
+              />
+              {/* Vignette */}
+              {!answered && (
+                <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30 pointer-events-none" />
+              )}
+              {/* Badge */}
+              {!answered && (
+                <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+                  IDENTIFY
+                </div>
+              )}
+              {/* Zone badge */}
+              <div className="absolute bottom-4 left-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                {currentSign.zone}
               </div>
-            )}
-            {/* Zone badge */}
-            <div className="absolute bottom-4 left-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-semibold">
-              {currentSign.zone}
-            </div>
-          </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`desc-${currentSign.id}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              className="relative mx-auto rounded-2xl shadow-xl bg-gradient-to-br from-blue-500 to-blue-700 p-8 text-white"
+              style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
+            >
+              <div className="h-full flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h2 className="text-3xl font-bold">{currentSign.name}</h2>
+                  <p className="text-lg leading-relaxed">{currentSign.description}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold opacity-75 uppercase">Real-World Use</p>
+                  <p className="text-sm leading-relaxed">{currentSign.realWorldApplication}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Three Answer Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          {cardOptions.map((option, idx) => (
-            <motion.button
-              key={option.id + idx}
-              onClick={() => handleCardClick(idx)}
-              disabled={answered}
-              whileHover={!answered ? { scale: 1.04, y: -4 } : {}}
-              whileTap={!answered ? { scale: 0.97 } : {}}
-              className={`relative h-28 rounded-xl bg-gradient-to-br ${getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
-            >
-              <span className="text-center leading-tight">{option.name}</span>
-              {answered && option.id === currentSign.id && (
-                <span className="absolute top-2 right-2 text-white text-lg">✓</span>
-              )}
-              {answered && selectedCard === idx && option.id !== currentSign.id && (
-                <span className="absolute top-2 right-2 text-white text-lg">✗</span>
-              )}
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Answer Feedback */}
-        {answered && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-5 shadow-md space-y-2"
-          >
-            <p className="font-bold text-slate-900 text-lg">{currentSign.name}</p>
-            <p className="text-slate-600 text-sm">{currentSign.description}</p>
-            <p className="text-slate-500 text-xs italic">{currentSign.realWorldApplication}</p>
-          </motion.div>
+        {!showDescription && (
+          <div className="grid grid-cols-3 gap-4">
+            {cardOptions.map((option, idx) => (
+              <motion.button
+                key={option.id + idx}
+                onClick={() => handleCardClick(idx)}
+                disabled={answered}
+                whileHover={!answered ? { scale: 1.04, y: -4 } : {}}
+                whileTap={!answered ? { scale: 0.97 } : {}}
+                className={`relative h-28 rounded-xl bg-gradient-to-br ${getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
+              >
+                <span className="text-center leading-tight">{option.name}</span>
+                {answered && option.id === currentSign.id && (
+                  <span className="absolute top-2 right-2 text-white text-lg">✓</span>
+                )}
+                {answered && selectedCard === idx && option.id !== currentSign.id && (
+                  <span className="absolute top-2 right-2 text-white text-lg">✗</span>
+                )}
+              </motion.button>
+            ))}
+          </div>
         )}
 
-        {/* Next Button */}
+        {/* Timer indicator */}
         {answered && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex justify-center"
           >
-            <button
-              onClick={nextSign}
-              className="px-8 py-3 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition"
-            >
-              Next Sign →
-            </button>
+            <div className="text-slate-600 text-sm font-semibold">
+              Next question in <motion.span
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                7 seconds
+              </motion.span>
+            </div>
           </motion.div>
         )}
       </div>
