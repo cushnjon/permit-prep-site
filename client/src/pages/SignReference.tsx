@@ -89,7 +89,7 @@ function SignCard({ sign, cardBg, headingColor }: SignCardProps) {
           src={sign.signImage}
           alt={sign.name}
           className="max-w-full max-h-full object-contain"
-          style={{ maxHeight: 144 }}
+          style={{ maxHeight: 122 }}
         />
       </div>
       {/* Info */}
@@ -105,16 +105,24 @@ function SignCard({ sign, cardBg, headingColor }: SignCardProps) {
   );
 }
 
+type SpeedLevel = "slow" | "normal" | "fast";
+
 interface CarouselTrackProps {
   group: typeof COLOR_GROUPS[0];
 }
 
 function CarouselTrack({ group }: CarouselTrackProps) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState<SpeedLevel>("normal");
   const posRef = useRef(0);
   const animRef = useRef<number>(0);
-  const speed = 0.5; // px per frame
+
+  // Speed multipliers
+  const speedMap: Record<SpeedLevel, number> = {
+    slow: 0.25,
+    normal: 0.5,
+    fast: 1.0,
+  };
 
   // Duplicate signs for infinite loop
   const doubled = [...group.signs, ...group.signs, ...group.signs];
@@ -125,37 +133,48 @@ function CarouselTrack({ group }: CarouselTrackProps) {
 
     const cardWidth = 288 + 24; // card width + gap
     const totalWidth = group.signs.length * cardWidth;
+    const currentSpeed = speedMap[speed];
 
     const animate = () => {
-      if (!paused) {
-        posRef.current += speed;
-        if (posRef.current >= totalWidth) {
-          posRef.current -= totalWidth;
-        }
-        if (track) {
-          track.style.transform = `translateX(-${posRef.current}px)`;
-        }
+      posRef.current += currentSpeed;
+      if (posRef.current >= totalWidth) {
+        posRef.current -= totalWidth;
+      }
+      if (track) {
+        track.style.transform = `translateX(-${posRef.current}px)`;
       }
       animRef.current = requestAnimationFrame(animate);
     };
 
     animRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animRef.current);
-  }, [paused, group.signs.length]);
+  }, [speed, group.signs.length]);
 
   return (
-    <div
-      className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden py-8`}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden py-8`}>
       {/* Header */}
       <div className="px-8 mb-6 flex items-center gap-4">
         <span className={`${group.badge} px-4 py-1.5 rounded-full text-sm font-bold tracking-wide`}>
           {group.label}
         </span>
         <span className="text-gray-600 text-sm">{group.subtitle}</span>
-        <span className="ml-auto text-xs text-gray-400 italic">Hover to pause</span>
+
+        {/* Speed toggle */}
+        <div className="ml-auto flex items-center gap-2 bg-white rounded-full p-1 border border-gray-300">
+          {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSpeed(s)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                speed === s
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {s === "slow" ? "Slow" : s === "normal" ? "Normal" : "Fast"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Scrolling track */}
@@ -198,7 +217,7 @@ export default function SignReference() {
         <div className="mb-12 text-center">
           <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">Traffic Sign Guide</h1>
           <p className="text-slate-500 text-lg max-w-xl mx-auto">
-            All {ALL_SIGNS.length} traffic signs organized by color. Hover over any carousel to pause and read.
+            All {ALL_SIGNS.length} traffic signs organized by color. Use speed controls to adjust carousel speed.
           </p>
         </div>
 
