@@ -113,37 +113,24 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [currentIndex, answered]);
 
-  // Auto-advance after 8 seconds with countdown
+  // Smooth 3-2-1 countdown then immediate next question
   useEffect(() => {
     if (!answered) return;
 
-    // Show countdown for last 3 seconds (starts at 3.8 seconds mark)
-    const countdownStart = setTimeout(() => {
-      setCountdown(3);
-    }, 3800);
-
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          // Immediately load next question when countdown reaches 0
-          setTimeout(() => nextSign(), 0);
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    const timer = setTimeout(() => {
-      // This will be overridden by countdown reaching 0
+    // Show 3 at 3.8s, 2 at 4.8s, 1 at 5.8s, load next at 6.8s
+    const t3 = setTimeout(() => setCountdown(3), 3800);
+    const t2 = setTimeout(() => setCountdown(2), 4800);
+    const t1 = setTimeout(() => setCountdown(1), 5800);
+    const tNext = setTimeout(() => {
+      setCountdown(null);
       nextSign();
     }, 6800);
 
     return () => {
-      clearTimeout(countdownStart);
-      clearTimeout(timer);
-      clearInterval(countdownInterval);
+      clearTimeout(t3);
+      clearTimeout(t2);
+      clearTimeout(t1);
+      clearTimeout(tNext);
     };
   }, [answered]);
 
