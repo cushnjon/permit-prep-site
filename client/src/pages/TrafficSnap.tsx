@@ -117,10 +117,10 @@ export default function TrafficSnap() {
   useEffect(() => {
     if (!answered) return;
 
-    // Show countdown for last 3 seconds
+    // Show countdown for last 3 seconds (starts at 3.8 seconds mark)
     const countdownStart = setTimeout(() => {
       setCountdown(3);
-    }, 5000);
+    }, 3800);
 
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -138,7 +138,7 @@ export default function TrafficSnap() {
     const timer = setTimeout(() => {
       // This will be overridden by countdown reaching 0
       nextSign();
-    }, 8000);
+    }, 6800);
 
     return () => {
       clearTimeout(countdownStart);
