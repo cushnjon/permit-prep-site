@@ -1,177 +1,223 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { trafficSnapData } from "@/data/trafficSnapData";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { trafficSnapData, TrafficSign } from "@/data/trafficSnapData";
+import { useLocation } from "wouter";
+import { ArrowLeft } from "lucide-react";
 
-// Flatten all signs from all zones
-const ALL_SIGNS = trafficSnapData.flatMap((zone) => zone.signs);
+// All signs flattened
+const ALL_SIGNS = trafficSnapData.flatMap((z) => z.signs);
 
-// Group signs by color
-const SIGN_COLORS = {
-  red: {
-    name: "Red Signs",
-    description: "Regulatory signs indicating stop, yield, or prohibition",
-    signs: ALL_SIGNS.filter((s) => ["Stop Sign", "Do Not Enter Sign", "No Parking Sign"].includes(s.name)),
-  },
-  yellow: {
-    name: "Yellow Signs",
-    description: "Warning signs alerting drivers to potential hazards",
-    signs: ALL_SIGNS.filter((s) => 
-      ["School Zone Sign", "Curve Ahead Sign", "Slippery Road Sign", "Merge Sign", "Deer Crossing Sign"].includes(s.name)
+// Color-coded groups
+const COLOR_GROUPS = [
+  {
+    key: "red",
+    label: "Red Signs",
+    subtitle: "Stop, Prohibition & Restriction",
+    bg: "bg-red-600",
+    track: "bg-red-50",
+    border: "border-red-300",
+    badge: "bg-red-600 text-white",
+    heading: "text-red-700",
+    card: "bg-white border-red-200",
+    dot: "bg-red-500",
+    signs: ALL_SIGNS.filter((s) =>
+      ["Stop Sign", "Do Not Enter Sign", "No Parking Sign", "Yield Sign"].includes(s.name)
     ),
   },
-  blue: {
-    name: "Blue Signs",
-    description: "Informational signs providing directions and services",
-    signs: ALL_SIGNS.filter((s) => 
-      ["Hospital Sign", "Rest Area Sign", "Gas Station Sign", "Lodging Sign"].includes(s.name)
+  {
+    key: "yellow",
+    label: "Yellow Signs",
+    subtitle: "Hazard & Warning",
+    bg: "bg-yellow-500",
+    track: "bg-yellow-50",
+    border: "border-yellow-300",
+    badge: "bg-yellow-500 text-white",
+    heading: "text-yellow-700",
+    card: "bg-white border-yellow-200",
+    dot: "bg-yellow-500",
+    signs: ALL_SIGNS.filter((s) =>
+      ["School Zone Sign", "Curve Ahead Sign", "Slippery Road Sign", "Merge Sign", "Deer Crossing Sign", "Pedestrian Crossing Sign"].includes(s.name)
     ),
   },
-  white: {
-    name: "White & Green Signs",
-    description: "Regulatory and directional signs",
-    signs: ALL_SIGNS.filter((s) => 
-      ["Speed Limit Sign", "One Way Sign", "Exit Sign", "Handicap Accessible Sign", "Pedestrian Crossing Sign"].includes(s.name)
+  {
+    key: "white",
+    label: "White Signs",
+    subtitle: "Regulatory & Speed Control",
+    bg: "bg-gray-700",
+    track: "bg-gray-50",
+    border: "border-gray-300",
+    badge: "bg-gray-700 text-white",
+    heading: "text-gray-800",
+    card: "bg-white border-gray-200",
+    dot: "bg-gray-600",
+    signs: ALL_SIGNS.filter((s) =>
+      ["Speed Limit Sign", "One Way Sign"].includes(s.name)
     ),
   },
-};
+  {
+    key: "blue",
+    label: "Blue Signs",
+    subtitle: "Services & Information",
+    bg: "bg-blue-600",
+    track: "bg-blue-50",
+    border: "border-blue-300",
+    badge: "bg-blue-600 text-white",
+    heading: "text-blue-700",
+    card: "bg-white border-blue-200",
+    dot: "bg-blue-500",
+    signs: ALL_SIGNS.filter((s) =>
+      ["Hospital Sign", "Rest Area Sign", "Gas Station Sign", "Lodging Sign", "Handicap Accessible Sign", "Exit Sign"].includes(s.name)
+    ),
+  },
+];
 
-interface CarouselProps {
-  colorKey: string;
-  colorData: {
-    name: string;
-    description: string;
-    signs: typeof ALL_SIGNS;
-  };
+interface SignCardProps {
+  sign: TrafficSign;
+  cardBg: string;
+  headingColor: string;
 }
 
-function SignCarousel({ colorKey, colorData }: CarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerPage = 3;
-  const totalPages = Math.ceil(colorData.signs.length / itemsPerPage);
+function SignCard({ sign, cardBg, headingColor }: SignCardProps) {
+  return (
+    <div
+      className={`flex-shrink-0 w-72 rounded-2xl border-2 ${cardBg} shadow-md overflow-hidden flex flex-col`}
+      style={{ minWidth: 288 }}
+    >
+      {/* Full sign image */}
+      <div className="w-full bg-white flex items-center justify-center p-6" style={{ height: 220 }}>
+        <img
+          src={sign.signImage}
+          alt={sign.name}
+          className="max-w-full max-h-full object-contain drop-shadow-lg"
+          style={{ maxHeight: 180 }}
+        />
+      </div>
+      {/* Info */}
+      <div className="p-5 flex flex-col gap-2 flex-1">
+        <h3 className={`font-bold text-lg leading-tight ${headingColor}`}>{sign.name}</h3>
+        <p className="text-sm text-gray-700 leading-relaxed">{sign.description}</p>
+        <div className="mt-auto pt-3 border-t border-gray-200">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Real-World Use</p>
+          <p className="text-xs text-gray-600 leading-relaxed">{sign.realWorldApplication}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + totalPages) % totalPages);
-  };
+interface CarouselTrackProps {
+  group: typeof COLOR_GROUPS[0];
+}
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % totalPages);
-  };
+function CarouselTrack({ group }: CarouselTrackProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+  const posRef = useRef(0);
+  const animRef = useRef<number>(0);
+  const speed = 0.5; // px per frame
 
-  const startIdx = currentIndex * itemsPerPage;
-  const visibleSigns = colorData.signs.slice(startIdx, startIdx + itemsPerPage);
+  // Duplicate signs for infinite loop
+  const doubled = [...group.signs, ...group.signs, ...group.signs];
 
-  const colorBgMap: Record<string, string> = {
-    red: "bg-red-50 border-red-200",
-    yellow: "bg-yellow-50 border-yellow-200",
-    blue: "bg-blue-50 border-blue-200",
-    white: "bg-gray-50 border-gray-200",
-  };
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
 
-  const colorAccentMap: Record<string, string> = {
-    red: "text-red-700",
-    yellow: "text-yellow-700",
-    blue: "text-blue-700",
-    white: "text-gray-700",
-  };
+    const cardWidth = 288 + 24; // card width + gap
+    const totalWidth = group.signs.length * cardWidth;
 
-  const colorButtonMap: Record<string, string> = {
-    red: "bg-red-500 hover:bg-red-600",
-    yellow: "bg-yellow-500 hover:bg-yellow-600",
-    blue: "bg-blue-500 hover:bg-blue-600",
-    white: "bg-gray-500 hover:bg-gray-600",
-  };
+    const animate = () => {
+      if (!paused) {
+        posRef.current += speed;
+        if (posRef.current >= totalWidth) {
+          posRef.current -= totalWidth;
+        }
+        if (track) {
+          track.style.transform = `translateX(-${posRef.current}px)`;
+        }
+      }
+      animRef.current = requestAnimationFrame(animate);
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [paused, group.signs.length]);
 
   return (
-    <div className={`rounded-2xl border-2 p-8 ${colorBgMap[colorKey]}`}>
-      <div className="mb-6">
-        <h2 className={`text-3xl font-bold ${colorAccentMap[colorKey]} mb-2`}>{colorData.name}</h2>
-        <p className="text-gray-600">{colorData.description}</p>
+    <div
+      className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden py-8`}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* Header */}
+      <div className="px-8 mb-6 flex items-center gap-4">
+        <span className={`${group.badge} px-4 py-1.5 rounded-full text-sm font-bold tracking-wide`}>
+          {group.label}
+        </span>
+        <span className="text-gray-600 text-sm">{group.subtitle}</span>
+        <span className="ml-auto text-xs text-gray-400 italic">Hover to pause</span>
       </div>
 
-      {/* Carousel */}
-      <div className="relative">
-        <div className="grid grid-cols-3 gap-6 mb-6">
-          {visibleSigns.map((sign) => (
-            <motion.div
-              key={sign.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-            >
-              {/* Sign Image */}
-              <div className="relative w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img
-                  src={sign.signImage}
-                  alt={sign.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Sign Info */}
-              <div className="p-4 space-y-3">
-                <h3 className="font-bold text-lg text-gray-900">{sign.name}</h3>
-                <p className="text-sm text-gray-600 line-clamp-2">{sign.description}</p>
-                <div className="pt-2 border-t border-gray-200">
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Real-World Use</p>
-                  <p className="text-xs text-gray-600 line-clamp-2">{sign.realWorldApplication}</p>
-                </div>
-              </div>
-            </motion.div>
+      {/* Scrolling track */}
+      <div className="overflow-hidden px-8">
+        <div
+          ref={trackRef}
+          className="flex gap-6 will-change-transform"
+          style={{ width: "max-content" }}
+        >
+          {doubled.map((sign, idx) => (
+            <SignCard
+              key={`${sign.id}-${idx}`}
+              sign={sign}
+              cardBg={group.card}
+              headingColor={group.heading}
+            />
           ))}
         </div>
-
-        {/* Navigation */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handlePrev}
-              className={`${colorButtonMap[colorKey]} text-white p-2 rounded-lg transition`}
-            >
-              <ChevronLeft size={24} />
-            </button>
-
-            <div className="text-sm font-semibold text-gray-600">
-              {currentIndex + 1} / {totalPages}
-            </div>
-
-            <button
-              onClick={handleNext}
-              className={`${colorButtonMap[colorKey]} text-white p-2 rounded-lg transition`}
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
 export default function SignReference() {
+  const [, setLocation] = useLocation();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-12">
-      <div className="container mx-auto px-4 max-w-5xl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-white py-10">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Back button */}
+        <button
+          onClick={() => setLocation("/")}
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-800 mb-8 transition-colors text-sm font-medium"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </button>
+
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Traffic Sign Reference</h1>
-          <p className="text-slate-600">Complete guide to all traffic signs organized by color</p>
+        <div className="mb-12 text-center">
+          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">Traffic Sign Guide</h1>
+          <p className="text-slate-500 text-lg max-w-xl mx-auto">
+            All {ALL_SIGNS.length} traffic signs organized by color. Hover over any carousel to pause and read.
+          </p>
         </div>
 
-        {/* Carousels */}
-        <div className="space-y-8">
-          {Object.entries(SIGN_COLORS).map(([colorKey, colorData]) => (
-            <SignCarousel key={colorKey} colorKey={colorKey} colorData={colorData} />
+        {/* Color-coded carousels */}
+        <div className="space-y-10">
+          {COLOR_GROUPS.map((group) => (
+            <CarouselTrack key={group.key} group={group} />
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-12">
-          <p className="text-slate-600 text-sm">
-            Master these signs to ace your DMV test. Practice with Traffic Snap for interactive learning!
-          </p>
+        {/* Footer CTA */}
+        <div className="text-center mt-16 pb-8">
+          <p className="text-slate-500 mb-4">Ready to test your knowledge?</p>
+          <button
+            onClick={() => setLocation("/traffic-snap")}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg shadow-lg transition"
+          >
+            Play Traffic Snap →
+          </button>
         </div>
       </div>
     </div>
