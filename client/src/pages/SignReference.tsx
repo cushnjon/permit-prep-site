@@ -89,7 +89,7 @@ function SignCard({ sign, cardBg, headingColor }: SignCardProps) {
           src={sign.signImage}
           alt={sign.name}
           className="max-w-full max-h-full object-contain"
-          style={{ maxHeight: 180 }}
+          style={{ maxHeight: 144 }}
         />
       </div>
       {/* Info */}
