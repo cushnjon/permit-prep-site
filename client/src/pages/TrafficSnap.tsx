@@ -82,7 +82,7 @@ export default function TrafficSnap() {
   const [showDescription, setShowDescription] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [selectedSignForInfo, setSelectedSignForInfo] = useState<typeof ALL_SIGNS[0] | null>(null);
+
 
   const currentSign = shuffledSigns[currentIndex % shuffledSigns.length];
 
@@ -95,7 +95,7 @@ export default function TrafficSnap() {
 
   // Left-to-right pan animation for the sign tile
   useEffect(() => {
-    if (answered || selectedSignForInfo) return;
+    if (answered) return;
     setPanX(0);
     const start = Date.now();
     const duration = 8000; // 8 seconds to pan across
@@ -111,11 +111,11 @@ export default function TrafficSnap() {
     const frameRef = { current: 0 as number };
     frameRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [currentIndex, answered, selectedSignForInfo]);
+  }, [currentIndex, answered]);
 
   // Auto-advance after 8 seconds with countdown
   useEffect(() => {
-    if (!answered || selectedSignForInfo) return;
+    if (!answered) return;
 
     // Show countdown for last 3 seconds
     const countdownStart = setTimeout(() => {
@@ -142,18 +142,18 @@ export default function TrafficSnap() {
       clearTimeout(timer);
       clearInterval(countdownInterval);
     };
-  }, [answered, selectedSignForInfo]);
+  }, [answered]);
 
   // Show description card after 0.5 seconds (if correct)
   useEffect(() => {
-    if (!answered || !isCorrect || selectedSignForInfo) return;
+    if (!answered || !isCorrect) return;
 
     const timer = setTimeout(() => {
       setShowDescription(true);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [answered, isCorrect, selectedSignForInfo]);
+  }, [answered, isCorrect]);
 
   const handleCardClick = (cardIndex: number) => {
     if (answered) return;
@@ -173,20 +173,10 @@ export default function TrafficSnap() {
     setShowDescription(false);
     setIsCorrect(false);
     setCountdown(null);
-    setSelectedSignForInfo(null);
+
   };
 
-  const handleSignClick = (sign: typeof ALL_SIGNS[0]) => {
-    setSelectedSignForInfo(sign);
-    setAnswered(true);
-    setShowDescription(false);
-    setCountdown(null);
-  };
 
-  const backToGame = () => {
-    setSelectedSignForInfo(null);
-    setAnswered(false);
-  };
 
   const getCardStyle = (cardIndex: number) => {
     if (!answered || selectedCard === null) return "from-slate-700 to-slate-900";
@@ -210,55 +200,11 @@ export default function TrafficSnap() {
           </div>
         </div>
 
-        {/* Reference Image with Clickable Signs */}
-        {selectedSignForInfo === null && (
-          <div className="relative mx-auto rounded-2xl overflow-hidden shadow-lg bg-white">
-            <img
-              src="https://storage.googleapis.com/manus-public/all-traffic-signs-collection.png"
-              alt="All Traffic Signs"
-              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={(e) => {
-                const rect = (e.currentTarget as HTMLImageElement).getBoundingClientRect();
-                const clickedSign = ALL_SIGNS[Math.floor(Math.random() * ALL_SIGNS.length)];
-                handleSignClick(clickedSign);
-              }}
-            />
-            <div className="absolute inset-0 pointer-events-none text-white text-xs font-semibold flex items-center justify-center bg-black/10">
-              Click any sign to view details
-            </div>
-          </div>
-        )}
+
 
         {/* Sign Tile OR Description Card OR Info Display */}
         <AnimatePresence mode="wait">
-          {selectedSignForInfo ? (
-            <motion.div
-              key={`info-${selectedSignForInfo.id}`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.4 }}
-              className="relative mx-auto rounded-2xl shadow-xl bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white"
-              style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
-            >
-              <div className="h-full flex flex-col justify-between">
-                <div className="space-y-4">
-                  <h2 className="text-3xl font-bold">{selectedSignForInfo.name}</h2>
-                  <p className="text-lg leading-relaxed">{selectedSignForInfo.description}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold opacity-75 uppercase">Real-World Use</p>
-                  <p className="text-sm leading-relaxed">{selectedSignForInfo.realWorldApplication}</p>
-                </div>
-              </div>
-              <button
-                onClick={backToGame}
-                className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-xs font-semibold transition"
-              >
-                Back
-              </button>
-            </motion.div>
-          ) : !answered || !showDescription ? (
+          {!answered || !showDescription ? (
             <motion.div
               key={`sign-${currentSign.id}`}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -315,7 +261,7 @@ export default function TrafficSnap() {
         </AnimatePresence>
 
         {/* Three Answer Cards */}
-        {!showDescription && !selectedSignForInfo && (
+        {!showDescription && (
           <div className="grid grid-cols-3 gap-4">
             {cardOptions.map((option, idx) => (
               <motion.button
@@ -339,7 +285,7 @@ export default function TrafficSnap() {
         )}
 
         {/* Countdown display */}
-        {answered && countdown !== null && !selectedSignForInfo && (
+        {answered && countdown !== null && (
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
