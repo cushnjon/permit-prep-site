@@ -273,14 +273,22 @@ export default function Home() {
                     <span className="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Click any sign to view details</span>
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">Learn all traffic signs with interactive flip cards</p>
-                  <button
-                    onClick={() => setLocation("/traffic-snap")}
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
-                  >
-                    Play Traffic Snap
-                  </button>
+                <div className="text-center space-y-3">
+                  <p className="text-gray-600">Learn all traffic signs with interactive flip cards</p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setLocation("/traffic-snap")}
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                    >
+                      Play Traffic Snap
+                    </button>
+                    <button
+                      onClick={() => setLocation("/sign-reference")}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
+                    >
+                      View All Signs
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
