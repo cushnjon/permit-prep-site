@@ -144,13 +144,13 @@ export default function TrafficSnap() {
     };
   }, [answered]);
 
-  // Show description card after 0.5 seconds (if correct)
+  // Show description card after 0 seconds (faster - immediately on correct)
   useEffect(() => {
     if (!answered || !isCorrect) return;
 
     const timer = setTimeout(() => {
       setShowDescription(true);
-    }, 500);
+    }, 0);
 
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
@@ -172,8 +172,7 @@ export default function TrafficSnap() {
     setSelectedCard(null);
     setShowDescription(false);
     setIsCorrect(false);
-    setCountdown(null);
-
+    setCountdown(3); // Start with 3 2 1 countdown on new question
   };
 
 

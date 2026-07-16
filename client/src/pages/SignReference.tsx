@@ -200,9 +200,9 @@ function CarouselTrack({ group }: CarouselTrackProps) {
           </div>
         </div>
 
-        {/* Single row of signs */}
+        {/* Single row of signs - scrollable */}
         <div className="overflow-x-auto px-8 py-8">
-          <div className="flex gap-6">
+          <div className="flex gap-6 w-max">
             {group.signs.map((sign) => (
               <div
                 key={sign.id}
