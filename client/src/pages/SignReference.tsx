@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trafficSnapData, TrafficSign } from "@/data/trafficSnapData";
 import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Play, Pause } from "lucide-react";
 
 // All signs flattened
 const ALL_SIGNS = trafficSnapData.flatMap((z) => z.signs);
@@ -20,6 +20,7 @@ const COLOR_GROUPS = [
     heading: "text-red-700",
     card: "bg-white border-red-200",
     dot: "bg-red-500",
+    layout: "carousel",
     signs: ALL_SIGNS.filter((s) =>
       ["Stop Sign", "Do Not Enter Sign", "No Parking Sign", "Yield Sign"].includes(s.name)
     ),
@@ -35,6 +36,7 @@ const COLOR_GROUPS = [
     heading: "text-yellow-700",
     card: "bg-white border-yellow-200",
     dot: "bg-yellow-500",
+    layout: "row",
     signs: ALL_SIGNS.filter((s) =>
       ["School Zone Sign", "Curve Ahead Sign", "Slippery Road Sign", "Merge Sign", "Deer Crossing Sign", "Pedestrian Crossing Sign"].includes(s.name)
     ),
@@ -50,6 +52,7 @@ const COLOR_GROUPS = [
     heading: "text-gray-800",
     card: "bg-white border-gray-200",
     dot: "bg-gray-600",
+    layout: "carousel",
     signs: ALL_SIGNS.filter((s) =>
       ["Speed Limit Sign", "One Way Sign"].includes(s.name)
     ),
@@ -65,6 +68,7 @@ const COLOR_GROUPS = [
     heading: "text-blue-700",
     card: "bg-white border-blue-200",
     dot: "bg-blue-500",
+    layout: "carousel",
     signs: ALL_SIGNS.filter((s) =>
       ["Hospital Sign", "Rest Area Sign", "Gas Station Sign", "Lodging Sign", "Handicap Accessible Sign", "Exit Sign"].includes(s.name)
     ),
@@ -108,12 +112,13 @@ function SignCard({ sign, cardBg, headingColor }: SignCardProps) {
 type SpeedLevel = "slow" | "normal" | "fast";
 
 interface CarouselTrackProps {
-  group: typeof COLOR_GROUPS[0];
+  group: (typeof COLOR_GROUPS)[0];
 }
 
 function CarouselTrack({ group }: CarouselTrackProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [speed, setSpeed] = useState<SpeedLevel>("normal");
+  const [playing, setPlaying] = useState(true);
   const posRef = useRef(0);
   const animRef = useRef<number>(0);
 
@@ -136,49 +141,145 @@ function CarouselTrack({ group }: CarouselTrackProps) {
     const currentSpeed = speedMap[speed];
 
     const animate = () => {
-      posRef.current += currentSpeed;
-      if (posRef.current >= totalWidth) {
-        posRef.current -= totalWidth;
-      }
-      if (track) {
-        track.style.transform = `translateX(-${posRef.current}px)`;
+      if (playing) {
+        posRef.current += currentSpeed;
+        if (posRef.current >= totalWidth) {
+          posRef.current -= totalWidth;
+        }
+        if (track) {
+          track.style.transform = `translateX(-${posRef.current}px)`;
+        }
       }
       animRef.current = requestAnimationFrame(animate);
     };
 
     animRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animRef.current);
-  }, [speed, group.signs.length]);
+  }, [speed, playing, group.signs.length]);
 
+  if (group.layout === "row") {
+    // Yellow signs in single row
+    return (
+      <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden`}>
+        {/* Slim top strip header */}
+        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-8 py-3 flex items-center gap-4 shadow-sm">
+          <span className="text-white font-bold text-sm tracking-wide">
+            {group.label}
+          </span>
+          <span className="text-white/80 text-xs">{group.subtitle}</span>
+
+          {/* Speed toggle + Pause button */}
+          <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+              {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  className={`px-2 py-1 rounded-full text-xs font-semibold transition-all ${
+                    speed === s
+                      ? "bg-white text-yellow-700"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  {s === "slow" ? "Slow" : s === "normal" ? "Normal" : "Fast"}
+                </button>
+              ))}
+            </div>
+
+            {/* Pause/Play button */}
+            <button
+              onClick={() => setPlaying(!playing)}
+              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all backdrop-blur-sm"
+              title={playing ? "Pause" : "Play"}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Single row of signs */}
+        <div className="overflow-x-auto px-8 py-8">
+          <div className="flex gap-6">
+            {group.signs.map((sign) => (
+              <div
+                key={sign.id}
+                className={`flex-shrink-0 w-80 rounded-2xl border-2 ${group.card} shadow-md overflow-hidden flex flex-row`}
+              >
+                {/* Sign image */}
+                <div className="w-40 bg-white flex items-center justify-center p-4 flex-shrink-0">
+                  <img
+                    src={sign.signImage}
+                    alt={sign.name}
+                    className="max-w-full max-h-full object-contain"
+                    style={{ maxHeight: 120 }}
+                  />
+                </div>
+                {/* Description */}
+                <div className="flex-1 p-4 flex flex-col justify-between">
+                  <div>
+                    <h3 className={`font-bold text-base leading-tight ${group.heading} mb-2`}>
+                      {sign.name}
+                    </h3>
+                    <p className="text-xs text-gray-700 leading-relaxed mb-2">{sign.description}</p>
+                  </div>
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Use
+                    </p>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      {sign.realWorldApplication}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Carousel layout for red, white, blue
   return (
-    <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden py-8`}>
-      {/* Header */}
-      <div className="px-8 mb-6 flex items-center gap-4">
-        <span className={`${group.badge} px-4 py-1.5 rounded-full text-sm font-bold tracking-wide`}>
+    <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden`}>
+      {/* Slim top strip header */}
+      <div className={`bg-gradient-to-r ${group.bg} to-opacity-90 px-8 py-3 flex items-center gap-4 shadow-sm`}>
+        <span className="text-white font-bold text-sm tracking-wide">
           {group.label}
         </span>
-        <span className="text-gray-600 text-sm">{group.subtitle}</span>
+        <span className="text-white/80 text-xs">{group.subtitle}</span>
 
-        {/* Speed toggle */}
-        <div className="ml-auto flex items-center gap-2 bg-white rounded-full p-1 border border-gray-300">
-          {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setSpeed(s)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                speed === s
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              {s === "slow" ? "Slow" : s === "normal" ? "Normal" : "Fast"}
-            </button>
-          ))}
+        {/* Speed toggle + Pause button */}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+            {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                className={`px-2 py-1 rounded-full text-xs font-semibold transition-all ${
+                  speed === s
+                    ? "bg-white text-gray-800"
+                    : "text-white/70 hover:text-white"
+                }`}
+              >
+                {s === "slow" ? "Slow" : s === "normal" ? "Normal" : "Fast"}
+              </button>
+            ))}
+          </div>
+
+          {/* Pause/Play button */}
+          <button
+            onClick={() => setPlaying(!playing)}
+            className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all backdrop-blur-sm"
+            title={playing ? "Pause" : "Play"}
+          >
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+          </button>
         </div>
       </div>
 
       {/* Scrolling track */}
-      <div className="overflow-hidden px-8">
+      <div className="overflow-hidden px-8 py-8">
         <div
           ref={trackRef}
           className="flex gap-6 will-change-transform"
@@ -217,7 +318,7 @@ export default function SignReference() {
         <div className="mb-12 text-center">
           <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">Traffic Sign Guide</h1>
           <p className="text-slate-500 text-lg max-w-xl mx-auto">
-            All {ALL_SIGNS.length} traffic signs organized by color. Use speed controls to adjust carousel speed.
+            All {ALL_SIGNS.length} traffic signs organized by color. Use controls to adjust carousel speed and pause.
           </p>
         </div>
 
