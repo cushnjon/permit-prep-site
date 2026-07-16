@@ -161,15 +161,18 @@ function CarouselTrack({ group }: CarouselTrackProps) {
     // Yellow signs in single row
     return (
       <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden`}>
-        {/* Slim top strip header */}
-        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-8 py-3 flex items-center gap-4 shadow-sm">
-          <span className="text-white font-bold text-sm tracking-wide">
-            {group.label}
-          </span>
-          <span className="text-white/80 text-xs">{group.subtitle}</span>
+        {/* Slim top strip header - Two rows */}
+        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-8 py-3 shadow-sm">
+          {/* Row 1: Label and subtitle */}
+          <div className="flex items-center gap-4 mb-2">
+            <span className="text-white font-bold text-sm tracking-wide">
+              {group.label}
+            </span>
+            <span className="text-white/80 text-xs">{group.subtitle}</span>
+          </div>
 
-          {/* Speed toggle + Pause button */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* Row 2: Speed toggle + Pause button */}
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 bg-white/20 rounded-full p-1 backdrop-blur-sm">
               {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
                 <button
@@ -242,15 +245,18 @@ function CarouselTrack({ group }: CarouselTrackProps) {
   // Carousel layout for red, white, blue
   return (
     <div className={`rounded-3xl border-2 ${group.border} ${group.track} overflow-hidden`}>
-      {/* Slim top strip header */}
-      <div className={`bg-gradient-to-r ${group.bg} to-opacity-90 px-8 py-3 flex items-center gap-4 shadow-sm`}>
-        <span className="text-white font-bold text-sm tracking-wide">
-          {group.label}
-        </span>
-        <span className="text-white/80 text-xs">{group.subtitle}</span>
+      {/* Slim top strip header - Two rows */}
+      <div className={`bg-gradient-to-r ${group.bg} to-opacity-90 px-8 py-3 shadow-sm`}>
+        {/* Row 1: Label and subtitle */}
+        <div className="flex items-center gap-4 mb-2">
+          <span className="text-white font-bold text-sm tracking-wide">
+            {group.label}
+          </span>
+          <span className="text-white/80 text-xs">{group.subtitle}</span>
+        </div>
 
-        {/* Speed toggle + Pause button */}
-        <div className="ml-auto flex items-center gap-2">
+        {/* Row 2: Speed toggle + Pause button */}
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-white/20 rounded-full p-1 backdrop-blur-sm">
             {(["slow", "normal", "fast"] as SpeedLevel[]).map((s) => (
               <button
