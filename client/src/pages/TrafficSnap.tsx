@@ -127,6 +127,8 @@ export default function TrafficSnap() {
         if (prev === null) return null;
         if (prev <= 1) {
           clearInterval(countdownInterval);
+          // Immediately load next question when countdown reaches 0
+          setTimeout(() => nextSign(), 0);
           return null;
         }
         return prev - 1;
@@ -134,6 +136,7 @@ export default function TrafficSnap() {
     }, 1000);
 
     const timer = setTimeout(() => {
+      // This will be overridden by countdown reaching 0
       nextSign();
     }, 8000);
 
@@ -172,7 +175,7 @@ export default function TrafficSnap() {
     setSelectedCard(null);
     setShowDescription(false);
     setIsCorrect(false);
-    setCountdown(3); // Start with 3 2 1 countdown on new question
+    setCountdown(null); // Reset countdown
   };
 
 
