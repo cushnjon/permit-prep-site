@@ -361,7 +361,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
           <span className="text-xs text-muted-foreground">Zone Progress</span>
           <span className="text-xs font-bold text-accent">{progress}%</span>
         </div>
-        <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-accent to-primary"
             initial={{ width: 0 }}
