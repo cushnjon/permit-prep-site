@@ -36,7 +36,7 @@ export default function Home() {
     timeLeft: 300, // 5 minutes
     selectedAnswer: null,
     showArticle: false,
-    expandedSection: 0, // Start with Text Drive expanded
+    expandedSection: Math.random() < 0.5 ? 0 : 1, // 50% chance to open Text Drive or Traffic Snap
     answersCollapsed: false,
     showGlossary: false,
     answeredQuestions: {},
