@@ -356,7 +356,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
       </button>
 
       {/* Progress Bar */}
-      <div className="px-3 py-2 bg-card/30">
+      <div className="px-3 py-2 bg-white">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-muted-foreground">Zone Progress</span>
           <span className="text-xs font-bold text-accent">{progress}%</span>
