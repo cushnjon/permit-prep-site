@@ -84,6 +84,7 @@ export default function TrafficSnap() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<typeof ALL_SIGNS>([]);
 
   // Blur & Zoom mode state
   const [blurElapsed, setBlurElapsed] = useState(0);
@@ -203,6 +204,14 @@ export default function TrafficSnap() {
       setRemainingSigns(newRemaining);
     } else {
       // Move incorrect sign to end of queue
+      const incorrectSign = remainingSigns[0];
+      setWrongAnswers((prev) => {
+        // Only add if not already in wrong answers
+        if (!prev.find((s) => s.id === incorrectSign.id)) {
+          return [...prev, incorrectSign];
+        }
+        return prev;
+      });
       const newRemaining = [...remainingSigns.slice(1), remainingSigns[0]];
       setRemainingSigns(newRemaining);
     }
@@ -226,17 +235,38 @@ export default function TrafficSnap() {
 
   // Game completion screen
   if (gameCompleted) {
+    const hasWrongAnswers = wrongAnswers.length > 0;
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6 flex flex-col items-center justify-center">
         <div className="w-full max-w-2xl text-center">
-          <h1 className="text-5xl font-bold text-green-600 mb-4">🎉 Perfect!</h1>
-          <p className="text-3xl font-bold text-slate-900 mb-2">All 18 Signs Mastered</p>
+          <h1 className={`text-5xl font-bold mb-4 ${hasWrongAnswers ? "text-yellow-600" : "text-green-600"}`}>
+            {hasWrongAnswers ? "✓ Complete!" : "🎉 Perfect!"}
+          </h1>
+          <p className="text-3xl font-bold text-slate-900 mb-2">
+            {hasWrongAnswers ? "Game Finished" : "All 18 Signs Mastered"}
+          </p>
           <p className="text-xl text-slate-600 mb-8">Final Score: {score} points</p>
+          
+          {hasWrongAnswers && (
+            <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left">
+              <p className="font-bold text-yellow-900 mb-4">Signs You Missed ({wrongAnswers.length}):</p>
+              <div className="grid grid-cols-2 gap-3">
+                {wrongAnswers.map((sign) => (
+                  <div key={sign.id} className="p-3 bg-white rounded border border-yellow-200">
+                    <p className="font-semibold text-slate-900">{sign.name}</p>
+                    <p className="text-xs text-slate-600 mt-1">{sign.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <motion.button
             onClick={() => {
               setRemainingSigns(shuffleArray([...ALL_SIGNS]));
               setGameCompleted(false);
               setScore(0);
+              setWrongAnswers([]);
               setAnswered(false);
               setSelectedCard(null);
               setShowDescription(false);
