@@ -318,7 +318,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full bg-card/70 hover:bg-card transition-colors p-3 flex items-center justify-between shadow-button"
+        className="w-full bg-white hover:bg-white transition-colors p-3 flex items-center justify-between shadow-button"
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <img src={logo} alt={title} className="h-10 w-10 flex-shrink-0" />
@@ -381,7 +381,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="border-t border-border"
           >
-            <div className="p-6 bg-background/30">
+            <div className="p-6 bg-white">
               {children}
             </div>
           </motion.div>
