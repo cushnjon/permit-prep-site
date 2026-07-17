@@ -390,6 +390,16 @@ export default function TrafficSnap() {
               className="relative mx-auto rounded-2xl shadow-xl bg-gradient-to-br from-blue-500 to-blue-700 p-8 text-white"
               style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
             >
+              {gameMode === "blur-zoom" && isCorrect && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute top-4 right-4 bg-green-400 text-green-900 px-6 py-3 rounded-full text-4xl font-black shadow-lg"
+                >
+                  +{getBlurPoints()}
+                </motion.div>
+              )}
               <div className="h-full flex flex-col justify-between">
                 <div className="space-y-4">
                   <h2 className="text-3xl font-bold">{currentSign.name}</h2>
