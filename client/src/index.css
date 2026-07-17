@@ -71,8 +71,8 @@
   /* Dark charcoal text - readable and professional */
   --foreground: oklch(0.25 0.02 150);
   
-  /* Card: Soft off-white with subtle shadow */
-  --card: oklch(0.99 0.005 0);
+  /* Card: Pure white with subtle shadow */
+  --card: oklch(1 0 0);
   --card-foreground: oklch(0.25 0.02 150);
   
   /* Popover: Same as card */
