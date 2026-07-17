@@ -263,15 +263,12 @@ export default function Home() {
           >
             {gameState.expandedSection === 1 && (
               <div className="space-y-6">
-                <div className="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer">
+                <div className="relative rounded-xl overflow-hidden shadow-lg">
                   <img
                     src="https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/all-traffic-signs-collection-ABfZqE94PcY8kqcmLCdrLc.webp"
                     alt="All Traffic Signs"
-                    className="w-full h-auto group-hover:opacity-90 transition-opacity"
+                    className="w-full h-auto"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none">
-                    <span className="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Click any sign to view details</span>
-                  </div>
                 </div>
                 <div className="text-center space-y-3">
                   <p className="text-gray-600">Learn all traffic signs with interactive flip cards</p>
