@@ -163,10 +163,11 @@ export default function TrafficSnap() {
     };
   }, [answered, gameCompleted]);
 
-  // Show description card immediately on correct
+  // Show description card immediately on correct, after 1 sec on incorrect
   useEffect(() => {
-    if (!answered || !isCorrect) return;
-    const timer = setTimeout(() => setShowDescription(true), 0);
+    if (!answered) return;
+    const delay = isCorrect ? 0 : 1000; // 1 second for incorrect
+    const timer = setTimeout(() => setShowDescription(true), delay);
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
 
