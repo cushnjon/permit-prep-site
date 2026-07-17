@@ -472,6 +472,9 @@ function TextDriveGame({
             <div className="scroll-ticker whitespace-nowrap text-sm text-muted-foreground font-medium">
               <span className="inline-block mr-12">{zone.background_tip}</span>
               <span className="inline-block mr-12">{zone.background_tip}</span>
+              <span className="inline-block mr-12">{zone.background_tip}</span>
+              <span className="inline-block mr-12">{zone.background_tip}</span>
+              <span className="inline-block mr-12">{zone.background_tip}</span>
             </div>
           </div>
         </div>
