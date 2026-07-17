@@ -45,7 +45,7 @@ export const gameData: Zone[] = [
         c: "To automatically plead guilty to minor mechanical and equipment violations.",
         d: "To always cooperate with traffic officers and show your physical license upon request.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-parking-lot-scenario-jsXYpueVp28cADofk5GMV7.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-alt-implied-consent-HSGQ2hphbfkRNUQ6SismyJ.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-parking-lot-scenario-jsXYpueVp28cADofk5GMV7.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp"],
         correct_side_note: "10 POINTS: Spot on. Implied Consent explicitly ties your signature on your license to an advance agreement to submit to chemical screenings if lawfully requested by an officer. Refusal triggers independent, immediate administrative penalties.",
         semi_correct_side_note: "5 POINTS: Close, but incomplete. While showing your physical license and cooperating are standard legal obligations of an operator, they do not satisfy the specific statutory mandate of the 'Implied Consent' chemical testing clause.",
         extended_reading: {
@@ -110,7 +110,7 @@ export const gameData: Zone[] = [
         c: "Slow down slightly while continuing through the lane without looking.",
         d: "Slow down or stop completely to let cross traffic or pedestrians pass first.",
         correct_answer: "d",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/intersection-traffic-control-nXvLp2qR8kM9jYzAb4cDeF.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q3-controlled-intersection-DqoogBzVp9BexpBwUEZh47.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q3-controlled-intersection-DqoogBzVp9BexpBwUEZh47.webp"],
         correct_side_note: "10 POINTS: Exactly right. A yield sign requires you to defer your path to others. If cross-traffic is present, that slow down must turn into a full, legal stop.",
         semi_correct_side_note: "5 POINTS: Dangerous practice. Reducing your speed slightly (coasting) without scanning the oncoming corridors or pedestrian lines fails the basic standard of a proactive yield check.",
         extended_reading: {
@@ -134,7 +134,7 @@ export const gameData: Zone[] = [
         c: "It is any standard junction located within city or business limits.",
         d: "It is regulated actively by traffic lights, stop signs, or yield signs.",
         correct_answer: "d",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/highway-driving-scenario-kL5mNoPqRsT2uVwXyZaBcD.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q4-uncontrolled-intersection-GzCCtfNra3zEqCJ7ESXi2k.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q4-uncontrolled-intersection-GzCCtfNra3zEqCJ7ESXi2k.webp"],
         correct_side_note: "10 POINTS: Excellent. Control requires active, regulatory traffic devices (lights, signage) that legally dictate vehicle cadence and movement sequences.",
         semi_correct_side_note: "5 POINTS: Too broad. While city and business districts contain a high concentration of controlled junctions, simply being inside municipal limits does not automatically make an un-signaled street corner 'controlled'.",
         extended_reading: {
