@@ -335,9 +335,19 @@ export default function TrafficSnap() {
                   <h2 className="text-3xl font-bold">{currentSign.name}</h2>
                   <p className="text-lg leading-relaxed">{currentSign.description}</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold opacity-75 uppercase">Real-World Use</p>
-                  <p className="text-sm leading-relaxed">{currentSign.realWorldApplication}</p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold opacity-75 uppercase">Real-World Use</p>
+                    <p className="text-sm leading-relaxed">{currentSign.realWorldApplication}</p>
+                  </div>
+                  <motion.button
+                    onClick={nextSign}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Next →
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
