@@ -226,7 +226,7 @@ export default function Home() {
           {/* Text Drive Section */}
           <GameSection
             title="Text Drive: Read & Answer"
-            logo={GAME_LOGOS.textDrive}
+            logo={GAME_LOGOS.permitPrepLogo}
             speedTier="15 MPH"
             isExpanded={gameState.expandedSection === 0}
             onToggle={() => toggleSection(0)}
@@ -255,7 +255,7 @@ export default function Home() {
           {/* Traffic Snap Section */}
           <GameSection
             title="Traffic Snap: Sign & Shape"
-            logo={GAME_LOGOS.textDrive}
+            logo={GAME_LOGOS.permitPrepLogo}
             speedTier="25 MPH"
             isExpanded={gameState.expandedSection === 1}
             onToggle={() => toggleSection(1)}
