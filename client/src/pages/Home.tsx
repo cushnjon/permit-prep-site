@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
+import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon, Globe } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
 import { CinematicSignImage } from "./TrafficSnap";
@@ -195,6 +195,20 @@ export default function Home() {
               <TrafficIcon className="h-4 w-4" />
               Traffic Snap
             </a>
+            {/* Language Toggle */}
+            {(() => {
+              const isSpanish = typeof window !== 'undefined' && window.location.pathname.startsWith('/espanol');
+              return (
+                <a
+                  href={isSpanish ? '/' : '/espanol'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-accent text-accent hover:bg-accent hover:text-white transition-all text-xs font-semibold"
+                  title={isSpanish ? 'Switch to English' : 'Ver en Español'}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  {isSpanish ? 'EN' : 'ES'}
+                </a>
+              );
+            })()}
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-5 w-5 text-accent" />
               <span className="font-mono text-lg">{formatTime(gameState.timeLeft)}</span>
