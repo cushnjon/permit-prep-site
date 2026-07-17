@@ -275,13 +275,13 @@ export default function Home() {
                   <div className="flex gap-3 justify-center">
                     <button
                       onClick={() => setLocation("/traffic-snap")}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-button"
                     >
                       Play Traffic Snap
                     </button>
                     <button
                       onClick={() => setLocation("/sign-reference")}
-                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-button"
                     >
                       View All Signs
                     </button>
@@ -311,14 +311,14 @@ interface GameSectionProps {
 function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, progress = 0, children }: GameSectionProps) {
   return (
     <motion.div
-      className="glow-border rounded-lg overflow-hidden drop-shadow-medium"
+      className="glow-border rounded-lg overflow-hidden drop-shadow-medium shadow-container"
       layout
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full bg-card/70 hover:bg-card transition-colors p-3 flex items-center justify-between"
+        className="w-full bg-card/70 hover:bg-card transition-colors p-3 flex items-center justify-between shadow-button"
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <img src={logo} alt={title} className="h-10 w-10 flex-shrink-0" />
@@ -434,7 +434,7 @@ function TextDriveGame({
   return (
     <div className="space-y-6">
       {/* Zone Header + Ticker Container */}
-      <div className="w-full rounded-lg overflow-hidden drop-shadow-medium">
+      <div className="w-full rounded-lg overflow-hidden drop-shadow-medium shadow-container">
         {/* Zone Strip Header with Controls */}
         <div className="w-full bg-gradient-to-r from-primary to-accent/80 text-primary-foreground p-3">
           <div className="flex items-center justify-between">
@@ -484,7 +484,7 @@ function TextDriveGame({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft"
+            className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft shadow-container"
           >
             <h3 className="text-lg font-bold text-primary mb-4">All Questions by Zone</h3>
             <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -529,7 +529,7 @@ function TextDriveGame({
           >
             {/* Left: Reading Text */}
             <div className="lg:col-span-1">
-              <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft">
+              <div className="bg-card border border-border rounded-lg p-4 sticky top-24 drop-shadow-soft shadow-container">
                 {question.images && question.images.length > 0 && (
                   <div className="mb-4 rounded-lg overflow-hidden">
                     <CinematicSignImage
@@ -567,7 +567,7 @@ function TextDriveGame({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 drop-shadow-soft ${
+                      className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 drop-shadow-soft shadow-button ${
                         selectedAnswer
                           ? isThisAnswerCorrect
                             ? "border-accent bg-accent/10 shadow-md shadow-accent/20 text-accent"
@@ -599,7 +599,7 @@ function TextDriveGame({
               >
                 {/* Selected Answer Card */}
                 {selectedAnswer && (
-                  <div className={`p-4 rounded-lg border-2 drop-shadow-medium ${
+                  <div className={`p-4 rounded-lg border-2 drop-shadow-medium shadow-container ${
                     isCorrect
                       ? "border-accent bg-accent/10"
                       : "border-destructive bg-destructive/10"
@@ -655,7 +655,7 @@ function TextDriveGame({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft"
+                    className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft shadow-container"
                   >
                     <h4 className="font-bold text-accent mb-2">{item.term}</h4>
                     <p className="text-sm text-muted-foreground mb-3"><span className="font-semibold">Quick Tip:</span> {item.quick_tip}</p>
@@ -677,7 +677,7 @@ function TextDriveGame({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 rounded-lg border-2 drop-shadow-soft ${
+            className={`p-4 rounded-lg border-2 drop-shadow-soft shadow-container ${
               isCorrect
                 ? "border-accent/50 bg-accent/5 text-foreground"
                 : "border-destructive/50 bg-destructive/5 text-foreground"
@@ -695,7 +695,7 @@ function TextDriveGame({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="bg-card border border-primary/20 rounded-lg p-6 space-y-3 drop-shadow-medium"
+            className="bg-card border border-primary/20 rounded-lg p-6 space-y-3 drop-shadow-medium shadow-container"
           >
             <div>
               <h4 className="text-lg font-bold text-primary mb-1">{question.extended_reading.title}</h4>
@@ -730,7 +730,7 @@ function TextDriveGame({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={onNextQuestion}
-            className="w-full pulse-glow bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all drop-shadow-medium"
+            className="w-full pulse-glow bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all drop-shadow-medium shadow-button wiggle"
           >
             <Play className="h-5 w-5" />
             Next Reading
@@ -744,7 +744,7 @@ function TextDriveGame({
 function PlaceholderGame({ title }: { title: string }) {
   return (
     <div className="text-center py-12">
-      <div className="inline-block bg-card border border-border rounded-lg p-8 max-w-md drop-shadow-soft">
+      <div className="inline-block bg-card border border-border rounded-lg p-8 max-w-md drop-shadow-soft shadow-container">
         <h3 className="text-lg font-bold text-primary mb-2">{title}</h3>
         <p className="text-muted-foreground mb-4">Coming soon! This game is under development.</p>
         <div className="text-4xl mb-4">🚧</div>

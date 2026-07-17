@@ -86,7 +86,7 @@ export const gameData: Zone[] = [
         c: "You can never legally take it; you can only yield it to others.",
         d: "It belongs strictly to whichever vehicle is larger or heavier.",
         correct_answer: "c",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-right-of-way-Yfz6BX8rfRmkWEHqfut7fV.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/parking-garage-safety-7A8sdCkinzXpjwaK5fhZQp.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-right-of-way-Yfz6BX8rfRmkWEHqfut7fV.webp"],
         correct_side_note: "10 POINTS: Perfectly answered. The vehicle code is written entirely around who must *yield* the right-of-way. The law never gives you the right to forcefully claim a patch of asphalt.",
         semi_correct_side_note: "5 POINTS: Incorrect application of physical realities. While a larger commercial truck can cause massive physical damage due to momentum laws, it does not possess a legal right-of-way exemption in suburban zoning blocks.",
         extended_reading: {
@@ -158,7 +158,7 @@ export const gameData: Zone[] = [
         c: "Whichever vehicle signals their intention first is allowed to proceed.",
         d: "The vehicle arriving on your right has the legal right-of-way.",
         correct_answer: "d",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q5-blind-spot-9jnn848pexZCtZv5dEWCGo.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/left-turn-safety-2cxnQLeLzBrsc3iHcUW4Uc.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q5-blind-spot-9jnn848pexZCtZv5dEWCGo.webp"],
         correct_side_note: "10 POINTS: Correct. The 'rule of the right' dictates that when two vehicles meet simultaneously at an unmarked grid, you must yield to the driver on your right side.",
         semi_correct_side_note: "5 POINTS: Incorrect. Turning on an electronic indicator lamp merely shows intent; it never grants you legal priority over a vehicle positioned to your right at a dead stop.",
         extended_reading: {
@@ -182,7 +182,7 @@ export const gameData: Zone[] = [
         c: "Check your side-view mirrors twice before signaling and moving.",
         d: "Physically turn your head and look directly over your shoulder.",
         correct_answer: "d",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q6-basic-speed-law-MKwxMn7me3djNtQLXhy9Hg.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/lane-change-safety-c6YBDfUZPwjRskLGrhxVir.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q6-basic-speed-law-MKwxMn7me3djNtQLXhy9Hg.webp"],
         correct_side_note: "10 POINTS: Perfect. Convex and flat side-view mirrors cannot capture the distinct pocket alongside your vehicle's rear quarters. A physical head-turn is non-negotiable.",
         semi_correct_side_note: "5 POINTS: Safe habit, but flawed. Checking mirrors multiple times narrows your field of view down the side, but it still fails to reveal objects hidden parallel to your B-and-C pillars.",
         extended_reading: {

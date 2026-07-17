@@ -257,6 +257,99 @@
     animation: score-pop 0.6s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
+  /* Drop shadow for containers and buttons */
+  @keyframes drop-shadow-entrance {
+    0% {
+      filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    }
+    100% {
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+    }
+  }
+
+  .shadow-container {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+    animation: drop-shadow-entrance 0.6s ease-out;
+  }
+
+  .shadow-button {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+    transition: filter 0.3s ease;
+  }
+
+  .shadow-button:hover {
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.15));
+  }
+
+  /* Shimmer animation */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0)
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Wiggle animation - 5 seconds */
+  @keyframes wiggle {
+    0%, 100% {
+      transform: rotate(0deg) translateX(0);
+    }
+    15% {
+      transform: rotate(-1deg) translateX(-2px);
+    }
+    30% {
+      transform: rotate(1deg) translateX(2px);
+    }
+    45% {
+      transform: rotate(-0.5deg) translateX(-1px);
+    }
+    60% {
+      transform: rotate(0.5deg) translateX(1px);
+    }
+    75% {
+      transform: rotate(-1deg) translateX(-2px);
+    }
+    90% {
+      transform: rotate(1deg) translateX(2px);
+    }
+  }
+
+  .wiggle {
+    animation: wiggle 5s ease-in-out infinite;
+  }
+
+  /* Apply shadows to common elements */
+  .card {
+    @apply shadow-md shadow-black/8;
+  }
+
+  button {
+    @apply shadow-sm shadow-black/5 transition-all duration-300;
+  }
+
+  button:hover {
+    @apply shadow-md shadow-black/10;
+  }
+
+  button:active {
+    @apply shadow-sm shadow-black/5;
+  }
+
+
   @media (min-width: 640px) {
     .container {
       padding-left: 1.5rem; /* 24px - tablet padding */
