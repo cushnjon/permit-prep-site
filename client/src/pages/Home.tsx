@@ -469,7 +469,7 @@ function TextDriveGame({
         {/* Scrolling Ticker */}
         <div className="w-full relative overflow-hidden bg-accent/5 border-t border-accent/20">
           <div className="h-12 flex items-center px-4">
-            <div className="scroll-ticker whitespace-nowrap text-sm text-muted-foreground font-medium">
+            <div className="scroll-ticker whitespace-nowrap text-sm text-blue-600 font-medium">
               <span className="inline-block mr-12">{zone.background_tip}</span>
               <span className="inline-block mr-12">{zone.background_tip}</span>
               <span className="inline-block mr-12">{zone.background_tip}</span>
