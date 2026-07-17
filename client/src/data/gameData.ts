@@ -261,7 +261,7 @@ export const gameData: Zone[] = [
         c: "Maintain a tight 1-to-2 second gap when driving in ideal weather conditions.",
         d: "Keep a safe distance of at least three full vehicle lengths on the highway.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q9-right-turn-red-light-5u93Qf2aBVWVCQy8LSHFLG.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/night-driving-safety-9mvPXHSv2KH3jVSrkrvbYq.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q9-right-turn-red-light-5u93Qf2aBVWVCQy8LSHFLG.webp"],
         correct_side_note: "10 POINTS: Correct. Time-based tracking (seconds) scales automatically as your speed increases, ensuring an adequate spatial safety buffer regardless of velocity.",
         semi_correct_side_note: "5 POINTS: Outdated metric. Measuring by arbitrary 'car lengths' is incredibly inaccurate at 45+ MPH because drivers consistently misjudge physical linear distances while moving.",
         extended_reading: {
@@ -285,7 +285,7 @@ export const gameData: Zone[] = [
         c: "They show mileage and exit destinations; colored green, blue, or brown.",
         d: "They provide basic legal speed rules for specific highways and cities.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q10-pedestrian-crosswalk-ZFFehsCtYWzrKm9H78YUzX.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/parking-lot-safety-TzUFTpZ964yKGpSbVaXfvU.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q10-pedestrian-crosswalk-ZFFehsCtYWzrKm9H78YUzX.webp"],
         correct_side_note: "10 POINTS: Perfect. Regulatory signs represent actual laws. Disobeying a red, white, or black sign (like a Stop or Speed Limit sign) is an immediate moving violation.",
         semi_correct_side_note: "5 POINTS: Too limited. While speed limit panels are a prominent subset of regulatory signage, these markers govern everything from turn tracking and lane restrictions to wrong-way mandates.",
         extended_reading: {
@@ -309,7 +309,7 @@ export const gameData: Zone[] = [
         c: "They are designed as equilateral triangles pointing directly downward.",
         d: "They are bright orange and used exclusively to highlight highway zones.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q11-emergency-vehicle-UmbPuYsUKzVZJwFhdothn2.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/school-zone-safety-bmqPuvDfiFthKu76Ynjejk.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q11-emergency-vehicle-UmbPuYsUKzVZJwFhdothn2.webp"],
         correct_side_note: "10 POINTS: Spot on. Yellow diamonds alert operators to changing physical road conditions, upcoming curves, lane mergers, or environmental hazards ahead.",
         semi_correct_side_note: "5 POINTS: Confuses distinct classes. Orange signs are temporary warning markers explicitly reserved for road construction and maintenance zones, not standard perpetual warnings.",
         extended_reading: {
@@ -333,7 +333,7 @@ export const gameData: Zone[] = [
         c: "Active road construction warning lines and temporary flagger instructions.",
         d: "Helpful updates about changing lane layouts and upcoming toll bridges.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-MPt3HJZo96zNQdnaqtSMaT.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/construction-zone-safety-Vuz64Noiaehx98WB6hMPE9.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-MPt3HJZo96zNQdnaqtSMaT.webp"],
         correct_side_note: "10 POINTS: Correct. Guide signs are informational pillars—green for routes/miles, blue for services, and brown for public parks or recreation.",
         semi_correct_side_note: "5 POINTS: Incomplete. While toll notices or structural lane layout maps do fall under informational guidance, they represent a minor fragment of the overall destination and tracking matrix.",
         extended_reading: {
@@ -357,7 +357,7 @@ export const gameData: Zone[] = [
         c: "Marked by broken white lines; reserved for high-speed commercial cargo trucks.",
         d: "Marked by a solid white boundary; reserved for buses and motorcycles only.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q13-backing-up-safely-WtkpkUEVtFmvP25RCq4wGm.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/right-turn-on-red-bqhgPzY8yHjYjtT3Ww7gQU.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q13-backing-up-safely-WtkpkUEVtFmvP25RCq4wGm.webp"],
         correct_side_note: "10 POINTS: Perfectly answered. High-Occupancy Vehicle lanes use the white diamond pavement marker to keep high-capacity commuter traffic flowing efficiently.",
         semi_correct_side_note: "5 POINTS: Partially correct depending on local context. Many states allow transit buses and solo motorcycles to utilize HOV diamond lanes for safety, but this completely overlooks the main carpool occupancy rules.",
         extended_reading: {
@@ -388,7 +388,7 @@ export const gameData: Zone[] = [
         c: "0.05% or higher for all drivers regardless of age due to federal mandate.",
         d: "0.08% for adults; any trace amount that visibly impairs driving for minors.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-2nvnGGCWKpw8DCQKRPZeuV.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/backing-up-safety-Zh6vDVdj2hPAnwjRdtKUh9.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-2nvnGGCWKpw8DCQKRPZeuV.webp"],
         correct_side_note: "10 POINTS: Absolutely. Per statutory law, a 0.08% BAC is the per se legal limit for adult criminal impairment. For minors under 21, Zero Tolerance dictates that any measurable alcohol (0.00% - 0.02% depending on state equipment tolerances) results in immediate legal action.",
         semi_correct_side_note: "5 POINTS: Close, but legally weak. While visible physical impairment is heavily prosecuted, the state does not require a minor to 'look drunk' to charge them; the mere chemical presence of alcohol violates the Zero Tolerance statute.",
         extended_reading: {
@@ -412,7 +412,7 @@ export const gameData: Zone[] = [
         c: "Using rapid lane changes to stay clear of large commercial vehicle clusters.",
         d: "Driving significantly below the speed limit to maximize reaction time.",
         correct_answer: "a",
-        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-safety-fgviySu7tQmPgYuSPku9zk.webp"],
+        images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/residential-street-safety-JFseykc473HYwk3rKSQmbY.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-safety-fgviySu7tQmPgYuSPku9zk.webp"],
         correct_side_note: "10 POINTS: Outstanding. Defensive driving requires constant scanning, mapping hazard vectors 12-15 seconds ahead, and assuming other drivers will make critical errors.",
         semi_correct_side_note: "5 POINTS: Overly cautious and disruptive. While slowing down increases your buffer, traveling significantly below the normal flow of high-speed highway traffic creates an artificial bottleneck that forces dangerous swerving behind you.",
         extended_reading: {
