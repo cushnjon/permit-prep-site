@@ -69,7 +69,7 @@ export default function Home() {
       selectedAnswer: answer,
       score: prev.score + points,
       showArticle: true,
-      answersCollapsed: true,
+      answersCollapsed: isCorrect,
       answeredQuestions: {
         ...prev.answeredQuestions,
         [questionId]: true,
