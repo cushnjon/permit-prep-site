@@ -250,11 +250,12 @@ export default function TrafficSnap() {
           {hasWrongAnswers && (
             <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left">
               <p className="font-bold text-yellow-900 mb-4">Signs You Missed ({wrongAnswers.length}):</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {wrongAnswers.map((sign) => (
-                  <div key={sign.id} className="p-3 bg-white rounded border border-yellow-200">
-                    <p className="font-semibold text-slate-900">{sign.name}</p>
-                    <p className="text-xs text-slate-600 mt-1">{sign.description}</p>
+                  <div key={sign.id} className="p-4 bg-white rounded border border-yellow-200 flex flex-col items-center">
+                    <img src={sign.signImage} alt={sign.name} className="h-24 object-contain mb-3" />
+                    <p className="font-semibold text-slate-900 text-center">{sign.name}</p>
+                    <p className="text-xs text-slate-600 mt-2 text-center">{sign.description}</p>
                   </div>
                 ))}
               </div>
