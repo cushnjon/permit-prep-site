@@ -301,27 +301,29 @@ export default function TrafficSnap() {
         </div>
 
         {/* Mode Toggle */}
-        <div className="flex gap-1 bg-slate-200 rounded-full p-1">
-          <button
-            onClick={() => { setGameMode("normal"); }}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-              gameMode === "normal"
-                ? "bg-white text-slate-900 shadow"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Normal
-          </button>
-          <button
-            onClick={() => { setGameMode("blur-zoom"); }}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-              gameMode === "blur-zoom"
-                ? "bg-slate-900 text-white shadow"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            🌫 Blur & Zoom
-          </button>
+        <div className="flex justify-center">
+          <div className="flex gap-1 bg-slate-200 rounded-full p-1 w-fit">
+            <button
+              onClick={() => { setGameMode("normal"); }}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                gameMode === "normal"
+                  ? "bg-white text-slate-900 shadow"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Normal
+            </button>
+            <button
+              onClick={() => { setGameMode("blur-zoom"); }}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                gameMode === "blur-zoom"
+                  ? "bg-slate-900 text-white shadow"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              🌫 Blur & Zoom
+            </button>
+          </div>
         </div>
       </div>
 
