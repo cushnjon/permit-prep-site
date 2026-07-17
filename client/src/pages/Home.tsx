@@ -180,7 +180,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Global Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm drop-shadow-soft">
+      <header className="sticky top-0 z-50 border-b border-border bg-white backdrop-blur-sm drop-shadow-soft">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
