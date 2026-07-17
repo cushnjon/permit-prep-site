@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trafficSnapData } from "@/data/trafficSnapData";
 
@@ -50,7 +50,7 @@ export function CinematicSignImage({
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none" />
         )}
         {!isAnswered && (
-          <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-semibold">
+          <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
             IDENTIFY
           </div>
         )}
@@ -59,10 +59,9 @@ export function CinematicSignImage({
   );
 }
 
-// Flatten all signs from all zones
+// All traffic signs
 const ALL_SIGNS = trafficSnapData.flatMap((zone) => zone.signs);
 
-// Shuffle array utility
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -76,8 +75,7 @@ type GameMode = "normal" | "blur-zoom";
 
 export default function TrafficSnap() {
   const [gameMode, setGameMode] = useState<GameMode>("normal");
-  const [shuffledSigns] = useState(() => shuffleArray(ALL_SIGNS));
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [remainingSigns, setRemainingSigns] = useState(() => shuffleArray([...ALL_SIGNS]));
   const [answered, setAnswered] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -85,16 +83,19 @@ export default function TrafficSnap() {
   const [showDescription, setShowDescription] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [gameCompleted, setGameCompleted] = useState(false);
 
   // Blur & Zoom mode state
-  const [blurElapsed, setBlurElapsed] = useState(0); // 0-30 seconds
+  const [blurElapsed, setBlurElapsed] = useState(0);
   const blurTimerRef = useRef<number | null>(null);
   const blurStartRef = useRef<number>(0);
 
-  const currentSign = shuffledSigns[currentIndex % shuffledSigns.length];
+  const currentSign = remainingSigns[0];
+  const totalAnswered = 18 - remainingSigns.length;
 
   // Build 3 card options: 1 correct + 2 random wrong answers
   const cardOptions = useMemo(() => {
+    if (!currentSign) return [];
     const others = shuffleArray(ALL_SIGNS.filter((s) => s.id !== currentSign.id)).slice(0, 2);
     const options = shuffleArray([currentSign, ...others]);
     return options;
@@ -102,7 +103,7 @@ export default function TrafficSnap() {
 
   // Left-to-right pan animation for the sign tile
   useEffect(() => {
-    if (answered) return;
+    if (answered || gameCompleted) return;
     setPanX(0);
     const start = Date.now();
     const duration = 8000;
@@ -118,11 +119,11 @@ export default function TrafficSnap() {
     const frameRef = { current: 0 as number };
     frameRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [currentIndex, answered]);
+  }, [answered, gameCompleted]);
 
   // Blur & Zoom timer — runs from 0 to 30 seconds
   useEffect(() => {
-    if (gameMode !== "blur-zoom" || answered) {
+    if (gameMode !== "blur-zoom" || answered || gameCompleted) {
       if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
       return;
     }
@@ -141,17 +142,16 @@ export default function TrafficSnap() {
     return () => {
       if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
     };
-  }, [gameMode, currentIndex, answered]);
+  }, [gameMode, answered, gameCompleted]);
 
   // Smooth 3-2-1 countdown then immediate next question
   useEffect(() => {
-    if (!answered) return;
+    if (!answered || gameCompleted) return;
 
     const t3 = setTimeout(() => setCountdown(3), 3800);
     const t2 = setTimeout(() => setCountdown(2), 4800);
     const t1 = setTimeout(() => setCountdown(1), 5800);
     const tNext = setTimeout(() => {
-      setCountdown(null);
       nextSign();
     }, 6800);
 
@@ -161,7 +161,7 @@ export default function TrafficSnap() {
       clearTimeout(t1);
       clearTimeout(tNext);
     };
-  }, [answered]);
+  }, [answered, gameCompleted]);
 
   // Show description card immediately on correct
   useEffect(() => {
@@ -171,9 +171,7 @@ export default function TrafficSnap() {
   }, [answered, isCorrect]);
 
   // Calculate blur & zoom values from elapsed time (0-30s)
-  // zoom: 1.5 → 1.0 over 30s
-  // blur: 18px → 0px over 30s (90% opacity blur effect)
-  const blurProgress = Math.min(blurElapsed / 30, 1); // 0 to 1
+  const blurProgress = Math.min(blurElapsed / 30, 1);
   const currentZoom = gameMode === "blur-zoom" && !answered ? 1.5 - blurProgress * 0.5 : (answered ? 1 : 1.35);
   const currentBlur = gameMode === "blur-zoom" && !answered ? (1 - blurProgress) * 18 : 0;
 
@@ -193,7 +191,21 @@ export default function TrafficSnap() {
   };
 
   const nextSign = () => {
-    setCurrentIndex((prev) => (prev + 1) % shuffledSigns.length);
+    if (isCorrect) {
+      // Remove correct sign from remaining
+      const newRemaining = remainingSigns.slice(1);
+      if (newRemaining.length === 0) {
+        // All 18 signs completed!
+        setGameCompleted(true);
+        return;
+      }
+      setRemainingSigns(newRemaining);
+    } else {
+      // Move incorrect sign to end of queue
+      const newRemaining = [...remainingSigns.slice(1), remainingSigns[0]];
+      setRemainingSigns(newRemaining);
+    }
+
     setAnswered(false);
     setSelectedCard(null);
     setShowDescription(false);
@@ -208,102 +220,116 @@ export default function TrafficSnap() {
     const isSelected = selectedCard === cardIndex;
     if (isThisCorrect) return "from-green-500 to-green-700";
     if (isSelected && !isThisCorrect) return "from-red-500 to-red-700";
-    return "from-slate-700 to-slate-900 opacity-60";
+    return "from-slate-700 to-slate-900";
   };
 
+  // Game completion screen
+  if (gameCompleted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6 flex flex-col items-center justify-center">
+        <div className="w-full max-w-2xl text-center">
+          <h1 className="text-5xl font-bold text-green-600 mb-4">🎉 Perfect!</h1>
+          <p className="text-3xl font-bold text-slate-900 mb-2">All 18 Signs Mastered</p>
+          <p className="text-xl text-slate-600 mb-8">Final Score: {score} points</p>
+          <motion.button
+            onClick={() => {
+              setRemainingSigns(shuffleArray([...ALL_SIGNS]));
+              setGameCompleted(false);
+              setScore(0);
+              setAnswered(false);
+              setSelectedCard(null);
+              setShowDescription(false);
+              setIsCorrect(false);
+              setCountdown(null);
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-8 py-4 bg-green-600 text-white font-bold rounded-lg text-lg"
+          >
+            Play Again
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentSign) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
-      <div className="container mx-auto px-4 space-y-8 max-w-3xl">
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <h1 className="text-4xl font-bold text-slate-900">Traffic Snap</h1>
-          <p className="text-slate-500 text-sm">Sign & Shape Recognition</p>
-          <div className="flex justify-center gap-6 mt-2">
-            <span className="text-slate-700 font-semibold">Score: <span className="text-green-600">{score}</span></span>
-            <span className="text-slate-500 text-sm">{currentIndex + 1} / {shuffledSigns.length}</span>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6 flex flex-col items-center justify-center">
+      {/* Header */}
+      <div className="w-full max-w-2xl mb-8 text-center">
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Traffic Snap</h1>
+        <p className="text-slate-600 mb-4">Sign & Shape Recognition</p>
+        <div className="flex justify-center items-center gap-4 mb-6">
+          <span className="text-2xl font-bold text-green-600">Score: {score}</span>
+          <span className="text-lg text-slate-600">{totalAnswered} / 18</span>
         </div>
 
         {/* Mode Toggle */}
-        <div className="flex justify-center">
-          <div className="flex gap-1 bg-slate-200 rounded-full p-1">
-            <button
-              onClick={() => { setGameMode("normal"); nextSign(); }}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                gameMode === "normal"
-                  ? "bg-white text-slate-900 shadow"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Normal
-            </button>
-            <button
-              onClick={() => { setGameMode("blur-zoom"); nextSign(); }}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                gameMode === "blur-zoom"
-                  ? "bg-slate-900 text-white shadow"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              🌫 Blur & Zoom
-            </button>
+        <div className="flex gap-1 bg-slate-200 rounded-full p-1">
+          <button
+            onClick={() => { setGameMode("normal"); }}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+              gameMode === "normal"
+                ? "bg-white text-slate-900 shadow"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Normal
+          </button>
+          <button
+            onClick={() => { setGameMode("blur-zoom"); }}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+              gameMode === "blur-zoom"
+                ? "bg-slate-900 text-white shadow"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            🌫 Blur & Zoom
+          </button>
+        </div>
+      </div>
+
+      {/* Blur Points Display */}
+      {gameMode === "blur-zoom" && !answered && (
+        <div className="mb-4 text-center">
+          <p className="text-sm text-slate-600">Points Available: <span className="font-bold text-blue-600">{getBlurPoints()}</span></p>
+          <div className="w-48 h-2 bg-slate-300 rounded-full mt-2 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-700"
+              animate={{ width: `${(blurElapsed / 30) * 100}%` }}
+              transition={{ duration: 0.1 }}
+            />
           </div>
         </div>
+      )}
 
-        {/* Blur mode: points preview */}
-        {gameMode === "blur-zoom" && !answered && (
-          <div className="flex items-center justify-center gap-4">
-            <div className="text-center">
-              <div className="text-4xl font-black text-amber-500">{getBlurPoints()}</div>
-              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Points Available</div>
-            </div>
-            <div className="w-48 h-3 bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-amber-400 to-red-500 transition-none rounded-full"
-                style={{ width: `${100 - blurProgress * 100}%` }}
-              />
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-slate-600">{Math.ceil(30 - blurElapsed)}s</div>
-              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Remaining</div>
-            </div>
-          </div>
-        )}
-
-        {/* Blur mode: points earned on correct answer */}
-        {gameMode === "blur-zoom" && answered && isCorrect && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center"
-          >
-            <div className="text-5xl font-black text-amber-500">+{getBlurPoints()} pts</div>
-            <div className="text-sm text-slate-500">answered in {blurElapsed.toFixed(1)}s</div>
-          </motion.div>
-        )}
-
-        {/* Sign Tile OR Description Card */}
+      {/* Sign Tile or Description Card */}
+      <div className="w-full max-w-2xl mb-8">
         <AnimatePresence mode="wait">
-          {!answered || !showDescription ? (
+          {!showDescription ? (
             <motion.div
               key={`sign-${currentSign.id}`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4 }}
-              className="relative mx-auto overflow-hidden rounded-2xl shadow-xl bg-black"
+              className="relative mx-auto rounded-2xl shadow-xl overflow-hidden"
               style={{ width: "100%", aspectRatio: "1 / 1", maxWidth: 400 }}
             >
               <motion.img
                 src={currentSign.signImage}
                 alt={currentSign.name}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="w-full h-full object-cover"
                 animate={{
-                  x: answered ? 0 : panX,
+                  x: panX,
                   scale: currentZoom,
                   filter: `blur(${currentBlur}px)`,
                 }}
-                transition={{ duration: answered ? 0.5 : 0.05, ease: "linear" }}
+                transition={{ duration: 0.05, ease: "linear" }}
               />
               {/* Vignette */}
               {!answered && (
@@ -353,52 +379,52 @@ export default function TrafficSnap() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Three Answer Cards */}
-        {!showDescription && (
-          <div className="grid grid-cols-3 gap-4">
-            {cardOptions.map((option, idx) => (
-              <motion.button
-                key={option.id + idx}
-                onClick={() => handleCardClick(idx)}
-                disabled={answered}
-                whileHover={!answered ? { scale: 1.04, y: -4 } : {}}
-                whileTap={!answered ? { scale: 0.97 } : {}}
-                className={`relative h-28 rounded-xl bg-gradient-to-br ${getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
-              >
-                <span className="text-center leading-tight">{option.name}</span>
-                {answered && option.id === currentSign.id && (
-                  <span className="absolute top-2 right-2 text-white text-lg">✓</span>
-                )}
-                {answered && selectedCard === idx && option.id !== currentSign.id && (
-                  <span className="absolute top-2 right-2 text-white text-lg">✗</span>
-                )}
-              </motion.button>
-            ))}
-          </div>
-        )}
-
-        {/* Countdown display */}
-        {answered && countdown !== null && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="fixed inset-0 flex items-center justify-center pointer-events-none"
-          >
-            <motion.div
-              key={countdown}
-              initial={{ opacity: 0, scale: 0.3 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.5 }}
-              transition={{ duration: 0.3 }}
-              className="text-9xl font-black text-red-600 drop-shadow-2xl"
-            >
-              {countdown}
-            </motion.div>
-          </motion.div>
-        )}
       </div>
+
+      {/* Three Answer Cards */}
+      {!showDescription && (
+        <div className="grid grid-cols-3 gap-4">
+          {cardOptions.map((option, idx) => (
+            <motion.button
+              key={option.id + idx}
+              onClick={() => handleCardClick(idx)}
+              disabled={answered}
+              whileHover={!answered ? { scale: 1.04, y: -4 } : {}}
+              whileTap={!answered ? { scale: 0.97 } : {}}
+              className={`relative h-28 rounded-xl bg-gradient-to-br ${getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
+            >
+              <span className="text-center leading-tight">{option.name}</span>
+              {answered && option.id === currentSign.id && (
+                <span className="text-xs mt-2 opacity-75">✓ Correct</span>
+              )}
+              {answered && selectedCard === idx && option.id !== currentSign.id && (
+                <span className="text-xs mt-2 opacity-75">✗ Wrong</span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      )}
+
+      {/* 3-2-1 Countdown Overlay */}
+      {countdown !== null && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <motion.div
+            key={countdown}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.5, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-9xl font-black text-red-600 drop-shadow-2xl"
+          >
+            {countdown}
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
