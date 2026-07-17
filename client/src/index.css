@@ -65,8 +65,8 @@
   
   --radius: 0.65rem;
   
-  /* Clean white background - 2 shades greyer */
-  --background: oklch(0.94 0.01 0);
+  /* Clean white background */
+  --background: oklch(0.98 0.01 0);
   
   /* Dark charcoal text - readable and professional */
   --foreground: oklch(0.25 0.02 150);
