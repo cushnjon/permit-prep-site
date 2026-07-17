@@ -328,22 +328,24 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRandomQuestion?.();
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="pl-1 pr-2 py-2 rounded-lg hover:bg-accent/10 transition-colors"
-            title="Random Question"
-          >
-            <motion.div
-              className="pulse-bounce"
+          {onRandomQuestion && (
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRandomQuestion?.();
+              }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="pl-1 pr-2 py-2 rounded-lg hover:bg-accent/10 transition-colors"
+              title="Random Question"
             >
-              <Dices size={18} className="text-accent" />
-            </motion.div>
-          </motion.button>
+              <motion.div
+                className="pulse-bounce"
+              >
+                <Dices size={18} className="text-accent" />
+              </motion.div>
+            </motion.button>
+          )}
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.3 }}
