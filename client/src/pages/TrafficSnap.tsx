@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trafficSnapData } from "@/data/trafficSnapData";
 
@@ -72,7 +72,10 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
+type GameMode = "normal" | "blur-zoom";
+
 export default function TrafficSnap() {
+  const [gameMode, setGameMode] = useState<GameMode>("normal");
   const [shuffledSigns] = useState(() => shuffleArray(ALL_SIGNS));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answered, setAnswered] = useState(false);
@@ -83,6 +86,10 @@ export default function TrafficSnap() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
 
+  // Blur & Zoom mode state
+  const [blurElapsed, setBlurElapsed] = useState(0); // 0-30 seconds
+  const blurTimerRef = useRef<number | null>(null);
+  const blurStartRef = useRef<number>(0);
 
   const currentSign = shuffledSigns[currentIndex % shuffledSigns.length];
 
@@ -98,8 +105,8 @@ export default function TrafficSnap() {
     if (answered) return;
     setPanX(0);
     const start = Date.now();
-    const duration = 8000; // 8 seconds to pan across
-    const maxPan = 30; // px
+    const duration = 8000;
+    const maxPan = 30;
 
     const animate = () => {
       const elapsed = (Date.now() - start) % (duration * 2);
@@ -113,11 +120,33 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [currentIndex, answered]);
 
+  // Blur & Zoom timer — runs from 0 to 30 seconds
+  useEffect(() => {
+    if (gameMode !== "blur-zoom" || answered) {
+      if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
+      return;
+    }
+    blurStartRef.current = Date.now();
+    setBlurElapsed(0);
+
+    const tick = () => {
+      const elapsed = (Date.now() - blurStartRef.current) / 1000;
+      const clamped = Math.min(elapsed, 30);
+      setBlurElapsed(clamped);
+      if (clamped < 30) {
+        blurTimerRef.current = requestAnimationFrame(tick);
+      }
+    };
+    blurTimerRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
+    };
+  }, [gameMode, currentIndex, answered]);
+
   // Smooth 3-2-1 countdown then immediate next question
   useEffect(() => {
     if (!answered) return;
 
-    // Show 3 at 3.8s, 2 at 4.8s, 1 at 5.8s, load next at 6.8s
     const t3 = setTimeout(() => setCountdown(3), 3800);
     const t2 = setTimeout(() => setCountdown(2), 4800);
     const t1 = setTimeout(() => setCountdown(1), 5800);
@@ -134,16 +163,22 @@ export default function TrafficSnap() {
     };
   }, [answered]);
 
-  // Show description card after 0 seconds (faster - immediately on correct)
+  // Show description card immediately on correct
   useEffect(() => {
     if (!answered || !isCorrect) return;
-
-    const timer = setTimeout(() => {
-      setShowDescription(true);
-    }, 0);
-
+    const timer = setTimeout(() => setShowDescription(true), 0);
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
+
+  // Calculate blur & zoom values from elapsed time (0-30s)
+  // zoom: 1.5 → 1.0 over 30s
+  // blur: 18px → 0px over 30s (90% opacity blur effect)
+  const blurProgress = Math.min(blurElapsed / 30, 1); // 0 to 1
+  const currentZoom = gameMode === "blur-zoom" && !answered ? 1.5 - blurProgress * 0.5 : (answered ? 1 : 1.35);
+  const currentBlur = gameMode === "blur-zoom" && !answered ? (1 - blurProgress) * 18 : 0;
+
+  // Points for blur mode: 100 at t=0, 0 at t=30
+  const getBlurPoints = () => Math.round(Math.max(0, 100 - (blurElapsed / 30) * 100));
 
   const handleCardClick = (cardIndex: number) => {
     if (answered) return;
@@ -152,7 +187,8 @@ export default function TrafficSnap() {
     const correct = cardOptions[cardIndex].id === currentSign.id;
     setIsCorrect(correct);
     if (correct) {
-      setScore((prev) => prev + 1);
+      const pts = gameMode === "blur-zoom" ? getBlurPoints() : 1;
+      setScore((prev) => prev + pts);
     }
   };
 
@@ -162,10 +198,9 @@ export default function TrafficSnap() {
     setSelectedCard(null);
     setShowDescription(false);
     setIsCorrect(false);
-    setCountdown(null); // Reset countdown
+    setCountdown(null);
+    setBlurElapsed(0);
   };
-
-
 
   const getCardStyle = (cardIndex: number) => {
     if (!answered || selectedCard === null) return "from-slate-700 to-slate-900";
@@ -189,9 +224,65 @@ export default function TrafficSnap() {
           </div>
         </div>
 
+        {/* Mode Toggle */}
+        <div className="flex justify-center">
+          <div className="flex gap-1 bg-slate-200 rounded-full p-1">
+            <button
+              onClick={() => { setGameMode("normal"); nextSign(); }}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                gameMode === "normal"
+                  ? "bg-white text-slate-900 shadow"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Normal
+            </button>
+            <button
+              onClick={() => { setGameMode("blur-zoom"); nextSign(); }}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                gameMode === "blur-zoom"
+                  ? "bg-slate-900 text-white shadow"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              🌫 Blur & Zoom
+            </button>
+          </div>
+        </div>
 
+        {/* Blur mode: points preview */}
+        {gameMode === "blur-zoom" && !answered && (
+          <div className="flex items-center justify-center gap-4">
+            <div className="text-center">
+              <div className="text-4xl font-black text-amber-500">{getBlurPoints()}</div>
+              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Points Available</div>
+            </div>
+            <div className="w-48 h-3 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-400 to-red-500 transition-none rounded-full"
+                style={{ width: `${100 - blurProgress * 100}%` }}
+              />
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-600">{Math.ceil(30 - blurElapsed)}s</div>
+              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Remaining</div>
+            </div>
+          </div>
+        )}
 
-        {/* Sign Tile OR Description Card OR Info Display */}
+        {/* Blur mode: points earned on correct answer */}
+        {gameMode === "blur-zoom" && answered && isCorrect && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <div className="text-5xl font-black text-amber-500">+{getBlurPoints()} pts</div>
+            <div className="text-sm text-slate-500">answered in {blurElapsed.toFixed(1)}s</div>
+          </motion.div>
+        )}
+
+        {/* Sign Tile OR Description Card */}
         <AnimatePresence mode="wait">
           {!answered || !showDescription ? (
             <motion.div
@@ -207,7 +298,11 @@ export default function TrafficSnap() {
                 src={currentSign.signImage}
                 alt={currentSign.name}
                 className="absolute inset-0 w-full h-full object-cover"
-                animate={{ x: answered ? 0 : panX, scale: answered ? 1 : 1.35 }}
+                animate={{
+                  x: answered ? 0 : panX,
+                  scale: currentZoom,
+                  filter: `blur(${currentBlur}px)`,
+                }}
                 transition={{ duration: answered ? 0.5 : 0.05, ease: "linear" }}
               />
               {/* Vignette */}
@@ -217,7 +312,7 @@ export default function TrafficSnap() {
               {/* Badge */}
               {!answered && (
                 <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
-                  IDENTIFY
+                  {gameMode === "blur-zoom" ? "BLUR MODE" : "IDENTIFY"}
                 </div>
               )}
               {/* Zone badge */}
