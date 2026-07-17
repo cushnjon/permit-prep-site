@@ -209,7 +209,7 @@ export default function Home() {
           </div>
         </div>
         <div className="container px-0 pb-2">
-          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-accent to-primary"
               initial={{ width: 0 }}
