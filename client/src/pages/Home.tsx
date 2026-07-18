@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as TrafficIcon } from "lucide-react";
 import { gameData, Question, Zone } from "@/data/gameData";
@@ -441,11 +442,13 @@ function TextDriveGame({
   onToggleGlossary,
   onNavigateToQuestion,
 }: TextDriveGameProps) {
+  const [showSpanish, setShowSpanish] = React.useState(false);
+
   const answers = [
-    { key: "a" as const, text: question.a },
-    { key: "b" as const, text: question.b },
-    { key: "c" as const, text: question.c },
-    { key: "d" as const, text: question.d },
+    { key: "a" as const, text: showSpanish && question.a_es ? question.a_es : question.a },
+    { key: "b" as const, text: showSpanish && question.b_es ? question.b_es : question.b },
+    { key: "c" as const, text: showSpanish && question.c_es ? question.c_es : question.c },
+    { key: "d" as const, text: showSpanish && question.d_es ? question.d_es : question.d },
   ];
 
   const isCorrect = selectedAnswer === question.correct_answer;

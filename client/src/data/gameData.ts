@@ -8,10 +8,15 @@ export interface Question {
   images?: string[];
   id: string;
   prompt: string;
+  prompt_es?: string;
   a: string;
+  a_es?: string;
   b: string;
+  b_es?: string;
   c: string;
+  c_es?: string;
   d: string;
+  d_es?: string;
   correct_answer: "a" | "b" | "c" | "d";
   correct_side_note: string;
   semi_correct_side_note: string;
@@ -40,10 +45,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_LEG_02",
         prompt: "Under the statutory Implied Consent Law, what do you legally agree to by signing your license application?",
+        prompt_es: "Bajo la Ley de Consentimiento Implícito, ¿a qué estás legalmente de acuerdo al firmar tu solicitud de licencia?",
         a: "To take a breath, blood, or urine test if an officer suspects a chemical DUI.",
+        a_es: "Someterte a una prueba de aliento, sangre u orina si un oficial sospecha un DUI químico.",
         b: "To carry comprehensive collision and liability insurance policies at all times.",
+        b_es: "Llevar pólizas integrales de seguro de colisión y responsabilidad civil en todo momento.",
         c: "To automatically plead guilty to minor mechanical and equipment violations.",
+        c_es: "Declararte automáticamente culpable de violaciones menores de equipos mecánicos.",
         d: "To always cooperate with traffic officers and show your physical license upon request.",
+        d_es: "Cooperar siempre con los oficiales de tránsito y mostrar tu licencia física cuando se solicite.",
         correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-parking-lot-scenario-jsXYpueVp28cADofk5GMV7.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp"],
         correct_side_note: "10 POINTS: Spot on. Implied Consent explicitly ties your signature on your license to an advance agreement to submit to chemical screenings if lawfully requested by an officer. Refusal triggers independent, immediate administrative penalties.",
@@ -81,10 +91,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_ROW_01",
         prompt: "When approaching an intersection, what is the legal status of the Right-of-Way?",
+        prompt_es: "Al acercarse a una intersección, ¿cuál es el estado legal del derecho de paso?",
         a: "It is automatically yours if you are traveling straight on a main street.",
+        a_es: "Es automáticamente tuyo si viajas recto en una calle principal.",
         b: "You must assertively take it to keep traffic flowing smoothly.",
+        b_es: "Debes asertivamente tomarlo para mantener el tráfico fluyendo suavemente.",
         c: "You can never legally take it; you can only yield it to others.",
+        c_es: "Nunca puedes legalmente tomarlo; solo puedes cederlo a otros.",
         d: "It belongs strictly to whichever vehicle is larger or heavier.",
+        d_es: "Pertenece estrictamente al vehículo que es más grande o pesado.",
         correct_answer: "c",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/parking-garage-safety-7A8sdCkinzXpjwaK5fhZQp.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-right-of-way-Yfz6BX8rfRmkWEHqfut7fV.webp"],
         correct_side_note: "10 POINTS: Perfectly answered. The vehicle code is written entirely around who must *yield* the right-of-way. The law never gives you the right to forcefully claim a patch of asphalt.",
@@ -105,10 +120,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_ROW_02",
         prompt: "What does a statutory 'Yield' mandate you to do as a licensed operator?",
+        prompt_es: "En una intersección controlada por semáforos, ¿cuándo es legal girar a la izquierda?",
         a: "Maintain current velocity while flashing high beams to warn crossing vehicles.",
+        a_es: "Siempre que el tráfico opuesto esté claro, incluso con una luz roja.",
         b: "Come to a mandatory 3-second stop regardless of current traffic flow.",
+        b_es: "Solo cuando tienes una flecha verde de giro a la izquierda o una luz verde sólida.",
         c: "Slow down slightly while continuing through the lane without looking.",
+        c_es: "Cuando el tráfico opuesto está claro y tu luz es verde.",
         d: "Slow down or stop completely to let cross traffic or pedestrians pass first.",
+        d_es: "Nunca es legal girar a la izquierda en una intersección controlada.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q3-controlled-intersection-DqoogBzVp9BexpBwUEZh47.webp"],
         correct_side_note: "10 POINTS: Exactly right. A yield sign requires you to defer your path to others. If cross-traffic is present, that slow down must turn into a full, legal stop.",
@@ -129,10 +149,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_ROW_03",
         prompt: "What legally defines an intersection as a 'Controlled Intersection'?",
+        prompt_es: "En una intersección no controlada, ¿quién tiene derecho de paso?",
         a: "It features painted crosswalks, clear lane dividers, and streetlights.",
+        a_es: "El vehículo que llega primero siempre tiene derecho de paso.",
         b: "It is monitored continuously by automated municipal speed cameras.",
+        b_es: "El vehículo en la calle principal tiene derecho de paso.",
         c: "It is any standard junction located within city or business limits.",
+        c_es: "El vehículo que viaja recto tiene derecho de paso sobre los que giran.",
         d: "It is regulated actively by traffic lights, stop signs, or yield signs.",
+        d_es: "El vehículo en tu lado derecho tiene derecho de paso.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q4-uncontrolled-intersection-GzCCtfNra3zEqCJ7ESXi2k.webp"],
         correct_side_note: "10 POINTS: Excellent. Control requires active, regulatory traffic devices (lights, signage) that legally dictate vehicle cadence and movement sequences.",
@@ -153,10 +178,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_ROW_04",
         prompt: "If you arrive at an Uncontrolled Intersection simultaneously with a car on your right, who proceeds?",
+        prompt_es: "Si llegas a una Intersección No Controlada simultáneamente con un auto a tu derecha, ¿quién procede?",
         a: "The vehicle traveling at the higher overall rate of speed proceeds first.",
+        a_es: "El vehículo que viaja a mayor velocidad procede primero.",
         b: "The vehicle turning left always takes precedence over straight-moving lanes.",
+        b_es: "El vehículo que gira a la izquierda siempre tiene precedencia sobre los que van recto.",
         c: "Whichever vehicle signals their intention first is allowed to proceed.",
+        c_es: "El vehículo que señala su intención primero puede proceder.",
         d: "The vehicle arriving on your right has the legal right-of-way.",
+        d_es: "El vehículo que llega a tu derecha tiene derecho de paso legal.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/left-turn-safety-2cxnQLeLzBrsc3iHcUW4Uc.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q5-blind-spot-9jnn848pexZCtZv5dEWCGo.webp"],
         correct_side_note: "10 POINTS: Correct. The 'rule of the right' dictates that when two vehicles meet simultaneously at an unmarked grid, you must yield to the driver on your right side.",
@@ -177,10 +207,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_ROW_05",
         prompt: "How must a driver check their vehicle's blind spots before executing any lane adjustment?",
+        prompt_es: "¿Cómo debe un conductor revisar los puntos ciegos de su vehículo antes de cambiar de carril?",
         a: "Adjust your interior rearview mirror outward while moving forward.",
+        a_es: "Ajusta tu espejo retrovisor interior hacia afuera mientras te mueves hacia adelante.",
         b: "Rely strictly on your side-view mirrors and integrated radar sensors.",
+        b_es: "Confía únicamente en tus espejos laterales y sensores de radar integrados.",
         c: "Check your side-view mirrors twice before signaling and moving.",
+        c_es: "Revisa tus espejos laterales dos veces antes de señalizar y moverte.",
         d: "Physically turn your head and look directly over your shoulder.",
+        d_es: "Gira físicamente tu cabeza y mira directamente sobre tu hombro.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/lane-change-safety-c6YBDfUZPwjRskLGrhxVir.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q6-basic-speed-law-MKwxMn7me3djNtQLXhy9Hg.webp"],
         correct_side_note: "10 POINTS: Perfect. Convex and flat side-view mirrors cannot capture the distinct pocket alongside your vehicle's rear quarters. A physical head-turn is non-negotiable.",
@@ -208,10 +243,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_SPD_01",
         prompt: "Under the Basic Speed Law, how should you adjust your speed during heavy rain or thick fog?",
+        prompt_es: "Bajo la Ley de Velocidad Básica, ¿cómo debes ajustar tu velocidad durante lluvia fuerte o niebla espesa?",
         a: "Maintain the exact posted speed limit to prevent rear-end collisions.",
+        a_es: "Mantén la velocidad exacta del límite de velocidad para evitar colisiones traseras.",
         b: "Drive 10 MPH faster than surrounding traffic to clear the hazard quickly.",
+        b_es: "Conduce 10 MPH más rápido que el tráfico circundante para salir del peligro rápidamente.",
         c: "Turn on your hazard lights and continue driving at the normal speed limit.",
+        c_es: "Enciende tus luces de emergencia y continúa conduciendo al límite de velocidad normal.",
         d: "Slow down below the posted limit to match what is safe for current conditions.",
+        d_es: "Reduce tu velocidad por debajo del límite de velocidad para que coincida con lo que es seguro para las condiciones actuales.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/weather-hazard-driving-3uHfhAXgzdKuRPMXiuEQW8.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q7-hydroplaning-NKcdUaQyuugJYxh8qUZpPF.webp"],
         correct_side_note: "10 POINTS: Spot on. The Basic Speed Law dictates that your velocity must always be reasonable and prudent for the environment, regardless of what is printed on the speed sign.",
@@ -232,10 +272,15 @@ export const gameData: Zone[] = [
       {
         id: "Q_SPD_02",
         prompt: "What immediate physical hazard occurs to a vehicle during a state of Hydroplaning?",
+        prompt_es: "¿Cuál es el peligro físico inmediato que ocurre a un vehículo durante un estado de Hidroplaneo?",
         a: "Brake pads overheat rapidly due to moisture accumulation in the calipers.",
+        a_es: "Las pastillas de freno se sobrecalientan rápidamente debido a la acumulación de humedad en los cilindros.",
         b: "The engine stalls instantly due to water entering the air intake system.",
+        b_es: "El motor se detiene instantáneamente debido a que el agua entra en el sistema de admisión de aire.",
         c: "Your brakes lose partial pressure, increasing your general stopping distance.",
+        c_es: "Tus frenos pierden presión parcial, aumentando tu distancia general de frenado.",
         d: "Tires ride on a layer of water, causing a total loss of traction and steering.",
+        d_es: "Los neumáticos se deslizan sobre una capa de agua, causando una pérdida total de tracción y dirección.",
         correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q8-left-turn-oncoming-mcZ5rxjezxjZZmD4U7SJf3.webp"],
         correct_side_note: "10 POINTS: Exactly. Hydroplaning occurs when fluid hydrodynamic pressure matches the vertical load of your vehicle, lifting the rubber completely off the pavement onto a water wedge.",
