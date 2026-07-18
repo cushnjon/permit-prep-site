@@ -618,6 +618,14 @@ function TextDriveGame({
                   const isThisAnswerCorrect = answer.key === question.correct_answer;
                   const isThisAnswerSelected = selectedAnswer === answer.key;
                   
+                  const answerColors = [
+                    { bg: "bg-blue-500", border: "border-blue-600", text: "text-white" },
+                    { bg: "bg-green-500", border: "border-green-600", text: "text-white" },
+                    { bg: "bg-purple-500", border: "border-purple-600", text: "text-white" },
+                    { bg: "bg-orange-500", border: "border-orange-600", text: "text-white" },
+                  ];
+                  const answerColor = answerColors[idx];
+
                   return (
                     <motion.button
                       key={answer.key}
@@ -637,7 +645,7 @@ function TextDriveGame({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-semibold text-sm">
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 ${answerColor.bg} ${answerColor.border} ${answerColor.text} flex items-center justify-center font-semibold text-sm`}>
                           {String.fromCharCode(65 + idx)}
                         </div>
                         <div className="flex-grow">
@@ -759,11 +767,11 @@ function TextDriveGame({
             className="bg-card border border-primary/20 rounded-lg p-6 space-y-3 drop-shadow-medium shadow-container"
           >
             <div>
-              <h4 className="text-lg font-bold text-primary mb-1">{question.extended_reading.title}</h4>
-              <p className="text-xs text-muted-foreground font-semibold">{question.extended_reading.context_type}</p>
+              <h4 className="text-lg font-bold text-primary mb-1">{showSpanish && question.extended_reading.title_es ? question.extended_reading.title_es : question.extended_reading.title}</h4>
+              <p className="text-xs text-muted-foreground font-semibold">{showSpanish && question.extended_reading.context_type_es ? question.extended_reading.context_type_es : question.extended_reading.context_type}</p>
             </div>
             <p className="text-sm leading-relaxed text-foreground">
-              {question.extended_reading.summary.split(/\[(.*?)\]\((.*?)\)/).map((part, idx) => {
+              {(showSpanish && question.extended_reading.summary_es ? question.extended_reading.summary_es : question.extended_reading.summary).split(/\[(.*?)\]\((.*?)\)/).map((part, idx) => {
                 if (idx % 3 === 0) return part;
                 if (idx % 3 === 1) return (
                   <a

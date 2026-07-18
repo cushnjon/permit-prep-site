@@ -24,8 +24,11 @@ export interface Question {
   semi_correct_side_note_es?: string;
   extended_reading: {
     title: string;
+    title_es?: string;
     context_type: string;
+    context_type_es?: string;
     summary: string;
+    summary_es?: string;
   };
   glossary?: GlossaryItem[];
 
