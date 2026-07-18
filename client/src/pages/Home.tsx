@@ -195,12 +195,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-primary">Permit Prep</h1>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
-            <a href="/gallery" className="text-xs sm:text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
-              <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Gallery <span className="italic text-yellow-500">/ Galería</span></span>
-              <span className="sm:hidden">Gallery</span>
-            </a>
-            <div className="h-5 w-px bg-border" />
+
             <a href="/traffic-snap" className="text-xs sm:text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <TrafficIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Traffic Snap <span className="italic text-yellow-500">/ Tráfico Snap</span></span>
