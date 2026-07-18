@@ -189,11 +189,11 @@ export default function Home() {
           <div className="flex items-center gap-6">
             <a href="/gallery" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
-              Gallery
+              Gallery <span className="italic text-yellow-500">/ Galería</span>
             </a>
             <a href="/traffic-snap" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <TrafficIcon className="h-4 w-4" />
-              Traffic Snap
+              Traffic Snap <span className="italic text-yellow-500">/ Tráfico Snap</span>
             </a>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-5 w-5 text-accent" />
@@ -204,7 +204,7 @@ export default function Home() {
               <span className="font-bold text-lg text-primary">{gameState.score}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Progress: {getTotalProgress()}%</span>
+              <span>Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function Home() {
         <div className="space-y-4">
           {/* Text Drive Section */}
           <GameSection
-            title="Text Drive: Read & Answer"
+            title="Text Drive: Read & Answer / Lectura de Texto: Lee y Responde"
             logo={GAME_LOGOS.permitPrepLogo}
             speedTier="15 MPH"
             isExpanded={gameState.expandedSection === 0}
@@ -254,7 +254,7 @@ export default function Home() {
 
           {/* Traffic Snap Section */}
           <GameSection
-            title="Traffic Snap: Sign & Shape"
+            title="Traffic Snap: Sign & Shape / Tráfico Snap: Signo y Forma"
             logo={GAME_LOGOS.permitPrepLogo}
             speedTier="25 MPH"
             isExpanded={gameState.expandedSection === 1}
@@ -271,19 +271,19 @@ export default function Home() {
                   />
                 </div>
                 <div className="text-center space-y-3">
-                  <p className="text-gray-600">Learn all traffic signs with interactive flip cards</p>
+                  <p className="text-gray-600">Learn all traffic signs with interactive flip cards <span className="italic text-yellow-500">/ Aprende todas las señales de tráfico con tarjetas interactivas</span></p>
                   <div className="flex gap-3 justify-center">
                     <button
                       onClick={() => setLocation("/traffic-snap")}
                       className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-button"
                     >
-                      Play Traffic Snap
+                      Play Traffic Snap <span className="italic text-yellow-500">/ Jugar Tráfico Snap</span>
                     </button>
                     <button
                       onClick={() => setLocation("/sign-reference")}
                       className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-button"
                     >
-                      View All Signs
+                      View All Signs <span className="italic text-yellow-500">/ Ver Todas las Señales</span>
                     </button>
                   </div>
                 </div>
