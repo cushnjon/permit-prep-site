@@ -576,8 +576,22 @@ function TextDriveGame({
                     />
                   </div>
                 )}
-                <h4 className="text-sm font-semibold text-primary mb-3">Question</h4>
-                <p className="text-base leading-relaxed text-foreground">{question.prompt}</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-primary">Question</h4>
+                    {question.prompt_es && (
+                      <motion.button
+                        onClick={() => setShowSpanish(!showSpanish)}
+                        className="px-2 py-1 rounded text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-900 font-semibold transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {showSpanish ? "EN" : "ES"}
+                      </motion.button>
+                    )}
+                  </div>
+                  <p className="text-base leading-relaxed text-foreground">{showSpanish && question.prompt_es ? question.prompt_es : question.prompt}</p>
+                </div>
               </div>
             </div>
 
