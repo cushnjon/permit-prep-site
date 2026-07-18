@@ -19,7 +19,9 @@ export interface Question {
   d_es?: string;
   correct_answer: "a" | "b" | "c" | "d";
   correct_side_note: string;
+  correct_side_note_es?: string;
   semi_correct_side_note: string;
+  semi_correct_side_note_es?: string;
   extended_reading: {
     title: string;
     context_type: string;
@@ -57,7 +59,9 @@ export const gameData: Zone[] = [
         correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-parking-lot-scenario-jsXYpueVp28cADofk5GMV7.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp"],
         correct_side_note: "10 POINTS: Spot on. Implied Consent explicitly ties your signature on your license to an advance agreement to submit to chemical screenings if lawfully requested by an officer. Refusal triggers independent, immediate administrative penalties.",
+        correct_side_note_es: "10 PUNTOS: Exacto. El Consentimiento Implícito vincula explícitamente tu firma en tu licencia a un acuerdo previo de someterte a pruebas químicas si lo solicita legalmente un oficial. La negativa desencadena sanciones administrativas inmediatas e independientes.",
         semi_correct_side_note: "5 POINTS: Close, but incomplete. While showing your physical license and cooperating are standard legal obligations of an operator, they do not satisfy the specific statutory mandate of the 'Implied Consent' chemical testing clause.",
+        semi_correct_side_note_es: "5 PUNTOS: Cerca, pero incompleto. Si bien mostrar tu licencia física y cooperar son obligaciones legales estándar de un operador, no satisfacen el mandato estatutario específico de la cláusula de pruebas químicas de 'Consentimiento Implícito'.",
         extended_reading: {
           title: "The Playground Contract: Signing Up for the Team",
           context_type: "Kid-Friendly Breakdown",

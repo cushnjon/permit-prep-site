@@ -19,6 +19,7 @@ interface GameState {
   answersCollapsed: boolean;
   showGlossary: boolean;
   answeredQuestions: Record<string, boolean>;
+  showSpanish?: boolean;
 }
 
 const GAME_LOGOS = {
@@ -42,6 +43,7 @@ export default function Home() {
     showGlossary: false,
     answeredQuestions: {},
   });
+  const [showSpanish, setShowSpanish] = useState(false);
 
   // Timer effect
   useEffect(() => {
@@ -175,6 +177,11 @@ export default function Home() {
   const getSideNote = () => {
     if (!gameState.selectedAnswer) return null;
     const isCorrect = gameState.selectedAnswer === currentQuestion.correct_answer;
+    if (showSpanish) {
+      return isCorrect 
+        ? (currentQuestion.correct_side_note_es || currentQuestion.correct_side_note)
+        : (currentQuestion.semi_correct_side_note_es || currentQuestion.semi_correct_side_note);
+    }
     return isCorrect ? currentQuestion.correct_side_note : currentQuestion.semi_correct_side_note;
   };
 
@@ -214,6 +221,15 @@ export default function Home() {
               <span className="hidden sm:inline">Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
               <span className="sm:hidden">Progress: {getTotalProgress()}%</span>
             </div>
+            <div className="h-5 w-px bg-border" />
+            <motion.button
+              onClick={() => setShowSpanish(!showSpanish)}
+              className="px-3 py-1 rounded-full text-xs sm:text-sm font-semibold transition-all bg-yellow-100 hover:bg-yellow-200 text-yellow-900"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showSpanish ? "English" : "Espanol"}
+            </motion.button>
           </div>
         </div>
         <div className="container px-0 pb-2">
@@ -682,7 +698,7 @@ function TextDriveGame({
                   >
                     <ChevronUp className="h-6 w-6" />
                   </motion.div>
-                  <span className="text-xs font-semibold uppercase tracking-wide">Pull to expand</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide">Pull to expand / Tirar para expandir</span>
                 </motion.button>
               </motion.div>
             )}
@@ -698,7 +714,7 @@ function TextDriveGame({
             className="w-full"
           >
             <div className="space-y-3">
-              <h3 className="text-lg font-bold text-primary mb-4">Question Glossary</h3>
+              <h3 className="text-lg font-bold text-primary mb-4">Question Glossary / Glosario de Preguntas</h3>
               {question.glossary && question.glossary.length > 0 ? (
                 question.glossary.slice(0, 1).map((item, idx) => (
                   <motion.div
@@ -709,8 +725,8 @@ function TextDriveGame({
                     className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft shadow-container"
                   >
                     <h4 className="font-bold text-accent mb-2">{item.term}</h4>
-                    <p className="text-sm text-muted-foreground mb-3"><span className="font-semibold">Quick Tip:</span> {item.quick_tip}</p>
-                    <p className="text-sm text-foreground border-l-2 border-accent pl-3"><span className="font-semibold text-accent">Correct Answer:</span> {item.correct_answer}</p>
+                    <p className="text-sm text-muted-foreground mb-3"><span className="font-semibold">Quick Tip / Consejo Rápido:</span> {item.quick_tip}</p>
+                    <p className="text-sm text-foreground border-l-2 border-accent pl-3"><span className="font-semibold text-accent">Correct Answer / Respuesta Correcta:</span> {item.correct_answer}</p>
                   </motion.div>
                 ))
               ) : (
@@ -786,7 +802,7 @@ function TextDriveGame({
             className="w-full pulse-glow bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all drop-shadow-medium shadow-button wiggle"
           >
             <Play className="h-5 w-5" />
-            Next Reading
+            Next Reading <span className="italic text-yellow-300">/ Siguiente Lectura</span>
           </motion.button>
         )}
       </AnimatePresence>
