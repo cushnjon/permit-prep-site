@@ -5,6 +5,7 @@ import { ChevronDown, Clock, Zap, Play, ChevronUp, Dices, BookOpen, Zap as Traff
 import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
 import { CinematicSignImage } from "./TrafficSnap";
+import PacManGame from "./PacManGame";
 
 
 
@@ -301,6 +302,25 @@ export default function Home() {
                       View All Signs <span className="italic text-yellow-500">/ Ver Todas las Señales</span>
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+          </GameSection>
+
+          {/* Pac-Man Game Section */}
+          <GameSection
+            title="Suburban Road Pac-Man / Pac-Man en Caminos Suburbanos"
+            logo={GAME_LOGOS.permitPrepLogo}
+            speedTier="35 MPH"
+            isExpanded={gameState.expandedSection === 2}
+            onToggle={() => toggleSection(2)}
+            progress={0}
+          >
+            {gameState.expandedSection === 2 && (
+              <div className="space-y-6">
+                <PacManGame />
+                <div className="text-center text-sm text-gray-600">
+                  <p>Navigate through suburban roads while avoiding stop signs and walls <span className="italic text-yellow-500">/ Navega por caminos suburbanos evitando señales de alto y muros</span></p>
                 </div>
               </div>
             )}
