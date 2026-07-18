@@ -330,7 +330,19 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <img src={logo} alt={title} className="h-10 w-10 flex-shrink-0" />
           <div className="text-left flex items-center gap-1 min-w-0">
-            <h2 className="text-sm sm:text-base font-bold text-primary truncate">{title}</h2>
+            <h2 className="text-sm sm:text-base font-bold text-primary truncate">
+              {(() => {
+                const parts = title.split(' / ');
+                if (parts.length === 2) {
+                  return (
+                    <>
+                      {parts[0]} <span className="italic text-yellow-500">/ {parts[1]}</span>
+                    </>
+                  );
+                }
+                return title;
+              })()}
+            </h2>
             <p className="text-xs text-muted-foreground font-medium flex-shrink-0">{speedTier}</p>
           </div>
         </div>
