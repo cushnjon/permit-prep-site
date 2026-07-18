@@ -7,11 +7,13 @@ interface GalleryImage {
   title: string;
   url: string;
   questionText: string;
+  questionText_es?: string;
   zone: string;
 }
 
 export default function ImageGallery() {
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [showSpanish, setShowSpanish] = useState(false);
 
   // Extract all images from gameData
   const galleryImages: GalleryImage[] = [];
@@ -24,6 +26,7 @@ export default function ImageGallery() {
             title: question.id.replace(/_/g, " "),
             url: img,
             questionText: question.prompt,
+            questionText_es: question.prompt_es,
             zone: zone.zone,
           });
         });
@@ -80,12 +83,22 @@ export default function ImageGallery() {
                 <p className="text-sm text-gray-500">{selectedImage.zone}</p>
                 <h2 className="text-xl font-bold text-gray-900">{selectedImage.title}</h2>
               </div>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-gray-600" />
-              </button>
+              <div className="flex items-center gap-2">
+                {selectedImage.questionText_es && (
+                  <button
+                    onClick={() => setShowSpanish(!showSpanish)}
+                    className="px-2 py-1 rounded text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-900 font-semibold transition-colors"
+                  >
+                    {showSpanish ? "English" : "Español"}
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X size={24} className="text-gray-600" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6">
@@ -96,7 +109,7 @@ export default function ImageGallery() {
               />
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-600 mb-2">Question:</p>
-                <p className="text-gray-900 font-medium">{selectedImage.questionText}</p>
+                <p className="text-gray-900 font-medium">{showSpanish && selectedImage.questionText_es ? selectedImage.questionText_es : selectedImage.questionText}</p>
               </div>
             </div>
           </div>

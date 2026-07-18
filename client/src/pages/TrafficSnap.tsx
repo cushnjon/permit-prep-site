@@ -90,6 +90,9 @@ export default function TrafficSnap() {
   const [blurElapsed, setBlurElapsed] = useState(0);
   const blurTimerRef = useRef<number | null>(null);
   const blurStartRef = useRef<number>(0);
+  
+  // Language toggle
+  const [showSpanish, setShowSpanish] = useState(false);
 
   const currentSign = remainingSigns[0];
   const totalAnswered = 18 - remainingSigns.length;
@@ -402,13 +405,25 @@ export default function TrafficSnap() {
               )}
               <div className="h-full flex flex-col justify-between">
                 <div className="space-y-4">
-                  <h2 className="text-3xl font-bold">{currentSign.name}</h2>
-                  <p className="text-lg leading-relaxed">{currentSign.description}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-3xl font-bold">{showSpanish && currentSign.name_es ? currentSign.name_es : currentSign.name}</h2>
+                    {(currentSign.name_es || currentSign.description_es) && (
+                      <motion.button
+                        onClick={() => setShowSpanish(!showSpanish)}
+                        className="px-2 py-1 rounded text-xs bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-semibold transition-colors flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {showSpanish ? "English" : "Español"}
+                      </motion.button>
+                    )}
+                  </div>
+                  <p className="text-lg leading-relaxed">{showSpanish && currentSign.description_es ? currentSign.description_es : currentSign.description}</p>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-xs font-semibold opacity-75 uppercase">Real-World Use</p>
-                    <p className="text-sm leading-relaxed">{currentSign.realWorldApplication}</p>
+                    <p className="text-sm leading-relaxed">{showSpanish && currentSign.realWorldApplication_es ? currentSign.realWorldApplication_es : currentSign.realWorldApplication}</p>
                   </div>
                   <motion.button
                     onClick={nextSign}

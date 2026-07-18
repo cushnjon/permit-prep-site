@@ -1,17 +1,21 @@
 export interface TrafficSign {
   id: string;
   name: string;
+  name_es?: string;
   shape: "octagon" | "triangle" | "circle" | "rectangle" | "diamond" | "pentagon";
   signImage: string;
   shapeImage: string;
   description: string;
+  description_es?: string;
   realWorldApplication: string;
+  realWorldApplication_es?: string;
   zone: "Regulatory" | "Warning" | "Informational";
 }
 
 export interface TrafficSnapZone {
   zone: "Regulatory" | "Warning" | "Informational";
   description: string;
+  description_es?: string;
   signs: TrafficSign[];
 }
 

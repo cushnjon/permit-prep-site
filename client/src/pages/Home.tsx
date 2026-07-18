@@ -734,7 +734,9 @@ function TextDriveGame({
                 : "border-destructive/50 bg-destructive/5 text-foreground"
             }`}
           >
-            <p className="text-sm leading-relaxed">{sideNote}</p>
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm leading-relaxed flex-1">{sideNote}</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
