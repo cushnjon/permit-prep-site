@@ -230,42 +230,45 @@ export default function Home() {
       {/* Main Content */}
       <main className="container py-8">
         <div className="space-y-4">
-          {/* Text Drive Section */}
-          <GameSection
-            title="Text Drive: Read & Answer / Lectura de Texto: Lee y Responde"
-            logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="15 MPH"
-            isExpanded={gameState.expandedSection === 0}
-            onToggle={() => toggleSection(0)}
-            onRandomQuestion={handleRandomQuestion}
-            progress={getZoneProgress(0)}
-          >
-            {gameState.expandedSection === 0 && (
-              <TextDriveGame
-                zone={currentZone}
-                question={currentQuestion}
-                selectedAnswer={gameState.selectedAnswer}
-                showArticle={gameState.showArticle}
-                sideNote={getSideNote()}
-                answersCollapsed={gameState.answersCollapsed}
-                showGlossary={gameState.showGlossary}
-                onAnswerClick={handleAnswerClick}
-                onNextQuestion={handleNextQuestion}
-                onToggleAnswers={toggleAnswersExpanded}
-                onRandomQuestion={handleRandomQuestion}
-                onToggleGlossary={handleToggleGlossary}
-                onNavigateToQuestion={handleNavigateToQuestion}
-              />
-            )}
-          </GameSection>
+          {/* Render all zones */}
+          {gameData.map((zone, zoneIndex) => (
+            <GameSection
+              key={zoneIndex}
+              title={zone.zone}
+              logo={GAME_LOGOS.permitPrepLogo}
+              speedTier={zone.speed_tier}
+              isExpanded={gameState.expandedSection === zoneIndex}
+              onToggle={() => toggleSection(zoneIndex)}
+              onRandomQuestion={handleRandomQuestion}
+              progress={getZoneProgress(zoneIndex)}
+            >
+              {gameState.expandedSection === zoneIndex && (
+                <TextDriveGame
+                  zone={zone}
+                  question={gameState.currentZoneIndex === zoneIndex ? currentQuestion : zone.questions[0]}
+                  selectedAnswer={gameState.currentZoneIndex === zoneIndex ? gameState.selectedAnswer : null}
+                  showArticle={gameState.currentZoneIndex === zoneIndex ? gameState.showArticle : false}
+                  sideNote={gameState.currentZoneIndex === zoneIndex ? getSideNote() : null}
+                  answersCollapsed={gameState.currentZoneIndex === zoneIndex ? gameState.answersCollapsed : false}
+                  showGlossary={gameState.currentZoneIndex === zoneIndex ? gameState.showGlossary : false}
+                  onAnswerClick={handleAnswerClick}
+                  onNextQuestion={handleNextQuestion}
+                  onToggleAnswers={toggleAnswersExpanded}
+                  onRandomQuestion={handleRandomQuestion}
+                  onToggleGlossary={handleToggleGlossary}
+                  onNavigateToQuestion={handleNavigateToQuestion}
+                />
+              )}
+            </GameSection>
+          ))}
 
           {/* Traffic Snap Section */}
           <GameSection
             title="Traffic Snap: Sign & Shape / Tráfico Snap: Signo y Forma"
             logo={GAME_LOGOS.permitPrepLogo}
             speedTier="25 MPH"
-            isExpanded={gameState.expandedSection === 1}
-            onToggle={() => toggleSection(1)}
+            isExpanded={gameState.expandedSection === gameData.length}
+            onToggle={() => toggleSection(gameData.length)}
             progress={0}
           >
             {gameState.expandedSection === 1 && (
