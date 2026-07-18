@@ -190,9 +190,9 @@ export default function Home() {
       {/* Global Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-white backdrop-blur-sm drop-shadow-soft">
         <div className="container flex items-center justify-between py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold text-primary">Permit Prep</h1>
+            <h1 className="text-2xl font-bold text-primary" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Permit Prep</h1>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
 
