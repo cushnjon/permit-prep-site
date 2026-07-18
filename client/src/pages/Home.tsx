@@ -453,6 +453,7 @@ function TextDriveGame({
   onNavigateToQuestion,
 }: TextDriveGameProps) {
   const [showSpanish, setShowSpanish] = React.useState(false);
+  const [showSpanishGlossary, setShowSpanishGlossary] = React.useState(false);
 
   const answers = [
     { key: "a" as const, text: showSpanish && question.a_es ? question.a_es : question.a },
@@ -533,7 +534,17 @@ function TextDriveGame({
             exit={{ opacity: 0, y: -10 }}
             className="bg-card border border-accent/30 rounded-lg p-4 drop-shadow-soft shadow-container"
           >
-            <h3 className="text-lg font-bold text-primary mb-4">All Questions by Zone</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-primary">All Questions by Zone</h3>
+              <motion.button
+                onClick={() => setShowSpanishGlossary?.(!showSpanishGlossary)}
+                className="px-3 py-1 rounded-lg text-xs font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/30"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {showSpanishGlossary ? "English" : "Español"}
+              </motion.button>
+            </div>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {gameData.map((z, zoneIdx) => (
                 <div key={z.zone} className="border-b border-accent/20 pb-3 last:border-b-0">
@@ -553,7 +564,7 @@ function TextDriveGame({
                         className="w-full text-left p-2 rounded-lg border border-accent/20 hover:bg-accent/10 hover:border-accent/50 transition-all"
                       >
                         <p className="text-xs font-semibold text-accent mb-1">Q{qIdx + 1}</p>
-                        <p className="text-xs text-foreground line-clamp-2">{q.prompt}</p>
+                        <p className="text-xs text-foreground line-clamp-2">{showSpanishGlossary && q.prompt_es ? q.prompt_es : q.prompt}</p>
                       </motion.button>
                     ))}
                   </div>
