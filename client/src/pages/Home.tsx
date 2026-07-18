@@ -307,24 +307,7 @@ export default function Home() {
             )}
           </GameSection>
 
-          {/* Pac-Man Game Section */}
-          <GameSection
-            title="Suburban Road Pac-Man / Pac-Man en Caminos Suburbanos"
-            logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="35 MPH"
-            isExpanded={gameState.expandedSection === 2}
-            onToggle={() => toggleSection(2)}
-            progress={0}
-          >
-            {gameState.expandedSection === 2 && (
-              <div className="space-y-6">
-                <PacManGame />
-                <div className="text-center text-sm text-gray-600">
-                  <p>Navigate through suburban roads while avoiding stop signs and walls <span className="italic text-yellow-500">/ Navega por caminos suburbanos evitando señales de alto y muros</span></p>
-                </div>
-              </div>
-            )}
-          </GameSection>
+          {/* Pac-Man Game Section - HIDDEN FOR NOW - Will be replaced with Crossword Module */}
 
         </div>
       </main>
