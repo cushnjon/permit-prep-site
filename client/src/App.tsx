@@ -14,20 +14,11 @@ import SignReference from "./pages/SignReference";
 function Router() {
   return (
     <Switch>
-      {/* English routes */}
       <Route path={"/"} component={Home} />
       <Route path={"/gallery"} component={ImageGallery} />
       <Route path={"/traffic-snap"} component={TrafficSnap} />
       <Route path={"/game-dev"} component={GameDev} />
       <Route path={"/sign-reference"} component={SignReference} />
-      
-      {/* Spanish routes */}
-      <Route path={"/espanol"} component={Home} />
-      <Route path={"/espanol/galeria"} component={ImageGallery} />
-      <Route path={"/espanol/trafico-snap"} component={TrafficSnap} />
-      <Route path={"/espanol/juego-dev"} component={GameDev} />
-      <Route path={"/espanol/referencia-senales"} component={SignReference} />
-      
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
