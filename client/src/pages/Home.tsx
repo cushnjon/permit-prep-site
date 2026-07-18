@@ -196,11 +196,16 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
 
-            <a href="/traffic-snap" className="text-xs sm:text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
-              <TrafficIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Traffic Snap <span className="italic text-yellow-500">/ Tráfico Snap</span></span>
-              <span className="sm:hidden">Traffic</span>
-            </a>
+            <motion.a
+              href="/traffic-snap"
+              className="relative w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              title="Traffic Snap / Tráfico Snap"
+            >
+              <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <TrafficIcon className="h-6 w-6 relative z-10" />
+            </motion.a>
             <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
