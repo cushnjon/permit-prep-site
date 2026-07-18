@@ -221,15 +221,7 @@ export default function Home() {
               <span className="hidden sm:inline">Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
               <span className="sm:hidden">Progress: {getTotalProgress()}%</span>
             </div>
-            <div className="h-5 w-px bg-border" />
-            <motion.button
-              onClick={() => setShowSpanish(!showSpanish)}
-              className="px-3 py-1 rounded-full text-xs sm:text-sm font-semibold transition-all bg-yellow-100 hover:bg-yellow-200 text-yellow-900"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {showSpanish ? "English" : "Espanol"}
-            </motion.button>
+
           </div>
         </div>
         <div className="container px-0 pb-2">
