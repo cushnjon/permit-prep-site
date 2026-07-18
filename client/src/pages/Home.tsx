@@ -199,7 +199,7 @@ export default function Home() {
 
             <motion.button
               onClick={() => setGameState(prev => ({ ...prev, showGlossary: !prev.showGlossary }))}
-              className="pl-6 px-3 py-2 rounded-lg text-sm font-semibold text-accent hover:bg-accent/10 transition-colors"
+              className="ml-6 px-3 py-2 rounded-lg text-sm font-semibold text-accent hover:bg-accent/10 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Zone Glossary"
