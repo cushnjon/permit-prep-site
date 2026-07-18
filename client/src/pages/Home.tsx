@@ -586,7 +586,7 @@ function TextDriveGame({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        {showSpanish ? "EN" : "ES"}
+                        {showSpanish ? "English" : "Español"}
                       </motion.button>
                     )}
                   </div>
