@@ -482,4 +482,113 @@ export const gameData: Zone[] = [
       }
     ]
   }
+,
+
+  {
+    zone: "Zone 3: Defensive Driving / Zona 3: Conducción Defensiva",
+    speed_tier: "35 MPH",
+    background_tip: "Defensive driving means anticipating hazards and maintaining control of your vehicle at all times.",
+    questions: [
+      {
+        id: "Q_DEF_01",
+        prompt: "What is the primary goal of defensive driving?",
+        prompt_es: "¿Cuál es el objetivo principal de la conducción defensiva?",
+        a: "To drive as fast as possible while staying alert.",
+        a_es: "Conducir lo más rápido posible mientras se mantiene alerta.",
+        b: "To anticipate hazards and maintain control of your vehicle to prevent accidents.",
+        b_es: "Anticipar peligros y mantener el control de tu vehículo para prevenir accidentes.",
+        c: "To honk your horn frequently to warn other drivers.",
+        c_es: "Tocar la bocina frecuentemente para advertir a otros conductores.",
+        d: "To use your high beams at all times for better visibility.",
+        d_es: "Usar las luces altas en todo momento para mejor visibilidad.",
+        correct_answer: "b",
+        correct_side_note: "10 POINTS: Correct! Defensive driving is about anticipating potential hazards and maintaining control to prevent accidents before they happen.",
+        correct_side_note_es: "10 PUNTOS: ¡Correcto! La conducción defensiva se trata de anticipar peligros potenciales y mantener el control para prevenir accidentes antes de que ocurran.",
+        semi_correct_side_note: "5 POINTS: Partially correct, but defensive driving is more about prevention than reaction.",
+        semi_correct_side_note_es: "5 PUNTOS: Parcialmente correcto, pero la conducción defensiva se trata más de prevención que de reacción.",
+        extended_reading: {
+          title: "The Art of Seeing Trouble Before It Happens",
+          context_type: "Defensive Driving Fundamentals",
+          summary: "Defensive driving means you're always thinking ahead. You scan the road for potential dangers, keep a safe distance from other vehicles, and adjust your speed based on road conditions. It's like being a chess player on the road—always thinking three moves ahead."
+        }
+      },
+      {
+        id: "Q_DEF_02",
+        prompt: "What should you do if you notice a vehicle swerving between lanes?",
+        prompt_es: "¿Qué deberías hacer si notas que un vehículo se mueve entre carriles?",
+        a: "Speed up to pass them quickly.",
+        a_es: "Acelera para pasarlos rápidamente.",
+        b: "Increase your following distance and avoid being near them.",
+        b_es: "Aumenta tu distancia de seguimiento y evita estar cerca de ellos.",
+        c: "Flash your headlights to get their attention.",
+        c_es: "Destella tus faros para llamar su atención.",
+        d: "Honk your horn continuously.",
+        d_es: "Toca la bocina continuamente.",
+        correct_answer: "b",
+        correct_side_note: "10 POINTS: Exactly right. Increasing your following distance protects you from unpredictable movements.",
+        correct_side_note_es: "10 PUNTOS: Exactamente correcto. Aumentar tu distancia de seguimiento te protege de movimientos impredecibles.",
+        semi_correct_side_note: "5 POINTS: Good instinct, but alerting them isn't the safest response.",
+        semi_correct_side_note_es: "5 PUNTOS: Buen instinto, pero alertarlos no es la respuesta más segura.",
+        extended_reading: {
+          title: "When Others Drive Dangerously",
+          context_type: "Defensive Driving Response",
+          summary: "When you notice erratic driving, your job is to protect yourself, not to correct the other driver. The safest response is to create distance and let them pass. Never engage or try to teach them a lesson—your safety comes first."
+        }
+      }
+    ]
+  },
+  {
+    zone: "Zone 4: Colorado License Process Start to Finish / Zona 4: Proceso de Licencia de Colorado de Principio a Fin",
+    speed_tier: "45 MPH",
+    background_tip: "Understanding Colorado's licensing process ensures you meet all requirements and avoid delays.",
+    questions: [
+      {
+        id: "Q_COL_01",
+        prompt: "What is the first step in obtaining a Colorado driver's license?",
+        prompt_es: "¿Cuál es el primer paso para obtener una licencia de conducir de Colorado?",
+        a: "Take the written test at the DMV.",
+        a_es: "Realizar la prueba escrita en el DMV.",
+        b: "Apply for a permit and pass the knowledge test.",
+        b_es: "Solicitar un permiso y aprobar la prueba de conocimiento.",
+        c: "Complete a driver's education course.",
+        c_es: "Completar un curso de educación para conductores.",
+        d: "Schedule your road test.",
+        d_es: "Programar tu prueba de manejo.",
+        correct_answer: "b",
+        correct_side_note: "10 POINTS: Correct! The permit is the first official step, which requires passing the knowledge test.",
+        correct_side_note_es: "10 PUNTOS: ¡Correcto! El permiso es el primer paso oficial, que requiere aprobar la prueba de conocimiento.",
+        semi_correct_side_note: "5 POINTS: Close, but the permit comes before the full license test.",
+        semi_correct_side_note_es: "5 PUNTOS: Cerca, pero el permiso viene antes de la prueba de licencia completa.",
+        extended_reading: {
+          title: "The Colorado Licensing Journey",
+          context_type: "Step-by-Step Process",
+          summary: "Colorado's licensing process starts with getting a learner's permit by passing the knowledge test. Once you have your permit, you can practice driving with a licensed adult. After meeting practice requirements, you can schedule your road test. Finally, once you pass the road test, you receive your full driver's license."
+        }
+      },
+      {
+        id: "Q_COL_02",
+        prompt: "How long must you hold a learner's permit before taking the road test in Colorado?",
+        prompt_es: "¿Cuánto tiempo debes mantener un permiso de aprendiz antes de hacer la prueba de manejo en Colorado?",
+        a: "1 week",
+        a_es: "1 semana",
+        b: "1 month",
+        b_es: "1 mes",
+        c: "6 months",
+        c_es: "6 meses",
+        d: "12 months",
+        d_es: "12 meses",
+        correct_answer: "c",
+        correct_side_note: "10 POINTS: Correct! Colorado requires a minimum of 6 months with a learner's permit.",
+        correct_side_note_es: "10 PUNTOS: ¡Correcto! Colorado requiere un mínimo de 6 meses con un permiso de aprendiz.",
+        semi_correct_side_note: "5 POINTS: Good effort, but Colorado has a longer waiting period.",
+        semi_correct_side_note_es: "5 PUNTOS: Buen esfuerzo, pero Colorado tiene un período de espera más largo.",
+        extended_reading: {
+          title: "The Waiting Period: Building Experience",
+          context_type: "Colorado Licensing Requirements",
+          summary: "The 6-month waiting period with a learner's permit is designed to give you time to practice and build driving experience. During this time, you must log supervised driving hours and demonstrate responsible behavior before you're ready for the road test."
+        }
+      }
+    ]
+  }
+
 ];
