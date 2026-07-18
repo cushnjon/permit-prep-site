@@ -186,25 +186,32 @@ export default function Home() {
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
             <h1 className="text-2xl font-bold text-primary">Permit Prep</h1>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="/gallery" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <a href="/gallery" className="text-xs sm:text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
-              Gallery <span className="italic text-yellow-500">/ Galería</span>
+              <span className="hidden sm:inline">Gallery <span className="italic text-yellow-500">/ Galería</span></span>
+              <span className="sm:hidden">Gallery</span>
             </a>
-            <a href="/traffic-snap" className="text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
+            <div className="h-5 w-px bg-border" />
+            <a href="/traffic-snap" className="text-xs sm:text-sm font-medium text-accent hover:text-primary transition-colors flex items-center gap-1">
               <TrafficIcon className="h-4 w-4" />
-              Traffic Snap <span className="italic text-yellow-500">/ Tráfico Snap</span>
+              <span className="hidden sm:inline">Traffic Snap <span className="italic text-yellow-500">/ Tráfico Snap</span></span>
+              <span className="sm:hidden">Traffic</span>
             </a>
+            <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="h-5 w-5 text-accent" />
-              <span className="font-mono text-lg">{formatTime(gameState.timeLeft)}</span>
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+              <span className="font-mono text-xs sm:text-lg">{formatTime(gameState.timeLeft)}</span>
             </div>
+            <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-accent" />
-              <span className="font-bold text-lg text-primary">{gameState.score}</span>
+              <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+              <span className="font-bold text-xs sm:text-lg text-primary">{gameState.score}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
+            <div className="h-5 w-px bg-border" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <span className="hidden sm:inline">Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
+              <span className="sm:hidden">Progress: {getTotalProgress()}%</span>
             </div>
           </div>
         </div>
