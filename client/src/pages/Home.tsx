@@ -196,7 +196,21 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
 
-
+            <motion.a
+              href="/traffic-snap"
+              className="relative flex items-center justify-center transition-all duration-300 group"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              title="Traffic Snap / Tráfico Snap"
+            >
+              <svg viewBox="0 0 120 140" className="w-12 h-14 drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="100" height="110" fill="white" stroke="black" strokeWidth="3" rx="6"/>
+                <rect x="15" y="15" width="90" height="100" fill="none" stroke="#CC0000" strokeWidth="2" rx="4"/>
+                <text x="60" y="65" fontSize="48" fontWeight="900" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">55</text>
+                <text x="60" y="105" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">SPEED</text>
+                <text x="60" y="120" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">LIMIT</text>
+              </svg>
+            </motion.a>
             <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
@@ -230,45 +244,42 @@ export default function Home() {
       {/* Main Content */}
       <main className="container py-8">
         <div className="space-y-4">
-          {/* Render all zones */}
-          {gameData.map((zone, zoneIndex) => (
-            <GameSection
-              key={zoneIndex}
-              title={zone.zone}
-              logo={GAME_LOGOS.permitPrepLogo}
-              speedTier={zone.speed_tier}
-              isExpanded={gameState.expandedSection === zoneIndex}
-              onToggle={() => toggleSection(zoneIndex)}
-              onRandomQuestion={handleRandomQuestion}
-              progress={getZoneProgress(zoneIndex)}
-            >
-              {gameState.expandedSection === zoneIndex && (
-                <TextDriveGame
-                  zone={zone}
-                  question={gameState.currentZoneIndex === zoneIndex ? currentQuestion : zone.questions[0]}
-                  selectedAnswer={gameState.currentZoneIndex === zoneIndex ? gameState.selectedAnswer : null}
-                  showArticle={gameState.currentZoneIndex === zoneIndex ? gameState.showArticle : false}
-                  sideNote={gameState.currentZoneIndex === zoneIndex ? getSideNote() : null}
-                  answersCollapsed={gameState.currentZoneIndex === zoneIndex ? gameState.answersCollapsed : false}
-                  showGlossary={gameState.currentZoneIndex === zoneIndex ? gameState.showGlossary : false}
-                  onAnswerClick={handleAnswerClick}
-                  onNextQuestion={handleNextQuestion}
-                  onToggleAnswers={toggleAnswersExpanded}
-                  onRandomQuestion={handleRandomQuestion}
-                  onToggleGlossary={handleToggleGlossary}
-                  onNavigateToQuestion={handleNavigateToQuestion}
-                />
-              )}
-            </GameSection>
-          ))}
+          {/* Text Drive Section */}
+          <GameSection
+            title="Text Drive: Read & Answer / Lectura de Texto: Lee y Responde"
+            logo={GAME_LOGOS.permitPrepLogo}
+            speedTier="15 MPH"
+            isExpanded={gameState.expandedSection === 0}
+            onToggle={() => toggleSection(0)}
+            onRandomQuestion={handleRandomQuestion}
+            progress={getZoneProgress(0)}
+          >
+            {gameState.expandedSection === 0 && (
+              <TextDriveGame
+                zone={currentZone}
+                question={currentQuestion}
+                selectedAnswer={gameState.selectedAnswer}
+                showArticle={gameState.showArticle}
+                sideNote={getSideNote()}
+                answersCollapsed={gameState.answersCollapsed}
+                showGlossary={gameState.showGlossary}
+                onAnswerClick={handleAnswerClick}
+                onNextQuestion={handleNextQuestion}
+                onToggleAnswers={toggleAnswersExpanded}
+                onRandomQuestion={handleRandomQuestion}
+                onToggleGlossary={handleToggleGlossary}
+                onNavigateToQuestion={handleNavigateToQuestion}
+              />
+            )}
+          </GameSection>
 
           {/* Traffic Snap Section */}
           <GameSection
             title="Traffic Snap: Sign & Shape / Tráfico Snap: Signo y Forma"
             logo={GAME_LOGOS.permitPrepLogo}
             speedTier="25 MPH"
-            isExpanded={gameState.expandedSection === gameData.length}
-            onToggle={() => toggleSection(gameData.length)}
+            isExpanded={gameState.expandedSection === 1}
+            onToggle={() => toggleSection(1)}
             progress={0}
           >
             {gameState.expandedSection === 1 && (
