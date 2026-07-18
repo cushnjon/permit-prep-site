@@ -196,21 +196,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
 
-            <motion.a
-              href="/traffic-snap"
-              className="relative flex items-center justify-center transition-all duration-300 group"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              title="Traffic Snap / Tráfico Snap"
-            >
-              <svg viewBox="0 0 120 140" className="w-12 h-14 drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
-                <rect x="10" y="10" width="100" height="110" fill="white" stroke="black" strokeWidth="3" rx="6"/>
-                <rect x="15" y="15" width="90" height="100" fill="none" stroke="#CC0000" strokeWidth="2" rx="4"/>
-                <text x="60" y="65" fontSize="48" fontWeight="900" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">55</text>
-                <text x="60" y="105" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">SPEED</text>
-                <text x="60" y="120" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">LIMIT</text>
-              </svg>
-            </motion.a>
+
             <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
