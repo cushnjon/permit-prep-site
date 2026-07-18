@@ -33,7 +33,7 @@ export interface Zone {
 
 export const gameData: Zone[] = [
   {
-    zone: "Zone 1: The DMV Parking Lot",
+    zone: "Zone 1: The DMV Parking Lot / Zona 1: El Estacionamiento del DMV",
     speed_tier: "15 MPH",
     background_tip: "Licensing protocols require strict documentation, identity verification, and eye exams before hitting the road.",
     questions: [
@@ -74,7 +74,7 @@ export const gameData: Zone[] = [
     ]
   },
   {
-    zone: "Zone 2: Suburban Streets",
+    zone: "Zone 2: Suburban Streets / Zona 2: Calles Suburbanas",
     speed_tier: "25 MPH",
     background_tip: "At intersections, never assume priority. Right-of-way can only be granted by others, never claimed manually.",
     questions: [
@@ -201,7 +201,7 @@ export const gameData: Zone[] = [
     ]
   },
   {
-    zone: "Zone 3: The Open Highway",
+    zone: "Zone 3: The Open Highway / Zona 3: La Carretera Abierta",
     speed_tier: "45 MPH",
     background_tip: "Speed signs show maximums under perfect conditions. Wet, slick, or crowded roads demand immediate speed reduction.",
     questions: [
