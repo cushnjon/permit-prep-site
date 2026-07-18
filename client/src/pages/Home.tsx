@@ -457,7 +457,19 @@ function TextDriveGame({
         {/* Zone Strip Header with Controls */}
         <div className="w-full bg-gradient-to-r from-primary to-accent/80 text-primary-foreground p-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wide">{zone.zone}</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide">
+              {(() => {
+                const parts = zone.zone.split(' / ');
+                if (parts.length === 2) {
+                  return (
+                    <>
+                      {parts[0]} <span className="italic text-yellow-300">/ {parts[1]}</span>
+                    </>
+                  );
+                }
+                return zone.zone;
+              })()}
+            </h3>
             <div className="flex items-center gap-2">
               <motion.button
                 onClick={onRandomQuestion}
