@@ -192,13 +192,13 @@ export default function Home() {
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold text-primary" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Permit Prep</h1>
+            <h1 className="text-xl font-bold text-primary">Permit Prep</h1>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
 
             <motion.button
               onClick={() => setGameState(prev => ({ ...prev, showGlossary: !prev.showGlossary }))}
-              className="px-3 py-2 rounded-lg text-sm font-semibold text-accent hover:bg-accent/10 transition-colors"
+              className="pl-6 px-3 py-2 rounded-lg text-sm font-semibold text-accent hover:bg-accent/10 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Zone Glossary"
