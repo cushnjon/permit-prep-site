@@ -326,6 +326,14 @@ export default function TrafficSnap() {
             >
               🌫 Blur & Zoom
             </button>
+            <motion.button
+              onClick={() => setShowSpanish(!showSpanish)}
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-yellow-100 hover:bg-yellow-200 text-yellow-900"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showSpanish ? "English" : "Español"}
+            </motion.button>
           </div>
         </div>
       </div>

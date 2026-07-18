@@ -46,8 +46,18 @@ export default function ImageGallery() {
             <ChevronLeft size={20} />
             Back to Quiz
           </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">DMV Learning Gallery</h1>
-          <p className="text-gray-600">Browse all {galleryImages.length} illustrations from the Permit Prep quiz</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">DMV Learning Gallery</h1>
+              <p className="text-gray-600">Browse all {galleryImages.length} illustrations from the Permit Prep quiz</p>
+            </div>
+            <button
+              onClick={() => setShowSpanish(!showSpanish)}
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-yellow-100 hover:bg-yellow-200 text-yellow-900"
+            >
+              {showSpanish ? "English" : "Espanol"}
+            </button>
+          </div>
         </div>
 
         {/* Gallery Grid */}
