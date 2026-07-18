@@ -204,7 +204,14 @@ export default function Home() {
               title="Traffic Snap / Tráfico Snap"
             >
               <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <TrafficIcon className="h-6 w-6 relative z-10" />
+              <div className="relative z-10 w-8 h-8 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="10" y="10" width="80" height="80" fill="white" stroke="black" strokeWidth="2" rx="4"/>
+                  <text x="50" y="45" fontSize="28" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">55</text>
+                  <text x="50" y="75" fontSize="12" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">SPEED</text>
+                  <text x="50" y="88" fontSize="12" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">LIMIT</text>
+                </svg>
+              </div>
             </motion.a>
             <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
