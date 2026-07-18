@@ -198,20 +198,18 @@ export default function Home() {
 
             <motion.a
               href="/traffic-snap"
-              className="relative w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden"
+              className="relative flex items-center justify-center transition-all duration-300 group"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               title="Traffic Snap / Tráfico Snap"
             >
-              <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 w-8 h-8 flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="10" y="10" width="80" height="80" fill="white" stroke="black" strokeWidth="2" rx="4"/>
-                  <text x="50" y="45" fontSize="28" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">55</text>
-                  <text x="50" y="75" fontSize="12" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">SPEED</text>
-                  <text x="50" y="88" fontSize="12" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial">LIMIT</text>
-                </svg>
-              </div>
+              <svg viewBox="0 0 120 140" className="w-12 h-14 drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="100" height="110" fill="white" stroke="black" strokeWidth="3" rx="6"/>
+                <rect x="15" y="15" width="90" height="100" fill="none" stroke="#CC0000" strokeWidth="2" rx="4"/>
+                <text x="60" y="65" fontSize="48" fontWeight="900" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">55</text>
+                <text x="60" y="105" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">SPEED</text>
+                <text x="60" y="120" fontSize="11" fontWeight="bold" textAnchor="middle" fill="black" fontFamily="Arial, sans-serif">LIMIT</text>
+              </svg>
             </motion.a>
             <div className="h-5 w-px bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
