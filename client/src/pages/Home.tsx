@@ -564,7 +564,15 @@ function TextDriveGame({
                         className="w-full text-left p-2 rounded-lg border border-accent/20 hover:bg-accent/10 hover:border-accent/50 transition-all"
                       >
                         <p className="text-xs font-semibold text-accent mb-1">Q{qIdx + 1}</p>
-                        <p className="text-xs text-foreground line-clamp-2">{showSpanishGlossary && q.prompt_es ? q.prompt_es : q.prompt}</p>
+                        <p className="text-xs text-foreground line-clamp-2">
+                          {q.prompt}
+                          {q.prompt_es && (
+                            <>
+                              {" "}
+                              <span className="italic text-yellow-500">/ {q.prompt_es}</span>
+                            </>
+                          )}
+                        </p>
                       </motion.button>
                     ))}
                   </div>
