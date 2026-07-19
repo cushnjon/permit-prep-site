@@ -565,11 +565,25 @@ function TextDriveGame({
                       >
                         <p className="text-xs font-semibold text-accent mb-1">Q{qIdx + 1}</p>
                         <p className="text-xs text-foreground line-clamp-2">
-                          {q.prompt}
-                          {q.prompt_es && (
+                          {showSpanishGlossary && q.prompt_es ? (
                             <>
-                              {" "}
-                              <span className="italic text-yellow-500">/ {q.prompt_es}</span>
+                              {q.prompt_es}
+                              {q.prompt && (
+                                <>
+                                  {" "}
+                                  <span className="italic text-yellow-500">/ {q.prompt}</span>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {q.prompt}
+                              {q.prompt_es && (
+                                <>
+                                  {" "}
+                                  <span className="italic text-yellow-500">/ {q.prompt_es}</span>
+                                </>
+                              )}
                             </>
                           )}
                         </p>
