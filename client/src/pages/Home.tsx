@@ -454,6 +454,7 @@ function TextDriveGame({
 }: TextDriveGameProps) {
   const [showSpanish, setShowSpanish] = React.useState(false);
   const [showSpanishGlossary, setShowSpanishGlossary] = React.useState(false);
+  const [expandedZones, setExpandedZones] = React.useState<Set<number>>(new Set([0])); // Auto-expand first zone
 
   const answers = [
     { key: "a" as const, text: showSpanish && question.a_es ? question.a_es : question.a },
@@ -548,7 +549,22 @@ function TextDriveGame({
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {gameData.map((z, zoneIdx) => (
                 <div key={z.zone} className="border-b border-accent/20 pb-3 last:border-b-0">
-                  <h4 className="text-sm font-bold text-accent mb-2">{z.zone}</h4>
+                  <motion.button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedZones);
+                      if (newExpanded.has(zoneIdx)) {
+                        newExpanded.delete(zoneIdx);
+                      } else {
+                        newExpanded.add(zoneIdx);
+                      }
+                      setExpandedZones(newExpanded);
+                    }}
+                    className="w-full text-left flex items-center gap-2 mb-2 hover:opacity-80 transition-opacity"
+                  >
+                    <span className="text-sm font-bold text-accent">{expandedZones.has(zoneIdx) ? "▼" : "▶"}</span>
+                    <h4 className="text-sm font-bold text-accent">{z.zone}</h4>
+                  </motion.button>
+                  {expandedZones.has(zoneIdx) && (
                   <div className="space-y-2 pl-2">
                     {z.questions.map((q, qIdx) => (
                       <motion.button
@@ -590,6 +606,7 @@ function TextDriveGame({
                       </motion.button>
                     ))}
                   </div>
+                  )}
                 </div>
               ))}
             </div>
