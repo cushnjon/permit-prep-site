@@ -175,6 +175,15 @@ export default function Home() {
     return Math.round((answeredCount / totalQuestions) * 100);
   };
 
+  const getFirstFourZonesProgress = () => {
+    const firstFourZones = gameData.slice(0, 4);
+    const totalQuestions = firstFourZones.reduce((sum, zone) => sum + zone.questions.length, 0);
+    const answeredCount = firstFourZones.reduce((sum, zone) => {
+      return sum + zone.questions.filter(q => gameState.answeredQuestions[q.id]).length;
+    }, 0);
+    return answeredCount === totalQuestions;
+  };
+
   const getSideNote = () => {
     if (!gameState.selectedAnswer) return null;
     const isCorrect = gameState.selectedAnswer === currentQuestion.correct_answer;
@@ -307,21 +316,23 @@ export default function Home() {
             )}
           </GameSection>
 
-          {/* Completion Window - Separates First 4 Modules from Advanced Zones */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-8 text-center shadow-lg"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-3">🎉 Congratulations! / ¡Felicidades!</h2>
-            <p className="text-blue-700 text-lg mb-4">You've completed the foundational modules! <span className="italic">/ ¡Has completado los módulos fundamentales!</span></p>
-            <p className="text-blue-600 mb-6">You're ready to advance to specialized driving scenarios. <span className="italic">/ Estás listo para avanzar a escenarios de conducción especializados.</span></p>
-            <div className="border-t-2 border-blue-300 pt-4">
-              <p className="text-blue-700 font-semibold text-sm">The following modules cover advanced topics:</p>
-              <p className="text-blue-600 text-sm italic">Los siguientes módulos cubren temas avanzados:</p>
-            </div>
-          </motion.div>
+          {/* Completion Window - Only shows after first 4 zones are completed */}
+          {getFirstFourZonesProgress() && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-8 text-center shadow-lg"
+            >
+              <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-3">🎉 Congratulations! / ¡Felicidades!</h2>
+              <p className="text-blue-700 text-lg mb-4">You've completed the foundational modules! <span className="italic">/ ¡Has completado los módulos fundamentales!</span></p>
+              <p className="text-blue-600 mb-6">You're ready to advance to specialized driving scenarios. <span className="italic">/ Estás listo para avanzar a escenarios de conducción especializados.</span></p>
+              <div className="border-t-2 border-blue-300 pt-4">
+                <p className="text-blue-700 font-semibold text-sm">The following modules cover advanced topics:</p>
+                <p className="text-blue-600 text-sm italic">Los siguientes módulos cubren temas avanzados:</p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Pac-Man Game Section - HIDDEN FOR NOW - Will be replaced with Crossword Module */}
 
