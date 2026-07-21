@@ -1,7 +1,8 @@
 export interface GlossaryItem {
   term: string;
+  term_es?: string;
   quick_tip: string;
-  correct_answer: string;
+  quick_tip_es?: string;
 }
 
 export interface Question {
@@ -41,6 +42,9 @@ export interface Zone {
   questions: Question[];
 }
 
+import { defensiveDrivingZone } from "./defensive_driving_zone_data";
+import { maintenancePreTakeoffZone } from "./maintenance_pre_takeoff_zone_data";
+
 export const gameData: Zone[] = [
   {
     zone: "Zone 1: The DMV Parking Lot / Zona 1: El Estacionamiento del DMV",
@@ -59,8 +63,8 @@ export const gameData: Zone[] = [
         c_es: "Declararte automáticamente culpable de violaciones menores de equipos mecánicos.",
         d: "To always cooperate with traffic officers and show your physical license upon request.",
         d_es: "Cooperar siempre con los oficiales de tránsito y mostrar tu licencia física cuando se solicite.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-parking-lot-scenario-jsXYpueVp28cADofk5GMV7.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-licensing-VGXns5uYfuHPs467kwrL6R.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Spot on. Implied Consent explicitly ties your signature on your license to an advance agreement to submit to chemical screenings if lawfully requested by an officer. Refusal triggers independent, immediate administrative penalties.",
         correct_side_note_es: "10 PUNTOS: Exacto. El Consentimiento Implícito vincula explícitamente tu firma en tu licencia a un acuerdo previo de someterte a pruebas químicas si lo solicita legalmente un oficial. La negativa desencadena sanciones administrativas inmediatas e independientes.",
         semi_correct_side_note: "5 POINTS: Close, but incomplete. While showing your physical license and cooperating are standard legal obligations of an operator, they do not satisfy the specific statutory mandate of the 'Implied Consent' chemical testing clause.",
@@ -74,17 +78,17 @@ export const gameData: Zone[] = [
           {
             term: "Implied Consent",
             quick_tip: "A legal agreement you make by signing your license that you'll take chemical tests if asked by an officer.",
-            correct_answer: "To take a breath, blood, or urine test if an officer suspects a chemical DUI."
+
           },
           {
             term: "Chemical DUI",
             quick_tip: "Driving under the influence of alcohol or drugs, detected through breath, blood, or urine tests.",
-            correct_answer: "Refusal to submit to chemical testing can result in immediate administrative penalties."
+
           },
           {
             term: "License Application",
             quick_tip: "The official document you sign to get permission to drive, which includes legal agreements.",
-            correct_answer: "Your signature on the license application means you agree to the Implied Consent Law."
+
           }
         ]
       }
@@ -107,8 +111,8 @@ export const gameData: Zone[] = [
         c_es: "Nunca puedes legalmente tomarlo; solo puedes cederlo a otros.",
         d: "It belongs strictly to whichever vehicle is larger or heavier.",
         d_es: "Pertenece estrictamente al vehículo que es más grande o pesado.",
-        correct_answer: "c",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/parking-garage-safety-7A8sdCkinzXpjwaK5fhZQp.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q2-yield-right-of-way-Yfz6BX8rfRmkWEHqfut7fV.webp"],
+        correct_answer: "c" as const,
         correct_side_note: "10 POINTS: Perfectly answered. The vehicle code is written entirely around who must *yield* the right-of-way. The law never gives you the right to forcefully claim a patch of asphalt.",
         semi_correct_side_note: "5 POINTS: Incorrect application of physical realities. While a larger commercial truck can cause massive physical damage due to momentum laws, it does not possess a legal right-of-way exemption in suburban zoning blocks.",
         extended_reading: {
@@ -120,7 +124,7 @@ export const gameData: Zone[] = [
           {
             term: "Right-of-Way",
             quick_tip: "The legal permission to proceed through an intersection or road before other vehicles.",
-            correct_answer: "You can only yield right-of-way to others; you cannot claim it yourself."
+
           }
         ]
       },
@@ -136,8 +140,8 @@ export const gameData: Zone[] = [
         c_es: "Cuando el tráfico opuesto está claro y tu luz es verde.",
         d: "Slow down or stop completely to let cross traffic or pedestrians pass first.",
         d_es: "Nunca es legal girar a la izquierda en una intersección controlada.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q3-controlled-intersection-DqoogBzVp9BexpBwUEZh47.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Exactly right. A yield sign requires you to defer your path to others. If cross-traffic is present, that slow down must turn into a full, legal stop.",
         semi_correct_side_note: "5 POINTS: Dangerous practice. Reducing your speed slightly (coasting) without scanning the oncoming corridors or pedestrian lines fails the basic standard of a proactive yield check.",
         extended_reading: {
@@ -149,7 +153,7 @@ export const gameData: Zone[] = [
           {
             term: "Yield Sign",
             quick_tip: "A red and white triangular sign that requires you to slow down or stop to let other traffic pass first.",
-            correct_answer: "You must slow down or stop completely to let cross traffic or pedestrians pass first."
+
           }
         ]
       },
@@ -165,8 +169,8 @@ export const gameData: Zone[] = [
         c_es: "El vehículo que viaja recto tiene derecho de paso sobre los que giran.",
         d: "It is regulated actively by traffic lights, stop signs, or yield signs.",
         d_es: "El vehículo en tu lado derecho tiene derecho de paso.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q4-uncontrolled-intersection-GzCCtfNra3zEqCJ7ESXi2k.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Excellent. Control requires active, regulatory traffic devices (lights, signage) that legally dictate vehicle cadence and movement sequences.",
         semi_correct_side_note: "5 POINTS: Too broad. While city and business districts contain a high concentration of controlled junctions, simply being inside municipal limits does not automatically make an un-signaled street corner 'controlled'.",
         extended_reading: {
@@ -178,7 +182,7 @@ export const gameData: Zone[] = [
           {
             term: "Controlled Intersection",
             quick_tip: "An intersection regulated by traffic lights, stop signs, or yield signs that control vehicle movement.",
-            correct_answer: "It is regulated actively by traffic lights, stop signs, or yield signs."
+
           }
         ]
       },
@@ -194,8 +198,8 @@ export const gameData: Zone[] = [
         c_es: "El vehículo que señala su intención primero puede proceder.",
         d: "The vehicle arriving on your right has the legal right-of-way.",
         d_es: "El vehículo que llega a tu derecha tiene derecho de paso legal.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/left-turn-safety-2cxnQLeLzBrsc3iHcUW4Uc.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q5-blind-spot-9jnn848pexZCtZv5dEWCGo.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Correct. The 'rule of the right' dictates that when two vehicles meet simultaneously at an unmarked grid, you must yield to the driver on your right side.",
         semi_correct_side_note: "5 POINTS: Incorrect. Turning on an electronic indicator lamp merely shows intent; it never grants you legal priority over a vehicle positioned to your right at a dead stop.",
         extended_reading: {
@@ -207,7 +211,7 @@ export const gameData: Zone[] = [
           {
             term: "Rule of the Right",
             quick_tip: "At an uncontrolled intersection, the vehicle on your right has the right-of-way when arriving simultaneously.",
-            correct_answer: "The vehicle arriving on your right has the legal right-of-way."
+
           }
         ]
       },
@@ -223,8 +227,8 @@ export const gameData: Zone[] = [
         c_es: "Revisa tus espejos laterales dos veces antes de señalizar y moverte.",
         d: "Physically turn your head and look directly over your shoulder.",
         d_es: "Gira físicamente tu cabeza y mira directamente sobre tu hombro.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/lane-change-safety-c6YBDfUZPwjRskLGrhxVir.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q6-basic-speed-law-MKwxMn7me3djNtQLXhy9Hg.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Perfect. Convex and flat side-view mirrors cannot capture the distinct pocket alongside your vehicle's rear quarters. A physical head-turn is non-negotiable.",
         semi_correct_side_note: "5 POINTS: Safe habit, but flawed. Checking mirrors multiple times narrows your field of view down the side, but it still fails to reveal objects hidden parallel to your B-and-C pillars.",
         extended_reading: {
@@ -236,7 +240,6 @@ export const gameData: Zone[] = [
           {
             term: "Blind Spot",
             quick_tip: "Areas around your vehicle that you cannot see in your mirrors and require a physical head-turn to check.",
-            correct_answer: "Physically turn your head and look directly over your shoulder to check blind spots."
           }
         ]
       }
@@ -259,8 +262,8 @@ export const gameData: Zone[] = [
         c_es: "Enciende tus luces de emergencia y continúa conduciendo al límite de velocidad normal.",
         d: "Slow down below the posted limit to match what is safe for current conditions.",
         d_es: "Reduce tu velocidad por debajo del límite de velocidad para que coincida con lo que es seguro para las condiciones actuales.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/weather-hazard-driving-3uHfhAXgzdKuRPMXiuEQW8.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q7-hydroplaning-NKcdUaQyuugJYxh8qUZpPF.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Spot on. The Basic Speed Law dictates that your velocity must always be reasonable and prudent for the environment, regardless of what is printed on the speed sign.",
         semi_correct_side_note: "5 POINTS: Dangerous logic. Running your amber hazards while refusing to drop your speed to match reduced friction coefficients creates an unpredictable moving hazard on high-speed roads.",
         extended_reading: {
@@ -272,7 +275,6 @@ export const gameData: Zone[] = [
           {
             term: "Basic Speed Law",
             quick_tip: "A law requiring you to drive at a safe speed for current road and weather conditions, regardless of posted limits.",
-            correct_answer: "Slow down below the posted limit to match what is safe for current conditions."
           }
         ]
       },
@@ -288,8 +290,8 @@ export const gameData: Zone[] = [
         c_es: "Tus frenos pierden presión parcial, aumentando tu distancia general de frenado.",
         d: "Tires ride on a layer of water, causing a total loss of traction and steering.",
         d_es: "Los neumáticos se deslizan sobre una capa de agua, causando una pérdida total de tracción y dirección.",
-        correct_answer: "d",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q8-left-turn-oncoming-mcZ5rxjezxjZZmD4U7SJf3.webp"],
+        correct_answer: "d" as const,
         correct_side_note: "10 POINTS: Exactly. Hydroplaning occurs when fluid hydrodynamic pressure matches the vertical load of your vehicle, lifting the rubber completely off the pavement onto a water wedge.",
         semi_correct_side_note: "5 POINTS: Misdiagnoses the core failure. Hydroplaning compromises your tires' contact patch, not the hydraulic fluid inside your brake lines. You lose steering control before braking even matters.",
         extended_reading: {
@@ -301,7 +303,6 @@ export const gameData: Zone[] = [
           {
             term: "Hydroplaning",
             quick_tip: "When tires lose contact with the road and float on water, causing loss of steering and braking control.",
-            correct_answer: "Tires ride on a layer of water, causing a total loss of traction and steering."
           }
         ]
       },
@@ -312,8 +313,8 @@ export const gameData: Zone[] = [
         b: "Keep a strict distance of exactly two car lengths for every 10 MPH of speed.",
         c: "Maintain a tight 1-to-2 second gap when driving in ideal weather conditions.",
         d: "Keep a safe distance of at least three full vehicle lengths on the highway.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/night-driving-safety-9mvPXHSv2KH3jVSrkrvbYq.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q9-right-turn-red-light-5u93Qf2aBVWVCQy8LSHFLG.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Correct. Time-based tracking (seconds) scales automatically as your speed increases, ensuring an adequate spatial safety buffer regardless of velocity.",
         semi_correct_side_note: "5 POINTS: Outdated metric. Measuring by arbitrary 'car lengths' is incredibly inaccurate at 45+ MPH because drivers consistently misjudge physical linear distances while moving.",
         extended_reading: {
@@ -325,7 +326,6 @@ export const gameData: Zone[] = [
           {
             term: "Following Distance",
             quick_tip: "The safe space between your vehicle and the one ahead, measured in seconds (typically 3-4 seconds).",
-            correct_answer: "Maintain a minimum buffer of 3-to-4 seconds behind the lead vehicle."
           }
         ]
       },
@@ -336,8 +336,8 @@ export const gameData: Zone[] = [
         b: "They warn you of upcoming road hazards; colored bright yellow and diamond-shaped.",
         c: "They show mileage and exit destinations; colored green, blue, or brown.",
         d: "They provide basic legal speed rules for specific highways and cities.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/parking-lot-safety-TzUFTpZ964yKGpSbVaXfvU.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q10-pedestrian-crosswalk-ZFFehsCtYWzrKm9H78YUzX.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Perfect. Regulatory signs represent actual laws. Disobeying a red, white, or black sign (like a Stop or Speed Limit sign) is an immediate moving violation.",
         semi_correct_side_note: "5 POINTS: Too limited. While speed limit panels are a prominent subset of regulatory signage, these markers govern everything from turn tracking and lane restrictions to wrong-way mandates.",
         extended_reading: {
@@ -349,7 +349,6 @@ export const gameData: Zone[] = [
           {
             term: "Regulatory Sign",
             quick_tip: "A red, white, and black sign that tells you what you must or must not do by law.",
-            correct_answer: "They mandate what you must or must not do by law; colored red, white, and black."
           }
         ]
       },
@@ -360,8 +359,8 @@ export const gameData: Zone[] = [
         b: "They are configured as vertical rectangles with a solid white background.",
         c: "They are designed as equilateral triangles pointing directly downward.",
         d: "They are bright orange and used exclusively to highlight highway zones.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/school-zone-safety-bmqPuvDfiFthKu76Ynjejk.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q11-emergency-vehicle-UmbPuYsUKzVZJwFhdothn2.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Spot on. Yellow diamonds alert operators to changing physical road conditions, upcoming curves, lane mergers, or environmental hazards ahead.",
         semi_correct_side_note: "5 POINTS: Confuses distinct classes. Orange signs are temporary warning markers explicitly reserved for road construction and maintenance zones, not standard perpetual warnings.",
         extended_reading: {
@@ -373,7 +372,6 @@ export const gameData: Zone[] = [
           {
             term: "Warning Sign",
             quick_tip: "A bright yellow diamond-shaped sign that alerts you to upcoming road hazards or changes.",
-            correct_answer: "They are almost always bright yellow and diamond-shaped."
           }
         ]
       },
@@ -384,8 +382,8 @@ export const gameData: Zone[] = [
         b: "Immediate speed limits, axle weight restrictions, and no-turn mandates.",
         c: "Active road construction warning lines and temporary flagger instructions.",
         d: "Helpful updates about changing lane layouts and upcoming toll bridges.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/construction-zone-safety-Vuz64Noiaehx98WB6hMPE9.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q12-highway-merging-MPt3HJZo96zNQdnaqtSMaT.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Correct. Guide signs are informational pillars—green for routes/miles, blue for services, and brown for public parks or recreation.",
         semi_correct_side_note: "5 POINTS: Incomplete. While toll notices or structural lane layout maps do fall under informational guidance, they represent a minor fragment of the overall destination and tracking matrix.",
         extended_reading: {
@@ -397,7 +395,6 @@ export const gameData: Zone[] = [
           {
             term: "Guide Sign",
             quick_tip: "Green, blue, or brown signs that provide directional routing, mileage, and information about services.",
-            correct_answer: "Directional routing, mileage to destinations, and available motorist services."
           }
         ]
       },
@@ -408,8 +405,8 @@ export const gameData: Zone[] = [
         b: "Marked by solid double yellow lines; reserved exclusively for emergency vehicles.",
         c: "Marked by broken white lines; reserved for high-speed commercial cargo trucks.",
         d: "Marked by a solid white boundary; reserved for buses and motorcycles only.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/right-turn-on-red-bqhgPzY8yHjYjtT3Ww7gQU.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q13-backing-up-safely-WtkpkUEVtFmvP25RCq4wGm.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Perfectly answered. High-Occupancy Vehicle lanes use the white diamond pavement marker to keep high-capacity commuter traffic flowing efficiently.",
         semi_correct_side_note: "5 POINTS: Partially correct depending on local context. Many states allow transit buses and solo motorcycles to utilize HOV diamond lanes for safety, but this completely overlooks the main carpool occupancy rules.",
         extended_reading: {
@@ -421,7 +418,6 @@ export const gameData: Zone[] = [
           {
             term: "HOV Lane",
             quick_tip: "A lane marked with white diamond symbols reserved for vehicles with minimum passenger occupancy.",
-            correct_answer: "Marked by a white diamond symbol; reserved for vehicles meeting minimum passenger limits."
           }
         ]
       }
@@ -439,8 +435,8 @@ export const gameData: Zone[] = [
         b: "0.10% or higher for adults over 21; 0.02% or lower for anyone under 21.",
         c: "0.05% or higher for all drivers regardless of age due to federal mandate.",
         d: "0.08% for adults; any trace amount that visibly impairs driving for minors.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/backing-up-safety-Zh6vDVdj2hPAnwjRdtKUh9.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q14-school-zone-2nvnGGCWKpw8DCQKRPZeuV.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Absolutely. Per statutory law, a 0.08% BAC is the per se legal limit for adult criminal impairment. For minors under 21, Zero Tolerance dictates that any measurable alcohol (0.00% - 0.02% depending on state equipment tolerances) results in immediate legal action.",
         semi_correct_side_note: "5 POINTS: Close, but legally weak. While visible physical impairment is heavily prosecuted, the state does not require a minor to 'look drunk' to charge them; the mere chemical presence of alcohol violates the Zero Tolerance statute.",
         extended_reading: {
@@ -452,7 +448,6 @@ export const gameData: Zone[] = [
           {
             term: "Blood Alcohol Concentration (BAC)",
             quick_tip: "The percentage of alcohol in your bloodstream; 0.08% is the legal limit for drivers over 21.",
-            correct_answer: "0.08% or higher for adults over 21; 0.00% (Zero Tolerance) for anyone under 21."
           }
         ]
       },
@@ -463,8 +458,8 @@ export const gameData: Zone[] = [
         b: "Maintaining your right-of-way strictly to force erratic drivers to yield.",
         c: "Using rapid lane changes to stay clear of large commercial vehicle clusters.",
         d: "Driving significantly below the speed limit to maximize reaction time.",
-        correct_answer: "a",
         images: ["https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/residential-street-safety-JFseykc473HYwk3rKSQmbY.webp", "https://d2xsxph8kpxj0f.cloudfront.net/310519663519249570/mm4tLNaBdqm6gYLeDdgBgS/dmv-q15-parking-lot-safety-fgviySu7tQmPgYuSPku9zk.webp"],
+        correct_answer: "a" as const,
         correct_side_note: "10 POINTS: Outstanding. Defensive driving requires constant scanning, mapping hazard vectors 12-15 seconds ahead, and assuming other drivers will make critical errors.",
         semi_correct_side_note: "5 POINTS: Overly cautious and disruptive. While slowing down increases your buffer, traveling significantly below the normal flow of high-speed highway traffic creates an artificial bottleneck that forces dangerous swerving behind you.",
         extended_reading: {
@@ -476,7 +471,6 @@ export const gameData: Zone[] = [
           {
             term: "Defensive Driving",
             quick_tip: "A driving strategy where you anticipate hazards ahead and make preemptive adjustments to stay safe.",
-            correct_answer: "Actively looking ahead to anticipate hazards and making preemptive adjustments."
           }
         ]
       }
@@ -501,7 +495,7 @@ export const gameData: Zone[] = [
         c_es: "Tocar la bocina frecuentemente para advertir a otros conductores.",
         d: "To use your high beams at all times for better visibility.",
         d_es: "Usar las luces altas en todo momento para mejor visibilidad.",
-        correct_answer: "b",
+        correct_answer: "b" as const,
         correct_side_note: "10 POINTS: Correct! Defensive driving is about anticipating potential hazards and maintaining control to prevent accidents before they happen.",
         correct_side_note_es: "10 PUNTOS: ¡Correcto! La conducción defensiva se trata de anticipar peligros potenciales y mantener el control para prevenir accidentes antes de que ocurran.",
         semi_correct_side_note: "5 POINTS: Partially correct, but defensive driving is more about prevention than reaction.",
@@ -524,7 +518,7 @@ export const gameData: Zone[] = [
         c_es: "Destella tus faros para llamar su atención.",
         d: "Honk your horn continuously.",
         d_es: "Toca la bocina continuamente.",
-        correct_answer: "b",
+        correct_answer: "b" as const,
         correct_side_note: "10 POINTS: Exactly right. Increasing your following distance protects you from unpredictable movements.",
         correct_side_note_es: "10 PUNTOS: Exactamente correcto. Aumentar tu distancia de seguimiento te protege de movimientos impredecibles.",
         semi_correct_side_note: "5 POINTS: Good instinct, but alerting them isn't the safest response.",
@@ -554,7 +548,7 @@ export const gameData: Zone[] = [
         c_es: "Completar un curso de educación para conductores.",
         d: "Schedule your road test.",
         d_es: "Programar tu prueba de manejo.",
-        correct_answer: "b",
+        correct_answer: "b" as const,
         correct_side_note: "10 POINTS: Correct! The permit is the first official step, which requires passing the knowledge test.",
         correct_side_note_es: "10 PUNTOS: ¡Correcto! El permiso es el primer paso oficial, que requiere aprobar la prueba de conocimiento.",
         semi_correct_side_note: "5 POINTS: Close, but the permit comes before the full license test.",
@@ -577,7 +571,7 @@ export const gameData: Zone[] = [
         c_es: "6 meses",
         d: "12 months",
         d_es: "12 meses",
-        correct_answer: "c",
+        correct_answer: "c" as const,
         correct_side_note: "10 POINTS: Correct! Colorado requires a minimum of 6 months with a learner's permit.",
         correct_side_note_es: "10 PUNTOS: ¡Correcto! Colorado requiere un mínimo de 6 meses con un permiso de aprendiz.",
         semi_correct_side_note: "5 POINTS: Good effort, but Colorado has a longer waiting period.",
@@ -589,6 +583,7 @@ export const gameData: Zone[] = [
         }
       }
     ]
-  }
-
+  },
+  defensiveDrivingZone,
+  maintenancePreTakeoffZone,
 ];

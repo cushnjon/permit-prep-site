@@ -778,7 +778,7 @@ function TextDriveGame({
                   >
                     <h4 className="font-bold text-accent mb-2">{item.term}</h4>
                     <p className="text-sm text-muted-foreground mb-3"><span className="font-semibold">Quick Tip / Consejo Rápido:</span> {item.quick_tip}</p>
-                    <p className="text-sm text-foreground border-l-2 border-accent pl-3"><span className="font-semibold text-accent">Correct Answer / Respuesta Correcta:</span> {item.correct_answer}</p>
+
                   </motion.div>
                 ))
               ) : (
