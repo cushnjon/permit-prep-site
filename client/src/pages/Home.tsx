@@ -703,10 +703,10 @@ function TextDriveGame({
                   const isThisAnswerSelected = selectedAnswer === answer.key;
                   
                   const answerColors = [
+                    { bg: "bg-blue-600", border: "border-blue-700", text: "text-white" },
                     { bg: "bg-blue-500", border: "border-blue-600", text: "text-white" },
-                    { bg: "bg-green-500", border: "border-green-600", text: "text-white" },
-                    { bg: "bg-purple-500", border: "border-purple-600", text: "text-white" },
-                    { bg: "bg-orange-500", border: "border-orange-600", text: "text-white" },
+                    { bg: "bg-blue-400", border: "border-blue-500", text: "text-white" },
+                    { bg: "bg-blue-700", border: "border-blue-800", text: "text-white" },
                   ];
                   const answerColor = answerColors[idx];
 
