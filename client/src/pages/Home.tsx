@@ -800,7 +800,7 @@ function TextDriveGame({
             <div className="space-y-3">
               <h3 className="text-lg font-bold text-primary mb-4">Question Glossary / Glosario de Preguntas</h3>
               {question.glossary && question.glossary.length > 0 ? (
-                question.glossary.slice(0, 1).map((item, idx) => (
+                question.glossary.map((item, idx) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 10 }}
