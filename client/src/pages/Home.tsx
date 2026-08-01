@@ -200,10 +200,14 @@ export default function Home() {
       {/* Global Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-white backdrop-blur-sm drop-shadow-soft">
         <div className="container flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            title="Refresh page"
+          >
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
             <h1 className="text-xl font-bold text-primary">Permit Prep</h1>
-          </div>
+          </button>
           <div className="flex items-center gap-4 sm:gap-6">
 
             <motion.button
