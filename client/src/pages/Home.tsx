@@ -39,7 +39,12 @@ export default function Home() {
     timeLeft: 300, // 5 minutes
     selectedAnswer: null,
     showArticle: false,
-    expandedSection: Math.random() < 0.5 ? 0 : 1, // 50% chance to open Text Drive or Traffic Snap
+    expandedSection: (() => {
+      const rand = Math.random();
+      if (rand < 0.4) return 0; // 40% Text Drive
+      if (rand < 0.8) return 1; // 40% Traffic Snap
+      return 2; // 20% Placeholder Module
+    })(),
     answersCollapsed: false,
     showGlossary: false,
     answeredQuestions: {},
@@ -315,6 +320,32 @@ export default function Home() {
                       View All Signs <span className="italic text-yellow-500">/ Ver Todas las Señales</span>
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+          </GameSection>
+
+          {/* Placeholder Module - Third Module */}
+          <GameSection
+            title="Coming Soon / Próximamente"
+            logo={GAME_LOGOS.permitPrepLogo}
+            speedTier="TBD"
+            isExpanded={gameState.expandedSection === 2}
+            onToggle={() => toggleSection(2)}
+            progress={0}
+          >
+            {gameState.expandedSection === 2 && (
+              <div className="space-y-6 text-center">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 border-2 border-purple-200">
+                  <h3 className="text-2xl font-bold text-purple-600 mb-3">🚀 New Module Coming Soon / Próximamente</h3>
+                  <p className="text-purple-700 mb-4">We are working on an exciting new learning module to help you master advanced driving scenarios.</p>
+                  <p className="text-purple-600 italic mb-6">Estamos trabajando en un nuevo módulo de aprendizaje emocionante para ayudarte a dominar escenarios de conducción avanzados.</p>
+                  <button
+                    disabled
+                    className="px-6 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed opacity-60"
+                  >
+                    Coming Soon / Próximamente
+                  </button>
                 </div>
               </div>
             )}
