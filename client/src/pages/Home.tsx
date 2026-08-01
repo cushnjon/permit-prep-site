@@ -213,29 +213,25 @@ export default function Home() {
             <img src={GAME_LOGOS.permitPrepLogo} alt="Permit Prep" className="h-10 w-10" />
             <h1 className="text-xl font-bold text-primary">Permit Prep</h1>
           </button>
-          <div className="flex items-center gap-4 sm:gap-6">
-
+          <div className="flex items-center gap-3 sm:gap-4">
             <motion.button
               onClick={() => setGameState(prev => ({ ...prev, showGlossary: !prev.showGlossary }))}
-              className="ml-6 px-3 py-2 rounded-lg text-sm font-semibold text-accent hover:bg-accent/10 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-2 py-1 rounded text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               title="Zone Glossary"
             >
-              📚 Glossary <span className="italic text-yellow-500">/ Glosario</span>
+              📚 <span className="hidden sm:inline">Glossary</span>
             </motion.button>
-            <div className="h-5 w-px bg-border" />
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-              <span className="font-mono text-xs sm:text-lg">{formatTime(gameState.timeLeft)}</span>
+              <span className="font-mono text-xs sm:text-sm">{formatTime(gameState.timeLeft)}</span>
             </div>
-            <div className="h-5 w-px bg-border" />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-              <span className="font-bold text-xs sm:text-lg text-primary">{gameState.score}</span>
+              <span className="font-bold text-xs sm:text-sm text-primary">{gameState.score}</span>
             </div>
-            <div className="h-5 w-px bg-border" />
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
               <span className="hidden sm:inline">Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
               <span className="sm:hidden">Progress: {getTotalProgress()}%</span>
             </div>
