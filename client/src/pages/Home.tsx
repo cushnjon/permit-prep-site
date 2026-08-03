@@ -61,6 +61,23 @@ export default function Home() {
     answeredQuestions: {},
   });
   const [showSpanish, setShowSpanish] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  const handleStudyGuideClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setIsShaking(true);
+    
+    // Trigger download
+    const link = document.createElement('a');
+    link.href = '/manus-storage/certstudyguide_105a3a3c.pdf';
+    link.download = 'E-100-Study-Guide.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset animation after it completes
+    setTimeout(() => setIsShaking(false), 500);
+  };
 
   // Timer effect
   useEffect(() => {
@@ -238,10 +255,11 @@ export default function Home() {
               📚 <span className="hidden sm:inline">Glossary</span>
             </motion.button>
             <a
-              href="/manus-storage/certstudyguide_105a3a3c.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
+              href="#"
+              onClick={handleStudyGuideClick}
+              className={`text-sm text-blue-600 hover:underline transition-all ${
+                isShaking ? 'shake-wave' : ''
+              }`}
               title="Study Guide"
             >
               Study Guide

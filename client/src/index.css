@@ -332,6 +332,44 @@
     animation: wiggle 5s ease-in-out infinite;
   }
 
+  /* Shake-wave animation for Study Guide button */
+  @keyframes shake-wave {
+    0%, 100% {
+      transform: translateX(0) translateY(0);
+    }
+    10% {
+      transform: translateX(-3px) translateY(-2px);
+    }
+    20% {
+      transform: translateX(3px) translateY(2px);
+    }
+    30% {
+      transform: translateX(-2px) translateY(-3px);
+    }
+    40% {
+      transform: translateX(2px) translateY(3px);
+    }
+    50% {
+      transform: translateX(-1px) translateY(-1px);
+    }
+    60% {
+      transform: translateX(1px) translateY(1px);
+    }
+    70% {
+      transform: translateX(-2px) translateY(2px);
+    }
+    80% {
+      transform: translateX(2px) translateY(-2px);
+    }
+    90% {
+      transform: translateX(-1px) translateY(1px);
+    }
+  }
+
+  .shake-wave {
+    animation: shake-wave 0.5s ease-in-out;
+  }
+
   /* Apply shadows to common elements */
   .card {
     @apply shadow-md shadow-black/8;
