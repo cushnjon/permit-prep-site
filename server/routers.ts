@@ -195,6 +195,58 @@ export const appRouter = router({
         }
       }),
   }),
+
+  // Debug endpoint for testing
+  debug: router({
+    generateTestProgress: publicProcedure
+      .input(
+        z.object({
+          pin: z.string(),
+          correctAnswers: z.number().min(0).max(100),
+          totalQuestions: z.number().refine((n) => n === 50 || n === 100),
+        })
+      )
+      .query(({ input }) => {
+        // Generate test data
+        const selectedAnswers: Record<number, string> = {};
+        for (let i = 0; i < input.correctAnswers; i++) {
+          selectedAnswers[i] = 'a';
+        }
+
+        const selectedQuestions = Array.from({ length: input.totalQuestions }, (_, i) => ({
+          id: `Q_CERT_${i + 1}`,
+          prompt: `Debug Question ${i + 1}`,
+          a: `Option A`,
+          b: `Option B`,
+          c: `Option C`,
+          d: `Option D`,
+          correct_answer: i < input.correctAnswers ? 'a' : 'b',
+        }));
+
+        const testState = {
+          mode: "testing",
+          questionCount: input.totalQuestions,
+          currentQuestionIndex: input.correctAnswers,
+          score: input.correctAnswers,
+          selectedAnswers,
+          userName: "",
+          savePin: input.pin,
+        };
+
+        const progressData = {
+          testState,
+          selectedQuestions,
+          timestamp: new Date().toISOString(),
+        };
+
+        return {
+          success: true,
+          pin: input.pin,
+          data: progressData,
+          instructions: `Open browser DevTools (F12), go to Application > Local Storage, find your domain, and add a new entry with key: test_progress_${input.pin} and value: ${JSON.stringify(progressData)}`,
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

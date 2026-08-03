@@ -9,6 +9,7 @@ import PacManGame from "./PacManGame";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { DonationMenu } from "@/components/DonationMenu";
 import CertificationTest from "./CertificationTest";
+import { DebugTestGenerator } from "@/components/DebugTestGenerator";
 
 
 
@@ -212,6 +213,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <DebugTestGenerator />
       {/* Global Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-white backdrop-blur-sm">
         <div className="container flex items-center justify-between py-4">
