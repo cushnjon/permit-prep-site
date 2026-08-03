@@ -27,10 +27,7 @@ export const appRouter = router({
 
   // Stripe donation subscription
   donation: router({
-    createCheckoutSession: protectedProcedure.mutation(async ({ ctx }) => {
-      if (!ctx.user) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
+    createCheckoutSession: publicProcedure.mutation(async ({ ctx }) => {
 
       try {
         const db = await getDb();
@@ -42,23 +39,37 @@ export const appRouter = router({
         }
 
         // Create or retrieve Stripe customer
-        let stripeCustomerId = ctx.user.stripeCustomerId;
+        let stripeCustomerId: string | undefined;
+        let userId: string | undefined;
 
-        if (!stripeCustomerId) {
+        if (ctx.user) {
+          stripeCustomerId = ctx.user.stripeCustomerId || undefined;
+          userId = ctx.user.id.toString();
+
+          if (!stripeCustomerId) {
+            const customer = await stripe.customers.create({
+              email: ctx.user.email || undefined,
+              name: ctx.user.name || undefined,
+              metadata: {
+                userId: ctx.user.id.toString(),
+              },
+            });
+            stripeCustomerId = customer.id;
+
+            // Save Stripe customer ID to database
+            await db
+              .update(users)
+              .set({ stripeCustomerId })
+              .where(eq(users.id, ctx.user.id));
+          }
+        } else {
+          // For unauthenticated users, create a guest customer
           const customer = await stripe.customers.create({
-            email: ctx.user.email || undefined,
-            name: ctx.user.name || undefined,
             metadata: {
-              userId: ctx.user.id.toString(),
+              userType: "guest",
             },
           });
           stripeCustomerId = customer.id;
-
-          // Save Stripe customer ID to database
-          await db
-            .update(users)
-            .set({ stripeCustomerId })
-            .where(eq(users.id, ctx.user.id));
         }
 
         // Create checkout session
@@ -77,9 +88,9 @@ export const appRouter = router({
           cancel_url: `${origin}/?donation=canceled`,
           allow_promotion_codes: true,
           metadata: {
-            userId: ctx.user.id.toString(),
-            customerEmail: ctx.user.email || "",
-            customerName: ctx.user.name || "",
+            userId: userId || "guest",
+            customerEmail: ctx.user?.email || "",
+            customerName: ctx.user?.name || "",
           },
         });
 
@@ -97,7 +108,7 @@ export const appRouter = router({
 
     getSubscriptionStatus: protectedProcedure.query(async ({ ctx }) => {
       if (!ctx.user) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
+        return { isSubscribed: false, subscription: null };
       }
 
       try {
