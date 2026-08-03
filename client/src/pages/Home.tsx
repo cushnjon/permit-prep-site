@@ -236,7 +236,7 @@ export default function Home() {
               📚 <span className="hidden sm:inline">Glossary</span>
             </motion.button>
             <a
-              href="/home/ubuntu/upload/certstudyguide.pdf"
+              href="/manus-storage/certstudyguide_105a3a3c.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="px-2 py-1 rounded text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
