@@ -1,18 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Download, RotateCcw } from "lucide-react";
+import { ChevronLeft, Download, RotateCcw, Save, Send } from "lucide-react";
 import { certificationQuestions } from "@/data/certificationQuestions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface TestState {
-  mode: "start" | "testing" | "results" | "certificate";
+  mode: "start" | "testing" | "results" | "certificate" | "save-progress";
   questionCount: 50 | 100;
   currentQuestionIndex: number;
   score: number;
   selectedAnswers: Record<number, string>;
   userName: string;
+  savePin: string;
 }
 
 export default function CertificationTest() {
@@ -23,7 +25,12 @@ export default function CertificationTest() {
     score: 0,
     selectedAnswers: {},
     userName: "",
+    savePin: "",
   });
+
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [tempPin, setTempPin] = useState("");
 
   // Randomize and select questions
   const selectedQuestions = useMemo(() => {
@@ -68,32 +75,55 @@ export default function CertificationTest() {
         ...prev,
         currentQuestionIndex: prev.currentQuestionIndex + 1,
       }));
-    } else {
-      // Test complete
-      const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
-      if (finalPercentage >= 70) {
-        setTestState(prev => ({
-          ...prev,
-          mode: "certificate",
-        }));
-      } else {
-        setTestState(prev => ({
-          ...prev,
-          mode: "results",
-        }));
-      }
     }
+  };
+
+  const handleSaveProgress = () => {
+    if (!tempPin || tempPin.length < 4) {
+      toast.error("PIN must be at least 4 digits");
+      return;
+    }
+
+    // Save to localStorage
+    const progressData = {
+      testState,
+      selectedQuestions: selectedQuestions.map(q => q.id),
+      timestamp: new Date().toISOString(),
+    };
+
+    localStorage.setItem(`test_progress_${tempPin}`, JSON.stringify(progressData));
+    toast.success(`Progress saved with PIN: ${tempPin}`);
+    setShowSaveDialog(false);
+    setTempPin("");
+  };
+
+  const handleFinishTest = () => {
+    // Calculate final score
+    const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
+    
+    if (finalPercentage >= 70) {
+      setTestState(prev => ({
+        ...prev,
+        mode: "certificate",
+      }));
+    } else {
+      setTestState(prev => ({
+        ...prev,
+        mode: "results",
+      }));
+    }
+    setShowFinishDialog(false);
   };
 
   const handleGenerateCertificate = () => {
     if (testState.userName.trim()) {
-      // Generate PDF certificate (placeholder for now)
+      const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
       const certificateText = `
 SAFETY CERTIFICATION
 
 This certifies that ${testState.userName}
 has successfully completed the Safety Certification Test
-with a score of ${Math.round((testState.score / selectedQuestions.length) * 100)}%
+with a score of ${finalPercentage}%
 
 Date: ${new Date().toLocaleDateString()}
       `;
@@ -106,6 +136,8 @@ Date: ${new Date().toLocaleDateString()}
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
+      
+      toast.success("Certificate downloaded!");
       
       // Reset to start
       setTestState(prev => ({
@@ -261,16 +293,98 @@ Date: ${new Date().toLocaleDateString()}
           </div>
         </div>
 
-        {/* Next Button */}
-        <div className="flex justify-end">
+        {/* Action Buttons */}
+        <div className="flex gap-3 justify-between flex-wrap">
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowSaveDialog(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" /> Save Progress
+            </Button>
+            <Button
+              onClick={() => setShowFinishDialog(true)}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <Send className="h-4 w-4" /> Finish & Submit
+            </Button>
+          </div>
           <Button
             onClick={handleNextQuestion}
             disabled={selectedAnswer === undefined}
             className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
-            {testState.currentQuestionIndex === selectedQuestions.length - 1 ? "Finish Test" : "Next Question"}
+            {testState.currentQuestionIndex === selectedQuestions.length - 1 ? "Last Question" : "Next Question"}
           </Button>
         </div>
+
+        {/* Save Progress Dialog */}
+        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Save Test Progress</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">Create a PIN to save your progress. You can resume later using this PIN.</p>
+              <Input
+                type="password"
+                placeholder="Enter 4-digit PIN"
+                maxLength={6}
+                value={tempPin}
+                onChange={(e) => setTempPin(e.target.value)}
+                className="text-lg tracking-widest"
+              />
+              <Button
+                onClick={handleSaveProgress}
+                disabled={tempPin.length < 4}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <Save className="mr-2 h-4 w-4" /> Save Progress
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSaveDialog(false);
+                  setTempPin("");
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Finish Test Dialog */}
+        <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Finish & Submit Test</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Are you sure you want to finish and submit your test? You have answered {Object.keys(testState.selectedAnswers).length} of {selectedQuestions.length} questions.
+              </p>
+              <p className="text-sm text-gray-500">
+                Current score: {Math.round((testState.score / (Object.keys(testState.selectedAnswers).length * 100)) * 100) || 0}%
+              </p>
+              <Button
+                onClick={handleFinishTest}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Send className="mr-2 h-4 w-4" /> Submit Test
+              </Button>
+              <Button
+                onClick={() => setShowFinishDialog(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Continue Testing
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     );
   }
