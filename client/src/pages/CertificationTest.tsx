@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 interface TestState {
   mode: "start" | "testing" | "results" | "certificate" | "save-progress";
@@ -33,6 +34,8 @@ export default function CertificationTest() {
   const [showOpenProgressDialog, setShowOpenProgressDialog] = useState(false);
   const [tempPin, setTempPin] = useState("");
 
+  const generateCertMutation = trpc.certificate.generate.useMutation();
+
   // Randomize and select questions
   const selectedQuestions = useMemo(() => {
     const allQuestions = certificationQuestions.questions || [];
@@ -41,32 +44,29 @@ export default function CertificationTest() {
   }, [testState.questionCount]);
 
   const currentQuestion = selectedQuestions[testState.currentQuestionIndex];
-  const percentage = Math.round((testState.score / (testState.currentQuestionIndex * 100)) * 100) || 0;
-  const passedTest = percentage >= 70;
 
-  const handleStartTest = (count: 50 | 100) => {
+  const handleStartTest = (questionCount: 50 | 100) => {
     setTestState(prev => ({
       ...prev,
       mode: "testing",
-      questionCount: count,
+      questionCount,
       currentQuestionIndex: 0,
       score: 0,
       selectedAnswers: {},
     }));
   };
 
-  const handleAnswerClick = (answerIndex: number) => {
-    const answerLetter = String.fromCharCode(97 + answerIndex); // a, b, c, d
-    const isCorrect = answerLetter === currentQuestion.correct_answer;
-    const points = isCorrect ? 100 : 0;
+  const handleSelectAnswer = (answer: string) => {
+    const currentQ = selectedQuestions[testState.currentQuestionIndex];
+    const isCorrect = answer === currentQ.correct_answer;
 
     setTestState(prev => ({
       ...prev,
       selectedAnswers: {
         ...prev.selectedAnswers,
-        [prev.currentQuestionIndex]: answerLetter,
+        [prev.currentQuestionIndex]: answer,
       },
-      score: prev.score + points,
+      score: isCorrect ? prev.score + 1 : prev.score,
     }));
   };
 
@@ -79,16 +79,24 @@ export default function CertificationTest() {
     }
   };
 
+  const handlePreviousQuestion = () => {
+    if (testState.currentQuestionIndex > 0) {
+      setTestState(prev => ({
+        ...prev,
+        currentQuestionIndex: prev.currentQuestionIndex - 1,
+      }));
+    }
+  };
+
   const handleSaveProgress = () => {
     if (!tempPin || tempPin.length < 4) {
       toast.error("PIN must be at least 4 digits");
       return;
     }
 
-    // Save to localStorage
     const progressData = {
       testState,
-      selectedQuestions: selectedQuestions.map(q => q.id),
+      selectedQuestions,
       timestamp: new Date().toISOString(),
     };
 
@@ -99,9 +107,8 @@ export default function CertificationTest() {
   };
 
   const handleFinishTest = () => {
-    // Calculate final score
     const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
-    
+
     if (finalPercentage >= 70) {
       setTestState(prev => ({
         ...prev,
@@ -116,36 +123,47 @@ export default function CertificationTest() {
     setShowFinishDialog(false);
   };
 
-  const handleGenerateCertificate = () => {
-    if (testState.userName.trim()) {
-      const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
-      const certificateText = `
-SAFETY CERTIFICATION
+  const handleGenerateCertificate = async () => {
+    if (!testState.userName.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
 
-This certifies that ${testState.userName}
-has successfully completed the Safety Certification Test
-with a score of ${finalPercentage}%
+    try {
+      toast.loading("Generating certificate...");
+      const result = await generateCertMutation.mutateAsync({
+        questionCount: testState.questionCount,
+        userName: testState.userName,
+        score: testState.score,
+      });
 
-Date: ${new Date().toLocaleDateString()}
-      `;
-      
-      // Download as text for now (can be enhanced with PDF generation)
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(certificateText));
-      element.setAttribute("download", `${testState.userName}_certificate.txt`);
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      
+      // Convert base64 to blob and download
+      const binaryString = atob(result.pdf);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
       toast.success("Certificate downloaded!");
-      
+
       // Reset to start
       setTestState(prev => ({
         ...prev,
         mode: "start",
         userName: "",
       }));
+    } catch (error) {
+      toast.error("Failed to generate certificate");
+      console.error(error);
     }
   };
 
@@ -191,23 +209,23 @@ Date: ${new Date().toLocaleDateString()}
   if (testState.mode === "start") {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto p-6 space-y-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-4xl mx-auto p-6 space-y-8"
       >
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-blue-600">Safety Certification Test</h1>
-          <p className="text-lg text-gray-600">Choose your test length and begin</p>
+          <h1 className="text-5xl font-bold text-blue-600">Safety Certification Test</h1>
+          <p className="text-xl text-gray-600">Choose your test length and begin</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 50 Question Test */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="p-8 border-2 border-blue-300 rounded-lg bg-blue-50 cursor-pointer"
+            className="p-8 border-2 border-blue-400 rounded-lg bg-blue-50 cursor-pointer"
             onClick={() => handleStartTest(50)}
           >
-            <h2 className="text-2xl font-bold text-blue-600 mb-2">50 Questions</h2>
+            <h2 className="text-2xl font-bold text-blue-700 mb-2">50 Questions</h2>
             <p className="text-gray-600 mb-4">~30 minutes</p>
             <p className="text-sm text-gray-500 mb-6">Pass with 70% or higher (35/50 correct)</p>
             <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Test</Button>
@@ -242,188 +260,6 @@ Date: ${new Date().toLocaleDateString()}
             <strong>Study Guide:</strong> Review the study materials before taking the test. You need a score of 70% or higher to pass and receive a certificate.
           </p>
         </div>
-      </motion.div>
-    );
-  }
-
-  // Testing Screen
-  if (testState.mode === "testing" && currentQuestion) {
-    const progress = ((testState.currentQuestionIndex + 1) / selectedQuestions.length) * 100;
-    const selectedAnswer = testState.selectedAnswers[testState.currentQuestionIndex];
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="max-w-3xl mx-auto p-6 space-y-6"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-600">Question {testState.currentQuestionIndex + 1} of {selectedQuestions.length}</h1>
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Progress</p>
-            <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Question */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">{currentQuestion.prompt}</h2>
-
-          {/* Answer Options */}
-          <div className="space-y-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => handleAnswerClick(0)}
-              disabled={selectedAnswer !== undefined}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                selectedAnswer === "a"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300"
-              } ${selectedAnswer !== undefined ? "opacity-70 cursor-not-allowed" : ""}`}
-            >
-              <span className="font-bold text-blue-600 mr-3">A.</span>
-              {currentQuestion.a}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => handleAnswerClick(1)}
-              disabled={selectedAnswer !== undefined}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                selectedAnswer === "b"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300"
-              } ${selectedAnswer !== undefined ? "opacity-70 cursor-not-allowed" : ""}`}
-            >
-              <span className="font-bold text-blue-500 mr-3">B.</span>
-              {currentQuestion.b}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => handleAnswerClick(2)}
-              disabled={selectedAnswer !== undefined}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                selectedAnswer === "c"
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300"
-              } ${selectedAnswer !== undefined ? "opacity-70 cursor-not-allowed" : ""}`}
-            >
-              <span className="font-bold text-blue-400 mr-3">C.</span>
-              {currentQuestion.c}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => handleAnswerClick(3)}
-              disabled={selectedAnswer !== undefined}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                selectedAnswer === "d"
-                  ? "border-blue-300 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300"
-              } ${selectedAnswer !== undefined ? "opacity-70 cursor-not-allowed" : ""}`}
-            >
-              <span className="font-bold text-blue-300 mr-3">D.</span>
-              {currentQuestion.d}
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 justify-between flex-wrap">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setShowSaveDialog(true)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" /> Save Progress
-            </Button>
-            <Button
-              onClick={() => setShowFinishDialog(true)}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4" /> Finish & Submit
-            </Button>
-          </div>
-          <Button
-            onClick={handleNextQuestion}
-            disabled={selectedAnswer === undefined}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-          >
-            {testState.currentQuestionIndex === selectedQuestions.length - 1 ? "Last Question" : "Next Question"}
-          </Button>
-        </div>
-
-        {/* Save Progress Dialog */}
-        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Save Test Progress</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-gray-600">Create a PIN to save your progress. You can resume later using this PIN.</p>
-              <Input
-                type="password"
-                placeholder="Enter 4-digit PIN"
-                maxLength={6}
-                value={tempPin}
-                onChange={(e) => setTempPin(e.target.value)}
-                className="text-lg tracking-widest"
-              />
-              <Button
-                onClick={handleSaveProgress}
-                disabled={tempPin.length < 4}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                <Save className="mr-2 h-4 w-4" /> Save Progress
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowSaveDialog(false);
-                  setTempPin("");
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                Cancel
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Finish Test Dialog */}
-        <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Finish & Submit Test</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-gray-600">
-                Are you sure you want to finish and submit your test? You have answered {Object.keys(testState.selectedAnswers).length} of {selectedQuestions.length} questions.
-              </p>
-              <p className="text-sm text-gray-500">
-                Current score: {Math.round((testState.score / (Object.keys(testState.selectedAnswers).length * 100)) * 100) || 0}%
-              </p>
-              <Button
-                onClick={handleFinishTest}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <Send className="mr-2 h-4 w-4" /> Submit Test
-              </Button>
-              <Button
-                onClick={() => setShowFinishDialog(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Continue Testing
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Open Progress Dialog */}
         <Dialog open={showOpenProgressDialog} onOpenChange={setShowOpenProgressDialog}>
@@ -464,6 +300,145 @@ Date: ${new Date().toLocaleDateString()}
     );
   }
 
+  // Testing Screen
+  if (testState.mode === "testing" && currentQuestion) {
+    const progress = ((testState.currentQuestionIndex + 1) / selectedQuestions.length) * 100;
+    const selectedAnswer = testState.selectedAnswers[testState.currentQuestionIndex];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-3xl mx-auto p-6 space-y-6"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button onClick={handlePreviousQuestion} variant="ghost" disabled={testState.currentQuestionIndex === 0}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Question {testState.currentQuestionIndex + 1} of {selectedQuestions.length}</p>
+            <div className="w-64 h-2 bg-gray-200 rounded-full mt-2">
+              <div
+                className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+          <Button onClick={handleNextQuestion} variant="ghost" disabled={testState.currentQuestionIndex === selectedQuestions.length - 1}>
+            Next <ChevronLeft className="ml-2 h-4 w-4 rotate-180" />
+          </Button>
+        </div>
+
+        {/* Question */}
+        <div className="bg-white p-6 rounded-lg border-2 border-blue-200">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{currentQuestion.prompt}</h2>
+
+          {/* Answer Options */}
+          <div className="space-y-3">
+            {["a", "b", "c", "d"].map((option) => (
+              <button
+                key={option}
+                onClick={() => handleSelectAnswer(option)}
+                className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+                  selectedAnswer === option
+                    ? "border-blue-600 bg-blue-100"
+                    : "border-gray-300 hover:border-blue-400"
+                }`}
+              >
+                <span className="font-semibold text-blue-600 mr-3">{option.toUpperCase()}.</span>
+                {currentQuestion[option as 'a' | 'b' | 'c' | 'd']}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex gap-3 justify-center">
+          <Button
+            onClick={() => setShowSaveDialog(true)}
+            variant="outline"
+            className="flex items-center"
+          >
+            <Save className="mr-2 h-4 w-4" /> Save Progress
+          </Button>
+          <Button
+            onClick={() => setShowFinishDialog(true)}
+            className="bg-green-600 hover:bg-green-700 flex items-center"
+          >
+            <Send className="mr-2 h-4 w-4" /> Finish Test
+          </Button>
+        </div>
+
+        {/* Save Progress Dialog */}
+        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Save Your Progress</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">Create a PIN to save your progress (4+ digits):</p>
+              <Input
+                type="password"
+                placeholder="Enter PIN"
+                value={tempPin}
+                onChange={(e) => setTempPin(e.target.value)}
+                className="text-lg tracking-widest"
+              />
+              <Button
+                onClick={handleSaveProgress}
+                disabled={!tempPin || tempPin.length < 4}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <Save className="mr-2 h-4 w-4" /> Save with PIN
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSaveDialog(false);
+                  setTempPin("");
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Finish Test Dialog */}
+        <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Submit Test</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                You have answered {Object.keys(testState.selectedAnswers).length} of {selectedQuestions.length} questions.
+              </p>
+              <p className="text-lg font-semibold">
+                Current Score: {testState.score} / {selectedQuestions.length}
+              </p>
+              <Button
+                onClick={handleFinishTest}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Send className="mr-2 h-4 w-4" /> Submit Test
+              </Button>
+              <Button
+                onClick={() => setShowFinishDialog(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Continue Testing
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
+    );
+  }
+
   // Results Screen (Failed)
   if (testState.mode === "results") {
     const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
@@ -482,20 +457,20 @@ Date: ${new Date().toLocaleDateString()}
 
         <div className="bg-red-50 p-6 rounded-lg border border-red-200">
           <p className="text-lg font-semibold text-red-700 mb-2">Score Breakdown</p>
-          <p className="text-gray-700">Correct: {testState.score} / {selectedQuestions.length * 100}</p>
+          <p className="text-gray-700">Correct: {testState.score} / {selectedQuestions.length}</p>
         </div>
 
         <Button
           onClick={handleRetakeTest}
           className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg"
         >
-          <RotateCcw className="mr-2" /> Retake Test
+          <RotateCcw className="mr-2 h-5 w-5" /> Retake Test
         </Button>
       </motion.div>
     );
   }
 
-  // Certificate Screen
+  // Certificate Screen (Passed)
   if (testState.mode === "certificate") {
     const finalPercentage = Math.round((testState.score / selectedQuestions.length) * 100);
 
@@ -503,48 +478,40 @@ Date: ${new Date().toLocaleDateString()}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl mx-auto p-6 space-y-8"
+        className="max-w-2xl mx-auto p-6 space-y-8 text-center"
       >
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-green-600">Congratulations!</h1>
-          <p className="text-xl text-gray-700">You passed with {finalPercentage}%</p>
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold text-green-600">🎉 Congratulations!</h1>
+          <p className="text-2xl font-semibold text-gray-700">You Passed!</p>
+          <p className="text-gray-600">Score: {finalPercentage}%</p>
         </div>
 
-        <Dialog open={testState.mode === "certificate"}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Generate Your Certificate</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-gray-600">Enter your name to generate your certificate:</p>
-              <Input
-                placeholder="Your Full Name"
-                value={testState.userName}
-                onChange={(e) =>
-                  setTestState(prev => ({
-                    ...prev,
-                    userName: e.target.value,
-                  }))
-                }
-                className="text-lg"
-              />
-              <Button
-                onClick={handleGenerateCertificate}
-                disabled={!testState.userName.trim()}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <Download className="mr-2" /> Download Certificate
-              </Button>
-              <Button
-                onClick={handleRetakeTest}
-                variant="outline"
-                className="w-full"
-              >
-                Retake Test
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+          <p className="text-lg font-semibold text-green-700 mb-4">Download Your Certificate</p>
+          <p className="text-gray-600 mb-4">Enter your name to generate your certificate:</p>
+          <Input
+            type="text"
+            placeholder="Your Full Name"
+            value={testState.userName}
+            onChange={(e) => setTestState(prev => ({ ...prev, userName: e.target.value }))}
+            className="mb-4"
+          />
+          <Button
+            onClick={handleGenerateCertificate}
+            disabled={!testState.userName.trim() || generateCertMutation.isPending}
+            className="w-full bg-green-600 hover:bg-green-700 py-6 text-lg"
+          >
+            <Download className="mr-2 h-5 w-5" /> Download Certificate
+          </Button>
+        </div>
+
+        <Button
+          onClick={handleRetakeTest}
+          variant="outline"
+          className="w-full py-6 text-lg"
+        >
+          <RotateCcw className="mr-2 h-5 w-5" /> Retake Test
+        </Button>
       </motion.div>
     );
   }

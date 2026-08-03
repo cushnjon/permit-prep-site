@@ -9,6 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { getDb } from "./db";
 import { subscriptions, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { generateCertificatePDF } from "./certificateGenerator";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
@@ -156,6 +157,43 @@ export const appRouter = router({
         });
       }
     }),
+  }),
+
+  // Certificate generation
+  certificate: router({
+    generate: publicProcedure
+      .input(
+        z.object({
+          questionCount: z.number().refine((n) => n === 50 || n === 100),
+          userName: z.string().min(1).max(100),
+          score: z.number().min(0),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const pdfBuffer = await generateCertificatePDF(
+            input.questionCount,
+            input.userName,
+            input.score
+          );
+
+          // Return base64 encoded PDF for download
+          const base64 = pdfBuffer.toString('base64');
+          const filename = `Safety_Certificate_${input.questionCount}Q_${Date.now()}.pdf`;
+
+          return {
+            success: true,
+            pdf: base64,
+            filename,
+          };
+        } catch (error) {
+          console.error("[Certificate] Generation failed:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to generate certificate",
+          });
+        }
+      }),
   }),
 });
 
