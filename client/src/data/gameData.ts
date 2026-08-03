@@ -44,6 +44,7 @@ export interface Zone {
 
 import { defensiveDrivingZone } from "./defensive_driving_zone_data";
 import { maintenancePreTakeoffZone } from "./maintenance_pre_takeoff_zone_data";
+import { certificationQuestions } from "./certificationQuestions";
 
 export const gameData: Zone[] = [
   {
@@ -586,4 +587,5 @@ export const gameData: Zone[] = [
   },
   defensiveDrivingZone,
   maintenancePreTakeoffZone,
+  certificationQuestions,
 ];

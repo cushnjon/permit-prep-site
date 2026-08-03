@@ -1,0 +1,7 @@
+- [ ] Replace the placeholder third module with a certification test module
+- [ ] Add randomized 50-question and 100-question test start flows using the uploaded 100-question bank
+- [ ] Add a study guide link in the header next to the glossary link
+- [ ] Generate a passing certificate PDF after scores of 70% or higher with a name input form
+- [ ] Use the uploaded E-50 and E-100 certificate PDFs as the visual basis for generated certificates
+- [ ] Store test attempts and certificate generation details for the certification module
+- [ ] Verify the certification module flow and certificate generation with tests and screenshots
