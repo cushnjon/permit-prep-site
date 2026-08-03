@@ -30,7 +30,7 @@ export async function generateCertificatePDF(
   const nameWidth = nameFont.widthOfTextAtSize(userName.toUpperCase(), nameSize);
   firstPage.drawText(userName.toUpperCase(), {
     x: width / 2 - nameWidth / 2,  // Center horizontally
-    y: 420,  // Positioned on the blank line below "AWARDED TO"
+    y: 415,  // Positioned on the blank line below "AWARDED TO"
     size: nameSize,
     color: rgb(0, 0, 0),
     font: nameFont,
@@ -39,8 +39,8 @@ export async function generateCertificatePDF(
   // Add the score percentage (where the blank % is)
   // Green zone: positioned inline with "with a score of" text
   firstPage.drawText(percentage.toString(), {
-    x: 540,  // Position after "score of" text
-    y: 410,  // Aligned with the text line (same as the score text)
+    x: 545,  // Position after "score of" text
+    y: 405,  // Aligned with the text line (same as the score text)
     size: 14,
     color: rgb(0, 0, 0),
     font: await pdfDoc.embedFont('Helvetica'),
