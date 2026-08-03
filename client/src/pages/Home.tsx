@@ -235,6 +235,15 @@ export default function Home() {
             >
               📚 <span className="hidden sm:inline">Glossary</span>
             </motion.button>
+            <a
+              href="/home/ubuntu/upload/certstudyguide.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2 py-1 rounded text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              title="Study Guide"
+            >
+              📖 <span className="hidden sm:inline">Study Guide</span>
+            </a>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               <span className="font-mono text-xs sm:text-sm">{formatTime(gameState.timeLeft)}</span>

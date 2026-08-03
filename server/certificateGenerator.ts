@@ -23,13 +23,14 @@ export async function generateCertificatePDF(
   
   const { width, height } = firstPage.getSize();
   
-  // Add the user's name (approximately where the blank line is)
+  // Add the user's name centered on the line just below "Awarded to"
+  const nameWidth = userName.length * 5.5; // Approximate character width at size 18
   firstPage.drawText(userName.toUpperCase(), {
-    x: width / 2 - (userName.length * 3),
-    y: height * 0.62,
+    x: width / 2 - nameWidth / 2,
+    y: height * 0.55,
     size: 18,
     color: rgb(0, 0, 0),
-    font: await pdfDoc.embedFont('Helvetica'),
+    font: await pdfDoc.embedFont('Helvetica-Bold'),
   });
   
   // Add the score percentage (where the blank % is)
