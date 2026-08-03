@@ -30,6 +30,7 @@ export default function CertificationTest() {
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [showOpenProgressDialog, setShowOpenProgressDialog] = useState(false);
   const [tempPin, setTempPin] = useState("");
 
   // Randomize and select questions
@@ -159,6 +160,33 @@ Date: ${new Date().toLocaleDateString()}
     }));
   };
 
+  const handleOpenProgress = () => {
+    if (!tempPin) {
+      toast.error("Please enter a PIN");
+      return;
+    }
+
+    const savedData = localStorage.getItem(`test_progress_${tempPin}`);
+    if (!savedData) {
+      toast.error("No saved progress found with this PIN");
+      return;
+    }
+
+    try {
+      const progressData = JSON.parse(savedData);
+      setTestState(prev => ({
+        ...prev,
+        ...progressData.testState,
+        mode: "testing",
+      }));
+      toast.success("Progress loaded!");
+      setShowOpenProgressDialog(false);
+      setTempPin("");
+    } catch (error) {
+      toast.error("Error loading progress");
+    }
+  };
+
   // Start Screen
   if (testState.mode === "start") {
     return (
@@ -196,6 +224,17 @@ Date: ${new Date().toLocaleDateString()}
             <p className="text-sm text-gray-500 mb-6">Pass with 70% or higher (70/100 correct)</p>
             <Button className="w-full bg-blue-700 hover:bg-blue-800">Start Test</Button>
           </motion.div>
+        </div>
+
+        {/* Open Progress Button */}
+        <div className="text-center">
+          <Button
+            onClick={() => setShowOpenProgressDialog(true)}
+            variant="outline"
+            className="border-2 border-gray-400 hover:border-blue-500"
+          >
+            📂 Open Saved Progress
+          </Button>
         </div>
 
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -381,6 +420,42 @@ Date: ${new Date().toLocaleDateString()}
                 className="w-full"
               >
                 Continue Testing
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Open Progress Dialog */}
+        <Dialog open={showOpenProgressDialog} onOpenChange={setShowOpenProgressDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Resume Saved Progress</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">Enter your PIN to resume your saved test:</p>
+              <Input
+                type="password"
+                placeholder="Enter your PIN"
+                value={tempPin}
+                onChange={(e) => setTempPin(e.target.value)}
+                className="text-lg tracking-widest"
+              />
+              <Button
+                onClick={handleOpenProgress}
+                disabled={!tempPin}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                📂 Load Progress
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowOpenProgressDialog(false);
+                  setTempPin("");
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Cancel
               </Button>
             </div>
           </DialogContent>
