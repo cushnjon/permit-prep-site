@@ -241,10 +241,10 @@ export default function Home() {
               href="/manus-storage/certstudyguide_105a3a3c.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2 py-1 rounded text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              className="text-sm text-blue-600 hover:underline"
               title="Study Guide"
             >
-              📖 <span className="hidden sm:inline">Study Guide</span>
+              Study Guide
             </a>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
