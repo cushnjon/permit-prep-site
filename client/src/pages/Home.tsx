@@ -8,6 +8,7 @@ import { CinematicSignImage } from "./TrafficSnap";
 import PacManGame from "./PacManGame";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { DonationMenu } from "@/components/DonationMenu";
+import CertificationTest from "./CertificationTest";
 
 
 
@@ -330,29 +331,17 @@ export default function Home() {
             )}
           </GameSection>
 
-          {/* Placeholder Module - Third Module */}
+          {/* Certification Test Module */}
           <GameSection
-            title="Coming Soon / Próximamente"
+            title="Certification Test / Examen de Certificación"
             logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="TBD"
+            speedTier="Variable"
             isExpanded={gameState.expandedSection === 2}
             onToggle={() => toggleSection(2)}
             progress={0}
           >
             {gameState.expandedSection === 2 && (
-              <div className="space-y-6 text-center">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 border-2 border-purple-200">
-                  <h3 className="text-2xl font-bold text-purple-600 mb-3">🚀 New Module Coming Soon / Próximamente</h3>
-                  <p className="text-purple-700 mb-4">We are working on an exciting new learning module to help you master advanced driving scenarios.</p>
-                  <p className="text-purple-600 italic mb-6">Estamos trabajando en un nuevo módulo de aprendizaje emocionante para ayudarte a dominar escenarios de conducción avanzados.</p>
-                  <button
-                    disabled
-                    className="px-6 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed opacity-60"
-                  >
-                    Coming Soon / Próximamente
-                  </button>
-                </div>
-              </div>
+              <CertificationTest />
             )}
           </GameSection>
 
