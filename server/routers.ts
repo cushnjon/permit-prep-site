@@ -80,7 +80,17 @@ export const appRouter = router({
           payment_method_types: ["card"],
           line_items: [
             {
-              price: STRIPE_CONFIG.donationPriceId,
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "Permit Prep Supporter",
+                  description: "Support Permit Prep with a monthly donation",
+                },
+                unit_amount: 100,
+                recurring: {
+                  interval: "month",
+                },
+              },
               quantity: 1,
             },
           ],
@@ -92,7 +102,7 @@ export const appRouter = router({
             customerEmail: ctx.user?.email || "",
             customerName: ctx.user?.name || "",
           },
-        });
+        } as any);
 
         return {
           checkoutUrl: session.url,
