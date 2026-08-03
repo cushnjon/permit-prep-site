@@ -6,6 +6,8 @@ import { gameData, Question, Zone } from "@/data/gameData";
 import { useLocation } from "wouter";
 import { CinematicSignImage } from "./TrafficSnap";
 import PacManGame from "./PacManGame";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { DonationMenu } from "@/components/DonationMenu";
 
 
 
@@ -31,6 +33,13 @@ const GAME_LOGOS = {
 };
 
 export default function Home() {
+  // The useAuth hook provides authentication state.
+  // To implement login/logout, call logout(), or start login from an event
+  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
+  // startLogin() during render (no href={startLogin()}) — it mints a one-time
+  // nonce cookie and must run only at the moment of navigation.
+  let { user, loading, error, isAuthenticated, logout } = useAuth();
+
   const [, setLocation] = useLocation();
   const [gameState, setGameState] = useState<GameState>({
     currentZoneIndex: 0,
@@ -235,7 +244,7 @@ export default function Home() {
               <span className="hidden sm:inline">Progress <span className="italic text-yellow-500">/ Progreso</span>: {getTotalProgress()}%</span>
               <span className="sm:hidden">Progress: {getTotalProgress()}%</span>
             </div>
-
+            <DonationMenu />
           </div>
         </div>
         <div className="container px-0 pb-2">

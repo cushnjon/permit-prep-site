@@ -10,8 +10,8 @@ import TrafficSnap from "./pages/TrafficSnap";
 import GameDev from "./pages/GameDev";
 import SignReference from "./pages/SignReference";
 
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
