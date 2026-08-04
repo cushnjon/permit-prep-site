@@ -45,13 +45,16 @@ export async function createGameScene(
     Vector3.Zero(),
     scene
   );
-  // Disable user camera interaction - camera only moves programmatically
-  camera.attachControl(canvas, false);
+  // Attach camera controls but set very high sensitivities to prevent accidental movement
+  camera.attachControl(canvas, true);
   camera.minZ = 0.1;
-  // Set sensitivities to 0 to prevent any user interaction
-  camera.angularSensibilityX = 0;
-  camera.angularSensibilityY = 0;
-  camera.wheelPrecision = 0;
+  // Set very high sensitivities so camera is essentially locked but still responsive to extreme input
+  camera.angularSensibilityX = 10000;
+  camera.angularSensibilityY = 10000;
+  camera.wheelPrecision = 10000;
+  // Prevent panning and zooming
+  camera.panningSensibility = 0;
+  camera.inertia = 0.7; // Smooth deceleration
 
   // Initialize game components
   const gridController = new CrosswordGrid(
