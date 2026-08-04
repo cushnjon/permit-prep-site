@@ -218,10 +218,11 @@ function CarouselTrack({ group }: CarouselTrackProps) {
                     style={{ maxHeight: 120 }}
                     onClick={() => {
                       if (sign.name === "Deer Crossing Sign") {
-                        const debugBtn = document.querySelector('[data-debug-toggle]');
-                        if (debugBtn) {
-                          (debugBtn as HTMLButtonElement).click();
-                        }
+                        // Toggle debug button visibility
+                        const currentVisibility = localStorage.getItem('debug-visible') !== 'false';
+                        localStorage.setItem('debug-visible', String(!currentVisibility));
+                        // Dispatch event to notify DebugTestGenerator
+                        window.dispatchEvent(new CustomEvent('debug-visibility-toggle'));
                         setLocation('/');
                       }
                     }}

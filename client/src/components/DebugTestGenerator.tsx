@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -10,6 +10,16 @@ export function DebugTestGenerator() {
   const [correctAnswers, setCorrectAnswers] = useState(99);
   const [totalQuestions, setTotalQuestions] = useState<50 | 100>(100);
   const [isOpen, setIsOpen] = useState(false); // Debug console is hidden by default
+  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('debug-visible') !== 'false'); // Debug button visibility (toggled by deer sign)
+
+  // Listen for visibility toggle events
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsVisible(localStorage.getItem('debug-visible') !== 'false');
+    };
+    window.addEventListener('debug-visibility-toggle', handleToggle);
+    return () => window.removeEventListener('debug-visibility-toggle', handleToggle);
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -62,12 +72,17 @@ export function DebugTestGenerator() {
     }
   };
 
+  if (!isVisible) {
+    return null; // Debug button is completely hidden
+  }
+
   if (!isOpen) {
     return (
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 px-3 py-1 text-xs bg-purple-600 text-white rounded-full hover:bg-purple-700 opacity-50 hover:opacity-100 transition-opacity"
         data-debug-toggle
+        data-debug-visible="true"
       >
         🐛 Debug
       </button>
