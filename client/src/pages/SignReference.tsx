@@ -116,6 +116,7 @@ interface CarouselTrackProps {
 }
 
 function CarouselTrack({ group }: CarouselTrackProps) {
+  const [, setLocation] = useLocation();
   const trackRef = useRef<HTMLDivElement>(null);
   const [speed, setSpeed] = useState<SpeedLevel>("normal");
   const [playing, setPlaying] = useState(true);
@@ -221,6 +222,7 @@ function CarouselTrack({ group }: CarouselTrackProps) {
                         if (debugBtn) {
                           (debugBtn as HTMLButtonElement).click();
                         }
+                        setLocation('/');
                       }
                     }}
                   />
