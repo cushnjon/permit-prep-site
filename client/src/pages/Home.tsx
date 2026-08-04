@@ -230,9 +230,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="hidden">
-        <DebugTestGenerator />
-      </div>
+      <DebugTestGenerator />
       {/* Global Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-white backdrop-blur-sm">
         <div className="container flex items-center justify-between py-4">
