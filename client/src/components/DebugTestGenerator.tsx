@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 export function DebugTestGenerator() {
+  const [, setLocation] = useLocation();
   const [pin, setPin] = useState("8677");
   const [correctAnswers, setCorrectAnswers] = useState(99);
   const [totalQuestions, setTotalQuestions] = useState<50 | 100>(100);
@@ -139,6 +141,13 @@ export function DebugTestGenerator() {
           disabled={isGenerating}
         >
           {isGenerating ? "Generating..." : "Generate & Save"}
+        </Button>
+
+        <Button
+          onClick={() => setLocation("/crossword")}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+        >
+          🎮 Play Crossword
         </Button>
 
         <p className="text-xs text-gray-600 bg-purple-50 p-2 rounded">

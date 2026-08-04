@@ -9,6 +9,7 @@ import ImageGallery from "./pages/ImageGallery";
 import TrafficSnap from "./pages/TrafficSnap";
 import GameDev from "./pages/GameDev";
 import SignReference from "./pages/SignReference";
+import Crossword from "./pages/Crossword";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path={"/traffic-snap"} component={TrafficSnap} />
       <Route path={"/game-dev"} component={GameDev} />
       <Route path={"/sign-reference"} component={SignReference} />
+      <Route path={"/crossword"} component={Crossword} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
