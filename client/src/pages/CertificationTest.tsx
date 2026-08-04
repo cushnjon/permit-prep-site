@@ -222,7 +222,8 @@ export default function CertificationTest() {
         className="max-w-4xl mx-auto p-6 space-y-8"
       >
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold text-blue-600">Safety Certification Test</h1>
+          <h2 className="text-lg font-semibold text-blue-500">🛴 E-Bike & E-Scooter Safety</h2>
+          <h1 className="text-5xl font-bold text-blue-600">Certification Test</h1>
           <p className="text-xl text-gray-600">Choose your test length and begin</p>
         </div>
 
