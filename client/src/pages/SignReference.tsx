@@ -213,7 +213,7 @@ function CarouselTrack({ group }: CarouselTrackProps) {
                   <img
                     src={sign.signImage}
                     alt={sign.name}
-                    className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                    className="max-w-full max-h-full object-contain"
                     style={{ maxHeight: 120 }}
                     onClick={() => {
                       if (sign.name === "Deer Crossing Sign") {
