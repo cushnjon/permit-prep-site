@@ -146,6 +146,18 @@ export default function Home() {
       ...prev,
       expandedSection: prev.expandedSection === index ? null : index,
     }));
+    
+    setTimeout(() => {
+      const sectionElement = document.querySelector(`[data-section-index="${index}"]`);
+      if (sectionElement) {
+        const headerHeight = 80;
+        const elementTop = sectionElement.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+          top: elementTop - headerHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 0);
   };
 
   const toggleAnswersExpanded = () => {
@@ -292,6 +304,7 @@ export default function Home() {
             onToggle={() => toggleSection(0)}
             onRandomQuestion={handleRandomQuestion}
             progress={getZoneProgress(0)}
+            data-section-index="0"
           >
             {gameState.expandedSection === 0 && (
               <TextDriveGame
@@ -320,6 +333,7 @@ export default function Home() {
             isExpanded={gameState.expandedSection === 1}
             onToggle={() => toggleSection(1)}
             progress={0}
+            data-section-index="1"
           >
             {gameState.expandedSection === 1 && (
               <div className="space-y-6">
@@ -359,6 +373,7 @@ export default function Home() {
             isExpanded={gameState.expandedSection === 2}
             onToggle={() => toggleSection(2)}
             progress={0}
+            data-section-index="2"
           >
             {gameState.expandedSection === 2 && (
               <CertificationTest />
