@@ -67,6 +67,7 @@ export function DebugTestGenerator() {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 px-3 py-1 text-xs bg-purple-600 text-white rounded-full hover:bg-purple-700 opacity-50 hover:opacity-100 transition-opacity"
+        data-debug-toggle
       >
         🐛 Debug
       </button>
