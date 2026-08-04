@@ -252,16 +252,7 @@ export default function Home() {
             >
               📚 <span className="hidden sm:inline">Glossary</span>
             </motion.button>
-            <a
-              href="#"
-              onClick={handleStudyGuideClick}
-              className={`text-sm text-blue-600 hover:underline transition-all ${
-                isShaking ? 'shake-wave' : ''
-              }`}
-              title="Study Guide"
-            >
-              Study Guide
-            </a>
+
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               <span className="font-mono text-xs sm:text-sm">{formatTime(gameState.timeLeft)}</span>

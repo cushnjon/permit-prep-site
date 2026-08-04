@@ -255,10 +255,26 @@ export default function CertificationTest() {
           </Button>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
           <p className="text-sm text-gray-700">
             <strong>Study Guide:</strong> Review the study materials before taking the test. You need a score of 70% or higher to pass and receive a certificate.
           </p>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              const link = document.createElement('a');
+              link.href = '/manus-storage/certstudyguide_105a3a3c.pdf';
+              link.download = 'E-100-Study-Guide.pdf';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="inline-block text-sm text-blue-600 hover:underline font-medium"
+            title="Download Study Guide"
+          >
+            📥 Download Study Guide
+          </a>
         </div>
 
         {/* Open Progress Dialog */}
