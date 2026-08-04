@@ -15,11 +15,32 @@ export function DebugTestGenerator() {
   // Listen for visibility toggle events
   useEffect(() => {
     const handleToggle = () => {
-      setIsVisible(localStorage.getItem('debug-visible') !== 'false');
+      setIsVisible(localStorage.getItem('debug-visible') === 'true');
+      localStorage.setItem('debug-visible-time', Date.now().toString());
     };
     window.addEventListener('debug-visibility-toggle', handleToggle);
     return () => window.removeEventListener('debug-visibility-toggle', handleToggle);
   }, []);
+
+  // 5-minute auto-hide timer
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const checkTimer = setInterval(() => {
+      const visibleTime = localStorage.getItem('debug-visible-time');
+      if (visibleTime) {
+        const elapsed = Date.now() - parseInt(visibleTime);
+        const fiveMinutes = 5 * 60 * 1000;
+        if (elapsed > fiveMinutes) {
+          localStorage.setItem('debug-visible', 'false');
+          setIsVisible(false);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(checkTimer);
+  }, [isVisible]);
+
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
