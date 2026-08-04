@@ -29,6 +29,12 @@ export class CameraController {
     // Select new word
     this.grid.selectWord(wordId);
     
+    // Move camera to follow the highlighted word line
+    const wordCenter = this.grid.getWordCenterPosition(wordId);
+    if (wordCenter) {
+      this.camera.target = wordCenter;
+    }
+    
     // Trigger callback to update header and puzzle
     if (this.onNavigateCallback) {
       this.onNavigateCallback(wordId);

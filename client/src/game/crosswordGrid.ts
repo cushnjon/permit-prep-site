@@ -217,6 +217,28 @@ export class CrosswordGrid {
     return this.gridGroup;
   }
 
+  public getWordCenterPosition(wordId: number): Vector3 | null {
+    const word = this.getWordById(wordId);
+    if (!word) return null;
+
+    const positions = this.getWordCellPositions(word);
+    if (positions.length === 0) return null;
+
+    // Calculate center of all cells in the word
+    let totalX = 0, totalZ = 0;
+    for (const pos of positions) {
+      totalX += (pos.x * this.cellSize) / 2;
+      totalZ += (pos.y * this.cellSize) / 2;
+    }
+
+    const centerX = totalX / positions.length;
+    const centerZ = totalZ / positions.length;
+
+    // Apply grid group offset
+    const gridCenter = this.gridGroup.position;
+    return new Vector3(centerX + gridCenter.x, 0 + gridCenter.y, centerZ + gridCenter.z);
+  }
+
   public dispose() {
     this.gridGroup.dispose();
     this.cellMeshes.clear();
