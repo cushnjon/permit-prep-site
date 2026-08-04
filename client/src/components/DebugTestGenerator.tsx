@@ -10,7 +10,7 @@ export function DebugTestGenerator() {
   const [correctAnswers, setCorrectAnswers] = useState(99);
   const [totalQuestions, setTotalQuestions] = useState<50 | 100>(100);
   const [isOpen, setIsOpen] = useState(false); // Debug console is hidden by default
-  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('debug-visible') !== 'false'); // Debug button visibility (toggled by deer sign)
+  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('debug-visible') === 'true'); // Debug button visibility (toggled by deer sign) - starts hidden
 
   // Listen for visibility toggle events
   useEffect(() => {
