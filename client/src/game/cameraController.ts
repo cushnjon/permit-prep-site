@@ -29,10 +29,13 @@ export class CameraController {
     // Select new word
     this.grid.selectWord(wordId);
     
-    // Move camera to follow the highlighted word line
+    // Move camera to follow the highlighted word line while keeping entire grid visible
     const wordCenter = this.grid.getWordCenterPosition(wordId);
     if (wordCenter) {
-      this.camera.target = wordCenter;
+      // Keep the camera target at the grid center, not the word center
+      // This ensures the entire grid stays visible
+      // The highlighted word will still be visible and emphasized
+      this.camera.target = this.grid.getGridGroup().position;
     }
     
     // Trigger callback to update header and puzzle
