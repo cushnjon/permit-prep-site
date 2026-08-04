@@ -145,15 +145,23 @@ export default function CertificationTest() {
       }
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = result.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      const isMobile = /iPhone|iPad|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        window.open(url, '_blank');
+      } else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = result.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
 
-      toast.success("Certificate downloaded!");
+      toast.success(isMobile ? "Certificate opened in new tab!" : "Certificate downloaded!");
 
       // Reset to start
       setTestState(prev => ({
