@@ -9,7 +9,7 @@ export function DebugTestGenerator() {
   const [pin, setPin] = useState("8677");
   const [correctAnswers, setCorrectAnswers] = useState(99);
   const [totalQuestions, setTotalQuestions] = useState<50 | 100>(100);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Debug console is hidden by default
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
