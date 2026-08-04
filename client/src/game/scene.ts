@@ -42,7 +42,7 @@ export async function createGameScene(
     Math.PI / 2,
     Math.PI / 2.5,
     21.6,
-    new Vector3(32.4, 10, 0),
+    new Vector3(32.4, 26, 0),
     scene
   );
   // Attach camera controls but set very high sensitivities to prevent accidental movement
