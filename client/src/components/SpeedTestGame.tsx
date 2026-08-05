@@ -156,6 +156,7 @@ export const SpeedTestGame: React.FC = () => {
   const [isAnswering, setIsAnswering] = useState(false);
   const [testComplete, setTestComplete] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
 
   // Shuffled question order for the whole session — created once on start
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
@@ -206,11 +207,13 @@ export const SpeedTestGame: React.FC = () => {
     const points = calculatePoints(timeLeft, isCorrect);
     setScore(prev => prev + points);
     setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect }]);
+    if (isCorrect && points > 0) setEarnedPoints(points);
 
     setTimeout(() => {
       moveToNextQuestion();
       setIsAnswering(false);
       setSelectedAnswer(null);
+      setEarnedPoints(null);
     }, 500);
   };
 
@@ -245,6 +248,7 @@ export const SpeedTestGame: React.FC = () => {
     setSelectedAnswer(null);
     setIsAnswering(false);
     setSessionQuestions([]);
+    setEarnedPoints(null);
   };
 
   const handleDownloadStudyGuide = () => {
@@ -346,7 +350,7 @@ export const SpeedTestGame: React.FC = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
+      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
         {/* Timer and Progress */}
         <div className="flex justify-between items-center mb-6">
           <div className="text-sm font-semibold text-gray-600">
@@ -427,6 +431,23 @@ export const SpeedTestGame: React.FC = () => {
               })}
             </div>
           </motion.div>
+        </AnimatePresence>
+
+        {/* Floating points burst */}
+        <AnimatePresence>
+          {earnedPoints !== null && (
+            <motion.div
+              key={`points-${currentQuestionIndex}`}
+              initial={{ opacity: 1, y: 0, scale: 0.5 }}
+              animate={{ opacity: 0, y: -120, scale: 1.8 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 z-50 text-6xl font-black text-blue-500 drop-shadow-[0_0_18px_rgba(59,130,246,0.9)]"
+              style={{ top: '50%' }}
+            >
+              +{earnedPoints}
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Current Score */}
