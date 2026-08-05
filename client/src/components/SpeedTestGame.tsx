@@ -428,11 +428,11 @@ export const SpeedTestGame: React.FC = () => {
                     disabled={isAnswering}
                     initial={{ x: index % 2 === 0 ? -200 : 200, opacity: 0 }}
                     animate={{
-                      x: isAnswering && isSelected ? (isCorrect ? 0 : [0, -10, 10, -10, 10, 0]) : 0,
-                      y: isAnswering && isSelected && isCorrect ? -10 : 0,
-                      opacity: 1,
-                      rotate: isAnswering && isSelected && !isCorrect ? [0, -5, 5, -5, 0] : 0,
-                      scale: isAnswering && isSelected ? (isCorrect ? 1.1 : 1) : 1
+                      x: isAnswering && isSelected && !isCorrect ? [0, -8, 8, -6, 6, -4, 4, 0] : 0,
+                      y: isAnswering && isSelected && !isCorrect ? [0, 0, 0, 10, 20, 40, 80, 120] : (isAnswering && isSelected && isCorrect ? -10 : 0),
+                      opacity: isAnswering && isSelected && !isCorrect ? [1, 1, 1, 0.8, 0.6, 0.4, 0.2, 0] : 1,
+                      rotate: isAnswering && isSelected && !isCorrect ? [0, -8, 8, -12, 15, -20, 25, 30] : 0,
+                      scale: isAnswering && isSelected && !isCorrect ? [1, 0.95, 0.9, 0.85, 0.75, 0.6, 0.4, 0.2] : (isAnswering && isSelected && isCorrect ? 1.1 : 1)
                     }}
                     transition={isAnswering && isSelected ? { duration: 0.4 } : { delay: index * 0.1, duration: 0.4 }}
                     whileHover={!isAnswering ? { scale: 1.02 } : {}}
