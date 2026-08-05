@@ -1,6 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, RotateCcw } from 'lucide-react';
+
+// Generate random distractors for each question
+const generateOptions = (correctAnswer: string, questionId: number): string[] => {
+  const distractors = [
+    // Generic wrong answers
+    "No specific requirement",
+    "At the driver's discretion",
+    "Not applicable",
+    "Varies by location",
+    "Depends on weather",
+    "Only on weekends",
+    "Never allowed",
+    "Always required",
+    "15 minutes",
+    "30 minutes",
+    "1 hour",
+    "2 hours",
+    "Immediately",
+    "Within 24 hours",
+    "Within 7 days",
+    "Within 30 days",
+    "50 mph",
+    "55 mph",
+    "65 mph",
+    "75 mph",
+    "$100",
+    "$500",
+    "$1,000",
+    "$5,000",
+    "Yes, always",
+    "No, never",
+    "Only in emergencies",
+    "Only with permission",
+    "Left side",
+    "Right side",
+    "Center",
+    "Either side",
+    "2 seconds",
+    "3 seconds",
+    "4 seconds",
+    "5 seconds",
+    "10 feet",
+    "20 feet",
+    "50 feet",
+    "100 feet",
+  ];
+
+  // Use questionId as seed for consistent randomization
+  const shuffled = distractors.sort(() => {
+    const seed = (questionId * 7 + 13) % 100;
+    return seed - 50;
+  });
+
+  const options = [correctAnswer, ...shuffled.slice(0, 3)];
+  
+  // Shuffle options
+  return options.sort(() => {
+    const seed = (questionId * 11 + 17) % 100;
+    return seed - 50;
+  });
+};
 
 const QUESTIONS = [
   { id: 1, question: "Urban residential speed limit?", answer: "25 mph" },
@@ -111,6 +172,8 @@ interface Score {
   correct: boolean;
 }
 
+const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
+
 export const SpeedTestGame: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -119,8 +182,11 @@ export const SpeedTestGame: React.FC = () => {
   const [scores, setScores] = useState<Score[]>([]);
   const [isAnswering, setIsAnswering] = useState(false);
   const [testComplete, setTestComplete] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'incorrect' | null>(null);
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
+  const options = useMemo(() => generateOptions(currentQuestion.answer, currentQuestion.id), [currentQuestion]);
 
   // Timer effect
   useEffect(() => {
@@ -141,7 +207,6 @@ export const SpeedTestGame: React.FC = () => {
 
   const calculatePoints = (timeRemaining: number, correct: boolean): number => {
     if (!correct) return 0;
-    // Scale: 3 seconds left = 200 points, 0 seconds = 1 point
     return Math.max(1, Math.round((timeRemaining / 3) * 200));
   };
 
@@ -151,16 +216,25 @@ export const SpeedTestGame: React.FC = () => {
     moveToNextQuestion();
   };
 
-  const handleAnswer = (correct: boolean) => {
+  const handleAnswer = (answer: string) => {
+    if (isAnswering) return;
+    
     setIsAnswering(true);
-    const points = calculatePoints(timeLeft, correct);
+    setSelectedAnswer(answer);
+    
+    const isCorrect = answer === currentQuestion.answer;
+    setFeedbackType(isCorrect ? 'correct' : 'incorrect');
+    
+    const points = calculatePoints(timeLeft, isCorrect);
     setScore(score + points);
-    setScores([...scores, { questionId: currentQuestion.id, points, correct }]);
+    setScores([...scores, { questionId: currentQuestion.id, points, correct: isCorrect }]);
 
     setTimeout(() => {
       moveToNextQuestion();
       setIsAnswering(false);
-    }, 1000);
+      setSelectedAnswer(null);
+      setFeedbackType(null);
+    }, 500);
   };
 
   const moveToNextQuestion = () => {
@@ -204,7 +278,7 @@ export const SpeedTestGame: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl mx-auto"
+        className="w-full"
       >
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">DMV License Speed Test</h1>
@@ -257,7 +331,7 @@ export const SpeedTestGame: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl mx-auto"
+        className="w-full"
       >
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 shadow-lg border border-green-100">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Test Complete!</h2>
@@ -301,7 +375,7 @@ export const SpeedTestGame: React.FC = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-2xl mx-auto"
+      className="w-full"
     >
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
         {/* Timer and Progress */}
@@ -336,25 +410,46 @@ export const SpeedTestGame: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-6"
+            className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8"
           >
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">{currentQuestion.question}</h3>
+            <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">{currentQuestion.question}</h3>
 
+            {/* Options Grid - Full Width */}
             <div className="space-y-3">
-              <button
-                onClick={() => handleAnswer(true)}
-                disabled={isAnswering}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-              >
-                {currentQuestion.answer}
-              </button>
-              <button
-                onClick={() => handleAnswer(false)}
-                disabled={isAnswering}
-                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-              >
-                Skip / Wrong
-              </button>
+              {options.map((option, index) => {
+                const isCorrect = option === currentQuestion.answer;
+                const isSelected = selectedAnswer === option;
+                const bgColor = COLORS[index % COLORS.length];
+                
+                return (
+                  <motion.button
+                    key={option}
+                    onClick={() => handleAnswer(option)}
+                    disabled={isAnswering}
+                    initial={{ x: index % 2 === 0 ? -200 : 200, opacity: 0 }}
+                    animate={{
+                      x: isAnswering && isSelected ? (isCorrect ? 0 : [0, -10, 10, -10, 10, 0]) : 0,
+                      y: isAnswering && isSelected && isCorrect ? -10 : 0,
+                      opacity: 1,
+                      rotate: isAnswering && isSelected && !isCorrect ? [0, -5, 5, -5, 0] : 0,
+                      scale: isAnswering && isSelected ? (isCorrect ? 1.1 : 1) : 1
+                    }}
+                    transition={isAnswering && isSelected ? { duration: 0.4 } : { delay: index * 0.1, duration: 0.4 }}
+                    whileHover={!isAnswering ? { scale: 1.02 } : {}}
+                    whileTap={!isAnswering ? { scale: 0.98 } : {}}
+                    className={`w-full p-4 rounded-lg font-semibold text-white transition-all ${bgColor} ${
+                      isAnswering && !isSelected ? 'opacity-50' : ''
+                    } ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-300' : ''} ${
+                      isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-300' : ''
+                    }`}
+                  >
+                    <div className="text-left">
+                      <div className="text-sm opacity-75">{String.fromCharCode(65 + index)}.</div>
+                      <div className="text-lg">{option}</div>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         </AnimatePresence>
