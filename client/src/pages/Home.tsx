@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { DonationMenu } from "@/components/DonationMenu";
 import CertificationTest from "./CertificationTest";
 import { DebugTestGenerator } from "@/components/DebugTestGenerator";
+import { SpeedTestGame } from "@/components/SpeedTestGame";
 
 
 
@@ -295,6 +296,21 @@ export default function Home() {
       {/* Main Content */}
       <main className="container py-8">
         <div className="space-y-4">
+          {/* DMV License Speed Test Section */}
+          <GameSection
+            title="DMV License Speed Test"
+            logo={GAME_LOGOS.permitPrepLogo}
+            speedTier="Variable"
+            isExpanded={gameState.expandedSection === -1}
+            onToggle={() => toggleSection(-1)}
+            progress={0}
+            data-section-index="-1"
+          >
+            {gameState.expandedSection === -1 && (
+              <SpeedTestGame />
+            )}
+          </GameSection>
+
           {/* Text Drive Section */}
           <GameSection
             title="Text Drive: Read & Answer / Lectura de Texto: Lee y Responde"
