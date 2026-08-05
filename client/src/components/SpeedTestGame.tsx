@@ -399,14 +399,14 @@ export const SpeedTestGame: React.FC = () => {
                     disabled={isAnswering}
                     initial={{ x: index % 2 === 0 ? -200 : 200, opacity: 0 }}
                     animate={{
-                      x: isAnswering && isSelected && !isCorrect ? [0, -8, 8, -6, 6, -4, 4, 0] : 0,
+                      x: isAnswering && isSelected && !isCorrect ? [0, 0, -8, 8, -6, 6, -4, 4, 0] : 0,
                       y: isAnswering && isSelected && !isCorrect
-                        ? [0, 0, 0, 10, 20, 40, 80, 120]
+                        ? [0, 0, 0, 0, 10, 20, 40, 80, 120]
                         : isAnswering && isSelected && isCorrect ? -10 : 0,
-                      opacity: isAnswering && isSelected && !isCorrect ? [1, 1, 1, 0.8, 0.6, 0.4, 0.2, 0] : 1,
-                      rotate: isAnswering && isSelected && !isCorrect ? [0, -8, 8, -12, 15, -20, 25, 30] : 0,
+                      opacity: isAnswering && isSelected && !isCorrect ? [1, 1, 1, 1, 0.8, 0.6, 0.4, 0.2, 0] : 1,
+                      rotate: isAnswering && isSelected && !isCorrect ? [0, 0, -8, 8, -12, 15, -20, 25, 30] : 0,
                       scale: isAnswering && isSelected && !isCorrect
-                        ? [1, 0.95, 0.9, 0.85, 0.75, 0.6, 0.4, 0.2]
+                        ? [1, 1.4, 1.3, 1.2, 1.0, 0.85, 0.65, 0.4, 0.15]
                         : isAnswering && isSelected && isCorrect ? 3 : 1,
                     }}
                     transition={
@@ -416,10 +416,14 @@ export const SpeedTestGame: React.FC = () => {
                     }
                     whileHover={!isAnswering ? { scale: 1.02 } : {}}
                     whileTap={!isAnswering ? { scale: 0.98 } : {}}
+                    style={isAnswering && isSelected && !isCorrect ? {
+                      background: 'linear-gradient(135deg, #7f1d1d, #1a0000)',
+                      boxShadow: '0 0 20px rgba(127,29,29,0.8), inset 0 0 10px rgba(0,0,0,0.5)'
+                    } : {}}
                     className={`w-full p-4 rounded-lg font-semibold text-white transition-all ${bgColor} ${
                       isAnswering && !isSelected ? 'opacity-50' : ''
                     } ${isAnswering && isSelected && isCorrect ? 'bg-green-500 pulse-neon-green ring-4 ring-green-300' : ''} ${
-                      isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-300' : ''
+                      isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-900' : ''
                     }`}
                   >
                     <div className="text-left">
