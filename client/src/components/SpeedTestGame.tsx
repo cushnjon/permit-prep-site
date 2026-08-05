@@ -260,7 +260,7 @@ export const SpeedTestGame: React.FC = () => {
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">DMV License Speed Test</h1>
+          <img src="/manus-storage/header_b6795826.png" alt="DMV License Speed Test" className="w-full max-w-xl mx-auto mb-2 rounded-xl" />
           <h2 className="text-xl text-blue-600 font-semibold mb-6">Top Scores Guaranteed License Exam Pass</h2>
 
           <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100">
