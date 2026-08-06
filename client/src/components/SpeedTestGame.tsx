@@ -157,6 +157,7 @@ export const SpeedTestGame: React.FC = () => {
   const [testComplete, setTestComplete] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
+  const [showReview, setShowReview] = useState(false);
 
   // Shuffled question order for the whole session — created once on start
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
@@ -261,42 +262,43 @@ export const SpeedTestGame: React.FC = () => {
   };
 
   if (!isStarted) {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
-          <img src="/manus-storage/header_b6795826.png" alt="DMV License Speed Test" className="w-full max-w-xl mx-auto mb-2 rounded-xl" />
-          <h2 className="text-xl text-blue-600 font-semibold mb-6">Top Scores Guaranteed License Exam Pass</h2>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-8 shadow-lg border border-blue-100">
+          <img src="/manus-storage/header_b6795826.png" alt="DMV License Speed Test" className="w-full max-w-xl mx-auto mb-2 sm:mb-4 rounded-lg sm:rounded-xl" />
+          <h2 className="text-lg sm:text-xl text-blue-600 font-semibold mb-4 sm:mb-6 text-center">Top Scores Guaranteed License Exam Pass</h2>
 
-          <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100">
-            <p className="text-gray-700 mb-4">
-              Test your DMV knowledge with 100 rapid-fire questions. You have 3 seconds per question. Score 1–200 points based on speed and accuracy. Questions and answer order are randomized every session.
+          <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm border border-gray-100">
+            <p className="text-sm sm:text-base text-gray-700 mb-4">
+              Test your DMV knowledge with 100 rapid-fire questions. Score 1–200 points based on speed and accuracy. Questions and answer order are randomized every session.
             </p>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">100</div>
-                <div className="text-sm text-gray-600">Questions</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-blue-50 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-blue-600">100</div>
+                <div className="text-xs sm:text-sm text-gray-600">Questions</div>
               </div>
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">3s</div>
-                <div className="text-sm text-gray-600">Per Question</div>
+              <div className="bg-green-50 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-green-600">4.7s</div>
+                <div className="text-xs sm:text-sm text-gray-600">Per Q</div>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">200</div>
-                <div className="text-sm text-gray-600">Max Points</div>
+              <div className="bg-purple-50 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-purple-600">200</div>
+                <div className="text-xs sm:text-sm text-gray-600">Max Pts</div>
               </div>
             </div>
 
             <button
               onClick={handleDownloadStudyGuide}
-              className="w-full mb-4 flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold py-3 px-4 rounded-lg transition-colors border border-amber-200"
+              className="w-full mb-3 sm:mb-4 flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors border border-amber-200 text-sm sm:text-base"
             >
-              <Download size={18} />
-              Download Study Guide
+              <Download size={16} className="sm:w-5 sm:h-5" />
+              Study Guide
             </button>
 
             <button
               onClick={handleStart}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all transform hover:scale-105 shadow-md text-sm sm:text-base"
             >
               Start Speed Test
             </button>
@@ -312,36 +314,130 @@ export const SpeedTestGame: React.FC = () => {
 
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full">
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 shadow-lg border border-green-100">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Test Complete!</h2>
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-6">
-            <div className="text-center mb-8">
-              <div className="text-6xl font-bold text-green-600 mb-2">{score.toLocaleString()}</div>
-              <div className="text-lg text-gray-600">Total Points</div>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl sm:rounded-2xl p-4 sm:p-8 shadow-lg border border-green-100">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Test Complete!</h2>
+          <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-8 shadow-sm border border-gray-100 mb-4 sm:mb-6">
+            <div className="text-center mb-4 sm:mb-8">
+              <div className="text-4xl sm:text-6xl font-bold text-green-600 mb-2">{score.toLocaleString()}</div>
+              <div className="text-base sm:text-lg text-gray-600">Total Points</div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-green-600">{correctAnswers}</div>
-                <div className="text-sm text-gray-600">Correct</div>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-green-50 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-green-600">{correctAnswers}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Correct</div>
               </div>
-              <div className="bg-red-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-red-600">{QUESTIONS.length - correctAnswers}</div>
-                <div className="text-sm text-gray-600">Incorrect</div>
+              <div className="bg-red-50 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-red-600">{QUESTIONS.length - correctAnswers}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Incorrect</div>
               </div>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center mb-6">
-              <div className="text-4xl font-bold text-blue-600">{percentage}%</div>
-              <div className="text-sm text-gray-600">Pass Rate</div>
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 text-center mb-4 sm:mb-6">
+              <div className="text-3xl sm:text-4xl font-bold text-blue-600">{percentage}%</div>
+              <div className="text-xs sm:text-sm text-gray-600">Pass Rate</div>
             </div>
-            <button
-              onClick={handleReset}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-            >
-              <RotateCcw size={18} />
-              Try Again
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowReview(true)}
+                className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                Review Answers
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                <RotateCcw size={18} />
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Review Modal */}
+        <AnimatePresence>
+          {showReview && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+              onClick={() => setShowReview(false)}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 flex justify-between items-center rounded-t-2xl">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Review Your Answers</h3>
+                  <button
+                    onClick={() => setShowReview(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-4 sm:p-6 space-y-4">
+                  {scores.map((score, idx) => {
+                    const question = QUESTIONS.find((q) => q.id === score.questionId);
+                    if (!question) return null;
+
+                    return (
+                      <div
+                        key={score.questionId}
+                        className={`p-4 rounded-lg border-2 ${
+                          score.correct
+                            ? 'bg-green-50 border-green-300'
+                            : 'bg-red-50 border-red-300'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          <div
+                            className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                              score.correct ? 'bg-green-600' : 'bg-red-600'
+                            }`}
+                          >
+                            {score.correct ? '✓' : '✕'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm sm:text-base mb-2">
+                              Q{idx + 1}: {question.question}
+                            </p>
+                            <div className="space-y-1 text-xs sm:text-sm">
+                              <p className="text-gray-700">
+                                <span className="font-semibold">Correct Answer:</span> {question.answer}
+                              </p>
+                              {!score.correct && (
+                                <p className="text-red-600">
+                                  <span className="font-semibold">You Selected:</span> Unknown
+                                </p>
+                              )}
+                              <p className="text-gray-600">
+                                <span className="font-semibold">Points:</span> {score.points}/{Math.round(4.7 * 200 / 4.7)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6">
+                  <button
+                    onClick={() => setShowReview(false)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     );
   }
@@ -350,27 +446,27 @@ export const SpeedTestGame: React.FC = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg border border-blue-100">
+      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-3 sm:p-8 shadow-lg border border-blue-100">
         {/* Timer and Progress */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="text-sm font-semibold text-gray-600">
-            Question {currentQuestionIndex + 1} of {sessionQuestions.length}
+        <div className="flex justify-between items-center mb-3 sm:mb-6">
+          <div className="text-xs sm:text-sm font-semibold text-gray-600">
+            Q{currentQuestionIndex + 1}/{sessionQuestions.length}
           </div>
           <motion.div
             animate={{ scale: timeLeft <= 1.2 ? [1, 1.1, 1] : 1 }}
-            className={`text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
+            className={`text-2xl sm:text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
           >
-            {timeLeft}s
+            {timeLeft.toFixed(1)}s
           </motion.div>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
+        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-4 sm:mb-8">
           <motion.div
             initial={{ width: '100%' }}
             animate={{ width: `${(timeLeft / 4.7) * 100}%` }}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full"
-            transition={{ duration: 1, ease: 'linear' }}
+            transition={{ duration: 0.1, ease: 'linear' }}
           />
         </div>
 
@@ -381,9 +477,9 @@ export const SpeedTestGame: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8"
+            className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-8 shadow-sm border border-gray-100 mb-4 sm:mb-8"
           >
-            <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">{currentQuestion.question}</h3>
+            <h3 className="text-lg sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center">{currentQuestion.question}</h3>
 
             {/* Options — shuffled per question, different color per slot */}
             <div className="space-y-3">
@@ -427,8 +523,8 @@ export const SpeedTestGame: React.FC = () => {
                     }`}
                   >
                     <div className="text-left">
-                      <div className="text-sm opacity-75">{String.fromCharCode(65 + index)}.</div>
-                      <div className="text-lg">{option}</div>
+                      <div className="text-xs sm:text-sm opacity-75">{String.fromCharCode(65 + index)}.</div>
+                      <div className="text-sm sm:text-lg">{option}</div>
                     </div>
                   </motion.button>
                 );
@@ -456,8 +552,8 @@ export const SpeedTestGame: React.FC = () => {
 
         {/* Current Score */}
         <div className="text-center">
-          <div className="text-sm text-gray-600">Current Score</div>
-          <div className="text-3xl font-bold text-blue-600">{score.toLocaleString()}</div>
+          <div className="text-xs sm:text-sm text-gray-600">Current Score</div>
+          <div className="text-2xl sm:text-3xl font-bold text-blue-600">{score.toLocaleString()}</div>
         </div>
       </div>
     </motion.div>
