@@ -150,7 +150,7 @@ const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
 export const SpeedTestGame: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(3);
+  const [timeLeft, setTimeLeft] = useState(4.7);
   const [score, setScore] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
   const [isAnswering, setIsAnswering] = useState(false);
@@ -177,7 +177,7 @@ export const SpeedTestGame: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           handleTimeout();
-          return 3;
+          return 4.7;
         }
         return prev - 1;
       });
@@ -188,7 +188,7 @@ export const SpeedTestGame: React.FC = () => {
 
   const calculatePoints = (timeRemaining: number, correct: boolean): number => {
     if (!correct) return 0;
-    return Math.max(1, Math.round((timeRemaining / 3) * 200));
+    return Math.max(1, Math.round((timeRemaining / 4.7) * 200));
   };
 
   const handleTimeout = () => {
@@ -220,7 +220,7 @@ export const SpeedTestGame: React.FC = () => {
   const moveToNextQuestion = () => {
     if (currentQuestionIndex < sessionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setTimeLeft(3);
+      setTimeLeft(4.7);
     } else {
       setTestComplete(true);
     }
@@ -230,7 +230,7 @@ export const SpeedTestGame: React.FC = () => {
     setSessionQuestions(shuffle(QUESTIONS));
     setIsStarted(true);
     setCurrentQuestionIndex(0);
-    setTimeLeft(3);
+    setTimeLeft(4.7);
     setScore(0);
     setScores([]);
     setTestComplete(false);
@@ -241,7 +241,7 @@ export const SpeedTestGame: React.FC = () => {
   const handleReset = () => {
     setIsStarted(false);
     setCurrentQuestionIndex(0);
-    setTimeLeft(3);
+    setTimeLeft(4.7);
     setScore(0);
     setScores([]);
     setTestComplete(false);
@@ -357,8 +357,8 @@ export const SpeedTestGame: React.FC = () => {
             Question {currentQuestionIndex + 1} of {sessionQuestions.length}
           </div>
           <motion.div
-            animate={{ scale: timeLeft <= 1 ? [1, 1.1, 1] : 1 }}
-            className={`text-3xl font-bold ${timeLeft <= 1 ? 'text-red-600' : timeLeft <= 2 ? 'text-yellow-600' : 'text-green-600'}`}
+            animate={{ scale: timeLeft <= 1.2 ? [1, 1.1, 1] : 1 }}
+            className={`text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
           >
             {timeLeft}s
           </motion.div>
@@ -368,7 +368,7 @@ export const SpeedTestGame: React.FC = () => {
         <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
           <motion.div
             initial={{ width: '100%' }}
-            animate={{ width: `${(timeLeft / 3) * 100}%` }}
+            animate={{ width: `${(timeLeft / 4.7) * 100}%` }}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full"
             transition={{ duration: 1, ease: 'linear' }}
           />
