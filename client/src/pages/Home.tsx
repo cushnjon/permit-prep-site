@@ -351,6 +351,13 @@ export default function Home() {
             onToggle={() => toggleSection(1)}
             progress={0}
             data-section-index="1"
+            customClosedContent={
+              <img
+                src="/manus-storage/62aaa6c7-ac1e-4a7f-809b-57554d6cd6eb(1)_f1c93b5f.jpg"
+                alt="Traffic Snap Match"
+                className="w-full h-auto rounded-lg"
+              />
+            }
           >
             {gameState.expandedSection === 1 && (
               <div className="space-y-6">
@@ -432,9 +439,10 @@ interface GameSectionProps {
   onRandomQuestion?: () => void;
   progress?: number;
   children: React.ReactNode;
+  customClosedContent?: React.ReactNode;
 }
 
-function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, progress = 0, children }: GameSectionProps) {
+function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQuestion, progress = 0, children, customClosedContent }: GameSectionProps) {
   return (
     <motion.div
       className="glow-border rounded-lg overflow-hidden drop-shadow-medium shadow-container"
@@ -493,21 +501,27 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
         </div>
       </button>
 
-      {/* Progress Bar */}
-      <div className="px-3 py-2 bg-white">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-muted-foreground">Zone Progress</span>
-          <span className="text-xs font-bold text-accent">{progress}%</span>
+      {/* Progress Bar or Custom Closed Content */}
+      {!isExpanded && customClosedContent ? (
+        <div className="px-3 py-2 bg-white">
+          {customClosedContent}
         </div>
-        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-accent to-primary"
-            initial={{ width: 0 }}
-            animate={{ width: progress + "%" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          />
+      ) : (
+        <div className="px-3 py-2 bg-white">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">Zone Progress</span>
+            <span className="text-xs font-bold text-accent">{progress}%</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-accent to-primary"
+              initial={{ width: 0 }}
+              animate={{ width: progress + "%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       <AnimatePresence>
