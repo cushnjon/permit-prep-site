@@ -161,6 +161,18 @@ export const appRouter = router({
 
   // Certificate generation
   certificate: router({
+    list: publicProcedure.query(async () => {
+      try {
+        const db = await getDb();
+        if (!db) return [];
+        const { generatedCertificates } = await import('../drizzle/schema');
+        const certs = await db.select().from(generatedCertificates).orderBy((t) => t.createdAt);
+        return certs || [];
+      } catch (error) {
+        console.error('[Certificate] List failed:', error);
+        return [];
+      }
+    }),
     generate: publicProcedure
       .input(
         z.object({
@@ -177,6 +189,22 @@ export const appRouter = router({
             input.score
           );
 
+          // Save certificate to database
+          const db = await getDb();
+          if (db) {
+            try {
+              const { generatedCertificates } = await import('../drizzle/schema');
+              await db.insert(generatedCertificates).values({
+                userName: input.userName,
+                score: input.score,
+                questionCount: input.questionCount,
+                pdfUrl: `certificates/${Date.now()}_${input.userName.replace(/\s+/g, '_')}.pdf`,
+              });
+            } catch (dbError) {
+              console.error('[Certificate] Database save failed:', dbError);
+            }
+          }
+
           // Return base64 encoded PDF for download
           const base64 = pdfBuffer.toString('base64');
           const filename = `Safety_Certificate_${input.questionCount}Q_${Date.now()}.pdf`;
@@ -187,10 +215,10 @@ export const appRouter = router({
             filename,
           };
         } catch (error) {
-          console.error("[Certificate] Generation failed:", error);
+          console.error('[Certificate] Generation failed:', error);
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to generate certificate",
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to generate certificate',
           });
         }
       }),

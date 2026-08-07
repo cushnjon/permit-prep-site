@@ -1,22 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Download } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 const ARCHIVE_PASSWORD = "permitprep";
-
-// Mock certificate data - in production this would come from the database
-const mockCertificates = [
-  { id: 1, name: "John Smith", score: 95, date: "2026-08-07", questionCount: 100 },
-  { id: 2, name: "Jane Doe", score: 87, date: "2026-08-06", questionCount: 50 },
-  { id: 3, name: "Bob Johnson", score: 72, date: "2026-08-05", questionCount: 100 },
-];
 
 export default function CertificateArchive() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { data: certificates = [], isLoading } = trpc.certificate.list.useQuery(
+    undefined,
+    { enabled: isUnlocked }
+  );
 
   const handleUnlock = () => {
     if (password === ARCHIVE_PASSWORD) {
@@ -73,11 +71,12 @@ export default function CertificateArchive() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Certificate Archive</h1>
-          <p className="text-gray-600">All generated certificates ({mockCertificates.length} total)</p>
+          <p className="text-gray-600">All generated certificates ({certificates.length} total)</p>
         </div>
 
         <div className="space-y-4">
-          {mockCertificates.map((cert, idx) => (
+          {isLoading && <p className="text-center text-gray-600">Loading certificates...</p>}
+          {certificates.map((cert: any, idx: number) => (
             <motion.div
               key={cert.id}
               initial={{ opacity: 0, y: 20 }}
@@ -89,12 +88,12 @@ export default function CertificateArchive() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex-1">
-                      <p className="text-lg font-bold text-slate-900">{cert.name}</p>
+                      <p className="text-lg font-bold text-slate-900">{cert.userName}</p>
                       <p className="text-sm text-gray-600">
                         Score: {cert.score}% • {cert.questionCount} Questions
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Generated: {new Date(cert.date).toLocaleDateString()} {new Date(cert.date).toLocaleTimeString()}
+                        Generated: {new Date(cert.createdAt).toLocaleDateString()} {new Date(cert.createdAt).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -110,7 +109,7 @@ export default function CertificateArchive() {
           ))}
         </div>
 
-        {mockCertificates.length === 0 && (
+        {certificates.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <p className="text-gray-600">No certificates in the archive yet</p>
           </div>
