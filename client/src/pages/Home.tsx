@@ -398,6 +398,13 @@ export default function Home() {
             onToggle={() => toggleSection(2)}
             progress={0}
             data-section-index="2"
+            customClosedContent={
+              <img
+                src="/manus-storage/62aaa6c7-ac1e-4a7f-809b-57554d6cd6eb(4)_e5d80f27.jpg"
+                alt="E50 & E100 Certification"
+                className="w-full h-auto rounded-lg"
+              />
+            }
           >
             {gameState.expandedSection === 2 && (
               <CertificationTest />
