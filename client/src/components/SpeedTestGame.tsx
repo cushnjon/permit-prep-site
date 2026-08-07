@@ -151,6 +151,7 @@ export const SpeedTestGame: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(4.7);
+  const [globalTimeLeft, setGlobalTimeLeft] = useState(20);
   const [score, setScore] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
   const [isAnswering, setIsAnswering] = useState(false);
@@ -181,7 +182,24 @@ export const SpeedTestGame: React.FC = () => {
     return opts;
   }, [currentQuestion, use5050Mode]);
 
-  // Timer effect
+  // Global timer effect (20 seconds total)
+  useEffect(() => {
+    if (!isStarted || testComplete) return;
+
+    const globalTimer = setInterval(() => {
+      setGlobalTimeLeft((prev) => {
+        if (prev <= 1) {
+          setTestComplete(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(globalTimer);
+  }, [isStarted, testComplete]);
+
+  // Per-question timer effect
   useEffect(() => {
     if (!isStarted || isAnswering || testComplete) return;
 
@@ -223,6 +241,13 @@ export const SpeedTestGame: React.FC = () => {
     setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect }]);
     if (isCorrect && points > 0) setEarnedPoints(points);
 
+    // Adjust global timer: +1 for correct, -1 for incorrect
+    if (isCorrect) {
+      setGlobalTimeLeft(prev => Math.min(prev + 1, 30)); // Cap at 30 seconds
+    } else {
+      setGlobalTimeLeft(prev => Math.max(prev - 1, 0)); // Floor at 0 seconds
+    }
+
     setTimeout(() => {
       moveToNextQuestion();
       setIsAnswering(false);
@@ -245,6 +270,7 @@ export const SpeedTestGame: React.FC = () => {
     setIsStarted(true);
     setCurrentQuestionIndex(0);
     setTimeLeft(use5050Mode ? 3.7 : 4.7);
+    setGlobalTimeLeft(20);
     setScore(0);
     setScores([]);
     setTestComplete(false);
@@ -478,12 +504,20 @@ export const SpeedTestGame: React.FC = () => {
           <div className="text-xs sm:text-sm font-semibold text-gray-600">
             Q{currentQuestionIndex + 1}/{sessionQuestions.length}
           </div>
-          <motion.div
-            animate={{ scale: timeLeft <= 1.2 ? [1, 1.1, 1] : 1 }}
-            className={`text-2xl sm:text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
-          >
-            {timeLeft.toFixed(1)}s
-          </motion.div>
+          <div className="flex gap-4 items-center">
+            <motion.div
+              animate={{ scale: globalTimeLeft <= 5 ? [1, 1.1, 1] : 1 }}
+              className={`text-lg sm:text-xl font-bold ${globalTimeLeft <= 5 ? 'text-red-600' : globalTimeLeft <= 10 ? 'text-yellow-600' : 'text-blue-600'}`}
+            >
+              ⏱ {globalTimeLeft}s
+            </motion.div>
+            <motion.div
+              animate={{ scale: timeLeft <= 1.2 ? [1, 1.1, 1] : 1 }}
+              className={`text-2xl sm:text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
+            >
+              {timeLeft.toFixed(1)}s
+            </motion.div>
+          </div>
         </div>
 
         {/* Progress Bar */}
