@@ -464,7 +464,7 @@ export default function TrafficSnap() {
               disabled={answered}
               whileHover={!answered ? { scale: 1.04, y: -4 } : {}}
               whileTap={!answered ? { scale: 0.97 } : {}}
-              className={`relative h-28 rounded-xl bg-gradient-to-br ${getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
+              className={`relative h-28 rounded-xl bg-gradient-to-br ${answered && !showDescription && option.id === currentSign.id && gameMode === 'blur-zoom' && !isCorrect ? 'from-green-400 to-green-600' : getCardStyle(idx)} text-white font-bold text-sm p-4 flex flex-col items-center justify-center shadow-lg transition-all duration-300 cursor-pointer disabled:cursor-default`}
             >
               <span className="text-center leading-tight">{option.name}</span>
               {answered && option.id === currentSign.id && (
