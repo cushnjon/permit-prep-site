@@ -187,6 +187,13 @@ export function DebugTestGenerator() {
           🎮 Play Crossword
         </Button>
 
+        <Button
+          onClick={() => setLocation("/certificate-archive")}
+          className="w-full bg-green-600 hover:bg-green-700"
+        >
+          📁 Certificate Archive
+        </Button>
+
         <p className="text-xs text-gray-600 bg-purple-50 p-2 rounded">
           This will save test progress to localStorage. Use "Open Saved Progress" to load it.
         </p>

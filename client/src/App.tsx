@@ -10,6 +10,7 @@ import TrafficSnap from "./pages/TrafficSnap";
 import GameDev from "./pages/GameDev";
 import SignReference from "./pages/SignReference";
 import Crossword from "./pages/Crossword";
+import CertificateArchive from "./pages/CertificateArchive";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/game-dev"} component={GameDev} />
       <Route path={"/sign-reference"} component={SignReference} />
       <Route path={"/crossword"} component={Crossword} />
+      <Route path={"/certificate-archive"} component={CertificateArchive} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

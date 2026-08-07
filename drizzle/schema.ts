@@ -41,3 +41,28 @@ export const subscriptions = mysqlTable("subscriptions", {
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+// Saved test progress with PIN
+export const savedTestProgress = mysqlTable("savedTestProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  pin: varchar("pin", { length: 10 }).notNull().unique(),
+  testData: text("testData").notNull(), // JSON stringified test state
+  expiresAt: timestamp("expiresAt").notNull(), // 14 days from creation
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SavedTestProgress = typeof savedTestProgress.$inferSelect;
+export type InsertSavedTestProgress = typeof savedTestProgress.$inferInsert;
+
+// Generated certificates archive
+export const generatedCertificates = mysqlTable("generatedCertificates", {
+  id: int("id").autoincrement().primaryKey(),
+  userName: varchar("userName", { length: 255 }).notNull(),
+  score: int("score").notNull(),
+  questionCount: int("questionCount").notNull(), // 50 or 100
+  pdfUrl: text("pdfUrl").notNull(), // S3 or storage URL
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GeneratedCertificate = typeof generatedCertificates.$inferSelect;
+export type InsertGeneratedCertificate = typeof generatedCertificates.$inferInsert;
