@@ -248,9 +248,9 @@ export const SpeedTestGame: React.FC = () => {
     setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect, selectedAnswer: answer }]);
     if (isCorrect && points > 0) setEarnedPoints(points);
 
-    // Adjust global timer: +1 for correct, -1 for incorrect
+    // Adjust global timer: +5.5 for correct, -1 for incorrect
     if (isCorrect) {
-      setGlobalTimeLeft(prev => Math.min(prev + 1, 40)); // Cap at 40 seconds
+      setGlobalTimeLeft(prev => Math.min(prev + 5.5, 60)); // Cap at 60 seconds
     } else {
       setGlobalTimeLeft(prev => Math.max(prev - 1, 0)); // Floor at 0 seconds
     }
