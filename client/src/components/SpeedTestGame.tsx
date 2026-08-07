@@ -143,6 +143,7 @@ interface Score {
   questionId: number;
   points: number;
   correct: boolean;
+  selectedAnswer?: string;
 }
 
 const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
@@ -226,7 +227,7 @@ export const SpeedTestGame: React.FC = () => {
 
   const handleTimeout = () => {
     if (!currentQuestion) return;
-    setScores(prev => [...prev, { questionId: currentQuestion.id, points: 0, correct: false }]);
+    setScores(prev => [...prev, { questionId: currentQuestion.id, points: 0, correct: false, selectedAnswer: undefined }]);
     moveToNextQuestion();
   };
 
@@ -244,7 +245,7 @@ export const SpeedTestGame: React.FC = () => {
     const isCorrect = answer === currentQuestion.answer;
     const points = calculatePoints(timeLeft, isCorrect);
     setScore(prev => prev + points);
-    setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect }]);
+    setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect, selectedAnswer: answer }]);
     if (isCorrect && points > 0) setEarnedPoints(points);
 
     // Adjust global timer: +1 for correct, -1 for incorrect
@@ -471,7 +472,7 @@ export const SpeedTestGame: React.FC = () => {
                               </p>
                               {!score.correct && (
                                 <p className="text-red-600">
-                                  <span className="font-semibold">You Selected:</span> Unknown
+                                  <span className="font-semibold">You Selected:</span> {score.selectedAnswer || 'Unknown'}
                                 </p>
                               )}
                               <p className="text-gray-600">
