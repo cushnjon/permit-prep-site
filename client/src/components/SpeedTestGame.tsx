@@ -8,7 +8,7 @@ const pulseNeonGreen = `
     50% { box-shadow: 0 0 30px rgba(34, 197, 94, 1), inset 0 0 20px rgba(34, 197, 94, 0.5); }
   }
   .pulse-neon-green {
-    animation: pulseNeonGreen 0.6s ease-in-out;
+    animation: pulseNeonGreen 0.25s ease-in-out 3;
   }
 `;
 
@@ -185,22 +185,24 @@ export const SpeedTestGame: React.FC = () => {
   useEffect(() => {
     if (!isStarted || isAnswering || testComplete) return;
 
+    const initialTime = use5050Mode ? 3.7 : 4.7;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           handleTimeout();
-          return 4.7;
+          return initialTime;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isStarted, isAnswering, testComplete, currentQuestionIndex]);
+  }, [isStarted, isAnswering, testComplete, currentQuestionIndex, use5050Mode]);
 
   const calculatePoints = (timeRemaining: number, correct: boolean): number => {
     if (!correct) return 0;
-    return Math.max(1, Math.round((timeRemaining / 4.7) * 200));
+    const maxTime = use5050Mode ? 3.7 : 4.7;
+    return Math.max(1, Math.round((timeRemaining / maxTime) * 200));
   };
 
   const handleTimeout = () => {
@@ -242,7 +244,7 @@ export const SpeedTestGame: React.FC = () => {
     setSessionQuestions(shuffle(QUESTIONS));
     setIsStarted(true);
     setCurrentQuestionIndex(0);
-    setTimeLeft(4.7);
+    setTimeLeft(use5050Mode ? 3.7 : 4.7);
     setScore(0);
     setScores([]);
     setTestComplete(false);
