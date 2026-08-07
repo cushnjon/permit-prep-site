@@ -125,7 +125,7 @@ export default function TrafficSnap() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [answered, gameCompleted]);
 
-  // Blur & Zoom timer — runs from 0 to 30 seconds
+  // Blur & Zoom timer — runs from 0 to 13 seconds
   useEffect(() => {
     if (gameMode !== "blur-zoom" || answered || gameCompleted) {
       if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
@@ -136,12 +136,16 @@ export default function TrafficSnap() {
 
     const tick = () => {
       const elapsed = (Date.now() - blurStartRef.current) / 1000;
-      const clamped = Math.min(elapsed, 30);
+      const clamped = Math.min(elapsed, 13);
       setBlurElapsed(clamped);
-      if (clamped < 30) {
+      if (clamped >= 13) {
+        // Auto-move to next question at 13 seconds
+        setAnswered(true);
+        setIsCorrect(false);
+      } else {
         blurTimerRef.current = requestAnimationFrame(tick);
       }
-    };
+    }
     blurTimerRef.current = requestAnimationFrame(tick);
     return () => {
       if (blurTimerRef.current) cancelAnimationFrame(blurTimerRef.current);
@@ -175,13 +179,15 @@ export default function TrafficSnap() {
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
 
-  // Calculate blur & zoom values from elapsed time (0-30s)
-  const blurProgress = Math.min(blurElapsed / 30, 1);
-  const currentZoom = gameMode === "blur-zoom" && !answered ? 1.5 - blurProgress * 0.5 : (answered ? 1 : 1.35);
+  // Calculate blur & zoom values from elapsed time (0-13s)
+  // Zoom: 130% (1.3) at start, 100% (1.0) at end
+  // Blur: 18px at start, 0px at end (both at 13 seconds)
+  const blurProgress = Math.min(blurElapsed / 13, 1);
+  const currentZoom = gameMode === "blur-zoom" && !answered ? 1.3 - blurProgress * 0.3 : (answered ? 1 : 1.3);
   const currentBlur = gameMode === "blur-zoom" && !answered ? (1 - blurProgress) * 18 : 0;
 
-  // Points for blur mode: 100 at t=0, 0 at t=30
-  const getBlurPoints = () => Math.round(Math.max(0, 100 - (blurElapsed / 30) * 100));
+  // Points for blur mode: 100 at t=0, 0 at t=13
+  const getBlurPoints = () => Math.round(Math.max(0, 100 - (blurElapsed / 13) * 100));
 
   const handleCardClick = (cardIndex: number) => {
     if (answered) return;

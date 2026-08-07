@@ -485,7 +485,7 @@ function GameSection({ title, logo, speedTier, isExpanded, onToggle, onRandomQue
                 return title;
               })()}
             </h2>
-            <p className="text-xs text-muted-foreground font-medium flex-shrink-0">{speedTier}</p>
+            <p className="text-xs text-red-600 font-medium flex-shrink-0">{speedTier}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
