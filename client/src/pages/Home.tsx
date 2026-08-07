@@ -306,6 +306,13 @@ export default function Home() {
             onToggle={() => toggleSection(-1)}
             progress={0}
             data-section-index="-1"
+            customClosedContent={
+              <img
+                src="/manus-storage/psdheaderpull_44ad173c.jpg"
+                alt="DMV License Speed Test"
+                className="w-full h-auto rounded-lg"
+              />
+            }
           >
             {gameState.expandedSection === -1 && (
               <SpeedTestGame />
