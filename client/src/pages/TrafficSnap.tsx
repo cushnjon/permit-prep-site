@@ -351,7 +351,7 @@ export default function TrafficSnap() {
           <div className="w-48 h-2 bg-slate-300 rounded-full mt-2 overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-blue-500 to-blue-700"
-              animate={{ width: `${(blurElapsed / 30) * 100}%` }}
+              animate={{ width: `${(blurElapsed / 9) * 100}%` }}
               transition={{ duration: 0.1 }}
             />
           </div>
