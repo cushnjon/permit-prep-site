@@ -158,6 +158,7 @@ export const SpeedTestGame: React.FC = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showReview, setShowReview] = useState(false);
+  const [use5050Mode, setUse5050Mode] = useState(false);
 
   // Shuffled question order for the whole session — created once on start
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
@@ -165,10 +166,20 @@ export const SpeedTestGame: React.FC = () => {
   const currentQuestion = sessionQuestions[currentQuestionIndex];
 
   // Per-question shuffled options — re-shuffle each time the question changes
-  const shuffledOptions = useMemo(
-    () => (currentQuestion ? shuffle(currentQuestion.options) : []),
-    [currentQuestion]
-  );
+  // In 50/50 mode, eliminate 2 wrong answers, keeping only correct + 1 wrong
+  const shuffledOptions = useMemo(() => {
+    if (!currentQuestion) return [];
+    let opts = shuffle(currentQuestion.options);
+    
+    if (use5050Mode) {
+      const correctAnswer = currentQuestion.answer;
+      const wrongAnswers = opts.filter(opt => opt !== correctAnswer);
+      const selectedWrong = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
+      opts = shuffle([correctAnswer, selectedWrong]);
+    }
+    
+    return opts;
+  }, [currentQuestion, use5050Mode]);
 
   // Timer effect
   useEffect(() => {
@@ -237,6 +248,7 @@ export const SpeedTestGame: React.FC = () => {
     setTestComplete(false);
     setSelectedAnswer(null);
     setIsAnswering(false);
+    // 50/50 mode is already set by user toggle before clicking Start
   };
 
   const handleReset = () => {
@@ -295,6 +307,18 @@ export const SpeedTestGame: React.FC = () => {
               <Download size={16} className="sm:w-5 sm:h-5" />
               Study Guide
             </button>
+
+            <div className="mb-4 sm:mb-6 flex items-center justify-center gap-3 bg-purple-50 rounded-lg p-3 sm:p-4 border border-purple-200">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={use5050Mode}
+                  onChange={(e) => setUse5050Mode(e.target.checked)}
+                  className="w-4 h-4 rounded cursor-pointer"
+                />
+                <span className="text-sm sm:text-base font-semibold text-purple-700">50/50 Mode</span>
+              </label>
+            </div>
 
             <button
               onClick={handleStart}
