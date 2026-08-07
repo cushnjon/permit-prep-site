@@ -51,13 +51,7 @@ export default function Home() {
     timeLeft: 300, // 5 minutes
     selectedAnswer: null,
     showArticle: false,
-    expandedSection: (() => {
-      const rand = Math.random();
-      if (rand < 0.40) return -1; // 40% Speed Test
-      if (rand < 0.60) return 0;  // 20% Text Drive
-      if (rand < 0.80) return 1;  // 20% Traffic Snap
-      return 2;                   // 20% Certification Test
-    })(),
+    expandedSection: 0, // Text Drive (second module) opens by default
     answersCollapsed: false,
     showGlossary: false,
     answeredQuestions: {},
