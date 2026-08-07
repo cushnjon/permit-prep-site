@@ -151,7 +151,8 @@ export const SpeedTestGame: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(4.7);
-  const [globalTimeLeft, setGlobalTimeLeft] = useState(20);
+  const [globalTimeLeft, setGlobalTimeLeft] = useState(30);
+  const [clickPos, setClickPos] = useState<{ x: number; y: number } | null>(null);
   const [score, setScore] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
   const [isAnswering, setIsAnswering] = useState(false);
@@ -229,11 +230,16 @@ export const SpeedTestGame: React.FC = () => {
     moveToNextQuestion();
   };
 
-  const handleAnswer = (answer: string) => {
+  const handleAnswer = (answer: string, event?: React.MouseEvent) => {
     if (isAnswering || !currentQuestion) return;
 
     setIsAnswering(true);
     setSelectedAnswer(answer);
+
+    // Capture click position for "CORRECT" text
+    if (event) {
+      setClickPos({ x: event.clientX, y: event.clientY });
+    }
 
     const isCorrect = answer === currentQuestion.answer;
     const points = calculatePoints(timeLeft, isCorrect);
@@ -243,7 +249,7 @@ export const SpeedTestGame: React.FC = () => {
 
     // Adjust global timer: +1 for correct, -1 for incorrect
     if (isCorrect) {
-      setGlobalTimeLeft(prev => Math.min(prev + 1, 30)); // Cap at 30 seconds
+      setGlobalTimeLeft(prev => Math.min(prev + 1, 40)); // Cap at 40 seconds
     } else {
       setGlobalTimeLeft(prev => Math.max(prev - 1, 0)); // Floor at 0 seconds
     }
@@ -270,12 +276,13 @@ export const SpeedTestGame: React.FC = () => {
     setIsStarted(true);
     setCurrentQuestionIndex(0);
     setTimeLeft(use5050Mode ? 3.7 : 4.7);
-    setGlobalTimeLeft(20);
+    setGlobalTimeLeft(30);
     setScore(0);
     setScores([]);
     setTestComplete(false);
     setSelectedAnswer(null);
     setIsAnswering(false);
+    setClickPos(null);
     // 50/50 mode is already set by user toggle before clicking Start
   };
 
@@ -551,19 +558,19 @@ export const SpeedTestGame: React.FC = () => {
                 return (
                   <motion.button
                     key={option}
-                    onClick={() => handleAnswer(option)}
+                    onClick={(e) => handleAnswer(option, e)}
                     disabled={isAnswering}
                     initial={{ x: index % 2 === 0 ? -200 : 200, opacity: 0 }}
                     animate={{
                       x: isAnswering && isSelected && !isCorrect ? [0, 0, -8, 8, -6, 6, -4, 4, 0] : 0,
                       y: isAnswering && isSelected && !isCorrect
                         ? [0, 0, 0, 0, 10, 20, 40, 80, 120]
-                        : isAnswering && isSelected && isCorrect ? -10 : 0,
+                        : 0,
                       opacity: isAnswering && isSelected && !isCorrect ? [1, 1, 1, 1, 0.8, 0.6, 0.4, 0.2, 0] : 1,
                       rotate: isAnswering && isSelected && !isCorrect ? [0, 0, -8, 8, -12, 15, -20, 25, 30] : 0,
                       scale: isAnswering && isSelected && !isCorrect
                         ? [1, 1.4, 1.3, 1.2, 1.0, 0.85, 0.65, 0.4, 0.15]
-                        : isAnswering && isSelected && isCorrect ? 3 : 1,
+                        : 1,
                     }}
                     transition={
                       isAnswering && isSelected
@@ -578,7 +585,7 @@ export const SpeedTestGame: React.FC = () => {
                     } : {}}
                     className={`w-full p-4 rounded-lg font-semibold text-white transition-all ${bgColor} ${
                       isAnswering && !isSelected ? 'opacity-50' : ''
-                    } ${isAnswering && isSelected && isCorrect ? 'bg-green-500 pulse-neon-green ring-4 ring-green-300' : ''} ${
+                    } ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-500' : ''} ${
                       isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-900' : ''
                     }`}
                   >
@@ -591,6 +598,27 @@ export const SpeedTestGame: React.FC = () => {
               })}
             </div>
           </motion.div>
+        </AnimatePresence>
+
+        {/* Flashing CORRECT text at click position */}
+        <AnimatePresence>
+          {clickPos && selectedAnswer === currentQuestion?.answer && (
+            <motion.div
+              key={`correct-${currentQuestionIndex}`}
+              initial={{ opacity: 1, scale: 0.8 }}
+              animate={{ opacity: [1, 0.5, 1, 0.5, 1, 0.5, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, times: [0, 0.15, 0.3, 0.45, 0.6, 0.75, 1] }}
+              className="pointer-events-none fixed z-50 text-4xl font-black text-green-500 drop-shadow-[0_0_20px_rgba(34,197,94,0.9)]"
+              style={{
+                left: `${clickPos.x}px`,
+                top: `${clickPos.y}px`,
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              CORRECT
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Floating points burst */}
