@@ -295,7 +295,7 @@ export default function Home() {
           <GameSection
             title="DMV License Speed Test"
             logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="Variable"
+            speedTier="60 MPH"
             isExpanded={gameState.expandedSection === -1}
             onToggle={() => toggleSection(-1)}
             progress={0}
@@ -401,7 +401,7 @@ export default function Home() {
           <GameSection
             title="Certification Test / Examen de Certificación"
             logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="Variable"
+            speedTier="20 MPH"
             isExpanded={gameState.expandedSection === 2}
             onToggle={() => toggleSection(2)}
             progress={0}
