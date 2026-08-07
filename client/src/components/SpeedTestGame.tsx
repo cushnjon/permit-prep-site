@@ -506,22 +506,22 @@ export const SpeedTestGame: React.FC = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-3 sm:p-8 shadow-lg border border-blue-100">
+      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-xl border border-blue-100 text-sm sm:text-base">
         {/* Timer and Progress */}
-        <div className="flex justify-between items-center mb-3 sm:mb-6">
+        <div className="flex justify-between items-center mb-2 sm:mb-4 gap-2">
           <div className="text-xs sm:text-sm font-semibold text-gray-600">
             Q{currentQuestionIndex + 1}/{sessionQuestions.length}
           </div>
           <div className="flex gap-4 items-center">
             <motion.div
               animate={{ scale: globalTimeLeft <= 5 ? [1, 1.1, 1] : 1 }}
-              className={`text-lg sm:text-xl font-bold ${globalTimeLeft <= 5 ? 'text-red-600' : globalTimeLeft <= 10 ? 'text-yellow-600' : 'text-blue-600'}`}
+              className={`text-sm sm:text-lg font-bold ${globalTimeLeft <= 5 ? 'text-red-600' : globalTimeLeft <= 10 ? 'text-yellow-600' : 'text-blue-600'}`}
             >
-              ⏱ {globalTimeLeft}s
+              ⏱ {globalTimeLeft.toFixed(1)}s
             </motion.div>
             <motion.div
               animate={{ scale: timeLeft <= 1.2 ? [1, 1.1, 1] : 1 }}
-              className={`text-2xl sm:text-3xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
+              className={`text-lg sm:text-2xl font-bold ${timeLeft <= 1.2 ? 'text-red-600' : timeLeft <= 2.5 ? 'text-yellow-600' : 'text-green-600'}`}
             >
               {timeLeft.toFixed(1)}s
             </motion.div>
@@ -529,7 +529,7 @@ export const SpeedTestGame: React.FC = () => {
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-4 sm:mb-8">
+        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-6 shadow-md">
           <motion.div
             initial={{ width: '100%' }}
             animate={{ width: `${(timeLeft / 4.7) * 100}%` }}
@@ -545,12 +545,12 @@ export const SpeedTestGame: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-8 shadow-sm border border-gray-100 mb-4 sm:mb-8"
+            className="bg-white/80 rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-lg border border-gray-100 mb-4 sm:mb-6 text-sm sm:text-base"
           >
             <h3 className="text-lg sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center">{currentQuestion.question}</h3>
 
             {/* Options — shuffled per question, different color per slot */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {shuffledOptions.map((option, index) => {
                 const isSelected = selectedAnswer === option;
                 const isCorrect = option === currentQuestion.answer;
@@ -584,15 +584,15 @@ export const SpeedTestGame: React.FC = () => {
                       background: 'linear-gradient(135deg, #7f1d1d, #1a0000)',
                       boxShadow: '0 0 20px rgba(127,29,29,0.8), inset 0 0 10px rgba(0,0,0,0.5)'
                     } : {}}
-                    className={`w-full p-4 rounded-lg font-semibold text-white transition-all ${bgColor} ${
+                    className={`w-full p-3 sm:p-4 rounded-lg font-semibold text-white transition-all shadow-md ${bgColor} ${
                       isAnswering && !isSelected ? 'opacity-50' : ''
                     } ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-500' : ''} ${
                       isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-900' : ''
                     }`}
                   >
                     <div className="text-left">
-                      <div className="text-xs sm:text-sm opacity-75">{String.fromCharCode(65 + index)}.</div>
-                      <div className="text-sm sm:text-lg">{option}</div>
+                      <div className="text-xs opacity-75">{String.fromCharCode(65 + index)}.</div>
+                      <div className="text-xs sm:text-base line-clamp-2">{option}</div>
                     </div>
                   </motion.button>
                 );
