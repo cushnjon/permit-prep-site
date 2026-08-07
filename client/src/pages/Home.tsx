@@ -360,7 +360,7 @@ export default function Home() {
             data-section-index="1"
             customClosedContent={
               <img
-                src="/manus-storage/62aaa6c7-ac1e-4a7f-809b-57554d6cd6eb(1)_f1c93b5f.jpg"
+                src="/manus-storage/psdheaderpull(1)_2eed0d64.jpg"
                 alt="Traffic Snap Match"
                 className="w-full h-auto rounded-lg"
               />
