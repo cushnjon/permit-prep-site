@@ -136,10 +136,10 @@ export default function TrafficSnap() {
 
     const tick = () => {
       const elapsed = (Date.now() - blurStartRef.current) / 1000;
-      const clamped = Math.min(elapsed, 13);
+      const clamped = Math.min(elapsed, 9);
       setBlurElapsed(clamped);
-      if (clamped >= 13) {
-        // Auto-move to next question at 13 seconds
+      if (clamped >= 9) {
+        // Auto-move to next question at 9 seconds
         setAnswered(true);
         setIsCorrect(false);
       } else {
@@ -179,15 +179,15 @@ export default function TrafficSnap() {
     return () => clearTimeout(timer);
   }, [answered, isCorrect]);
 
-  // Calculate blur & zoom values from elapsed time (0-13s)
+  // Calculate blur & zoom values from elapsed time (0-9s)
   // Zoom: 130% (1.3) at start, 100% (1.0) at end
-  // Blur: 18px at start, 0px at end (both at 13 seconds)
-  const blurProgress = Math.min(blurElapsed / 13, 1);
+  // Blur: 18px at start, 0px at end (both at 9 seconds)
+  const blurProgress = Math.min(blurElapsed / 9, 1);
   const currentZoom = gameMode === "blur-zoom" && !answered ? 1.3 - blurProgress * 0.3 : (answered ? 1 : 1.3);
   const currentBlur = gameMode === "blur-zoom" && !answered ? (1 - blurProgress) * 18 : 0;
 
-  // Points for blur mode: 100 at t=0, 0 at t=13
-  const getBlurPoints = () => Math.round(Math.max(0, 100 - (blurElapsed / 13) * 100));
+  // Points for blur mode: 100 at t=0, 0 at t=9
+  const getBlurPoints = () => Math.round(Math.max(0, 100 - (blurElapsed / 9) * 100));
 
   const handleCardClick = (cardIndex: number) => {
     if (answered) return;
