@@ -329,6 +329,13 @@ export default function Home() {
             onRandomQuestion={handleRandomQuestion}
             progress={getZoneProgress(0)}
             data-section-index="0"
+            customClosedContent={
+              <img
+                src="/manus-storage/psdpulldowjn_d2110be3.jpg"
+                alt="Extended Prep Read & Answer"
+                className="w-full h-auto rounded-lg"
+              />
+            }
           >
             {gameState.expandedSection === 0 && (
               <TextDriveGame
