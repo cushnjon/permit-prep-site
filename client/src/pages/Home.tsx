@@ -354,7 +354,7 @@ export default function Home() {
           <GameSection
             title="Traffic Snap: Sign & Shape / Tráfico Snap: Signo y Forma"
             logo={GAME_LOGOS.permitPrepLogo}
-            speedTier="25 MPH"
+            speedTier="40 MPH"
             isExpanded={gameState.expandedSection === 1}
             onToggle={() => toggleSection(1)}
             progress={0}

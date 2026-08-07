@@ -74,7 +74,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 type GameMode = "normal" | "blur-zoom";
 
 export default function TrafficSnap() {
-  const [gameMode, setGameMode] = useState<GameMode>("normal");
+  const [gameMode, setGameMode] = useState<GameMode>("blur-zoom");
   const [remainingSigns, setRemainingSigns] = useState(() => shuffleArray([...ALL_SIGNS]));
   const [answered, setAnswered] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
