@@ -230,26 +230,32 @@ export default function CertificationTest() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 50 Question Test */}
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="p-8 border-2 border-blue-400 rounded-lg bg-blue-50 cursor-pointer"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            whileHover={{ scale: 1.04, y: -4 }}
+            className="p-4 border-2 border-blue-400 rounded-lg bg-blue-50 cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
             onClick={() => handleStartTest(50)}
           >
             <h2 className="text-2xl font-bold text-blue-700 mb-2">50 Questions</h2>
             <p className="text-gray-600 mb-4">~30 minutes</p>
-            <p className="text-sm text-gray-500 mb-6">Pass with 70% or higher (35/50 correct)</p>
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Test</Button>
+            <p className="text-sm text-gray-500 mb-4">Pass with 70% or higher (35/50 correct)</p>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md">Start Test</Button>
           </motion.div>
 
           {/* 100 Question Test */}
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="p-8 border-2 border-blue-500 rounded-lg bg-blue-100 cursor-pointer"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            whileHover={{ scale: 1.04, y: -4 }}
+            className="p-4 border-2 border-blue-500 rounded-lg bg-blue-100 cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
             onClick={() => handleStartTest(100)}
           >
             <h2 className="text-2xl font-bold text-blue-700 mb-2">100 Questions</h2>
             <p className="text-gray-600 mb-4">~60 minutes</p>
-            <p className="text-sm text-gray-500 mb-6">Pass with 70% or higher (70/100 correct)</p>
-            <Button className="w-full bg-blue-700 hover:bg-blue-800">Start Test</Button>
+            <p className="text-sm text-gray-500 mb-4">Pass with 70% or higher (70/100 correct)</p>
+            <Button className="w-full bg-blue-700 hover:bg-blue-800 shadow-md">Start Test</Button>
           </motion.div>
         </div>
 
