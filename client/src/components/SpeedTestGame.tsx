@@ -148,6 +148,17 @@ interface Score {
 
 const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
 
+export const SPEED_TEST_GROUP_PALETTE = [
+  { surface: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-700', empty: 'bg-sky-50 border-sky-300 text-sky-600', filled: 'bg-sky-400 border-sky-500 text-white' },
+  { surface: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', empty: 'bg-violet-50 border-violet-300 text-violet-600', filled: 'bg-violet-400 border-violet-500 text-white' },
+  { surface: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700', empty: 'bg-rose-50 border-rose-300 text-rose-600', filled: 'bg-rose-400 border-rose-500 text-white' },
+  { surface: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800', empty: 'bg-amber-50 border-amber-300 text-amber-700', filled: 'bg-amber-400 border-amber-500 text-white' },
+  { surface: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', empty: 'bg-emerald-50 border-emerald-300 text-emerald-600', filled: 'bg-emerald-400 border-emerald-500 text-white' },
+  { surface: 'bg-cyan-50', border: 'border-cyan-200', badge: 'bg-cyan-100 text-cyan-700', empty: 'bg-cyan-50 border-cyan-300 text-cyan-600', filled: 'bg-cyan-400 border-cyan-500 text-white' },
+  { surface: 'bg-lime-50', border: 'border-lime-200', badge: 'bg-lime-100 text-lime-800', empty: 'bg-lime-50 border-lime-300 text-lime-700', filled: 'bg-lime-400 border-lime-500 text-white' },
+  { surface: 'bg-fuchsia-50', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-700', empty: 'bg-fuchsia-50 border-fuchsia-300 text-fuchsia-600', filled: 'bg-fuchsia-400 border-fuchsia-500 text-white' },
+] as const;
+
 const REVIEW_TOPIC_PATTERNS: Array<[string, RegExp]> = [
   ['impaired-driving', /dui|dwai|bac|alcohol|cannabis|breath|blood test|zero-tolerance|refusing/i],
   ['traffic-signals', /traffic light|signal|flashing red|flashing yellow|yellow light|green light|red x|arrow|beacon/i],
@@ -211,6 +222,9 @@ export const getRelatedReviewQuestions = (questionId: number): Question[] => {
 
   return related.slice(0, 5);
 };
+
+export const getSpeedTestGroupIndex = (questionId: number): number =>
+  REVIEW_GROUPS.findIndex((group) => group.some((question) => question.id === questionId));
 
 interface ReviewQuestionStackProps {
   score: Score;
@@ -311,11 +325,14 @@ export const SpeedTestGame: React.FC = () => {
   const [showReview, setShowReview] = useState(false);
   const [expandedReviewQuestionId, setExpandedReviewQuestionId] = useState<number | null>(null);
   const [use5050Mode, setUse5050Mode] = useState(false);
+  const [completedGroupSlots, setCompletedGroupSlots] = useState<number[]>([]);
 
   // Shuffled question order for the whole session — created once on start
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
 
   const currentQuestion = sessionQuestions[currentQuestionIndex];
+  const currentGroupIndex = currentQuestion ? getSpeedTestGroupIndex(currentQuestion.id) : -1;
+  const currentGroupColor = SPEED_TEST_GROUP_PALETTE[Math.max(currentGroupIndex, 0) % SPEED_TEST_GROUP_PALETTE.length];
 
   // Per-question shuffled options — re-shuffle each time the question changes
   // In 50/50 mode, eliminate 2 wrong answers, keeping only correct + 1 wrong
@@ -396,6 +413,9 @@ export const SpeedTestGame: React.FC = () => {
     setScore(prev => prev + points);
     setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect, selectedAnswer: answer }]);
     if (isCorrect && points > 0) setEarnedPoints(points);
+    if (isCorrect && currentGroupIndex >= 0) {
+      setCompletedGroupSlots((previous) => previous.includes(currentGroupIndex) ? previous : [...previous, currentGroupIndex]);
+    }
 
     // Adjust global timer: +5.5 for correct, -1 for incorrect
     if (isCorrect) {
@@ -433,6 +453,7 @@ export const SpeedTestGame: React.FC = () => {
     setSelectedAnswer(null);
     setIsAnswering(false);
     setClickPos(null);
+    setCompletedGroupSlots([]);
     // 50/50 mode is already set by user toggle before clicking Start
   };
 
@@ -447,6 +468,7 @@ export const SpeedTestGame: React.FC = () => {
     setIsAnswering(false);
     setSessionQuestions([]);
     setEarnedPoints(null);
+    setCompletedGroupSlots([]);
   };
 
   const handleDownloadStudyGuide = () => {
@@ -695,8 +717,14 @@ export const SpeedTestGame: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white/80 rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-lg border border-gray-100 mb-4 sm:mb-6 text-sm sm:text-base"
+            className={`${currentGroupColor.surface} rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-lg border ${currentGroupColor.border} mb-4 sm:mb-6 text-sm sm:text-base`}
           >
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide sm:text-xs ${currentGroupColor.badge}`}>
+                Group {currentGroupIndex + 1}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">Answer to fill its slot</span>
+            </div>
             <h3 className="text-lg sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center">{currentQuestion.question}</h3>
 
             {/* Options — shuffled per question, different color per slot */}
@@ -750,6 +778,41 @@ export const SpeedTestGame: React.FC = () => {
             </div>
           </motion.div>
         </AnimatePresence>
+
+        {/* Solitaire-style group progress footer */}
+        <footer className="mt-4 rounded-lg border border-gray-200 bg-white/90 p-3 shadow-md sm:mt-6 sm:p-4" aria-label="Question group progress">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-700 sm:text-sm">Group progress</p>
+              <p className="text-[10px] text-gray-500 sm:text-xs">Correct answers fill their matching card space.</p>
+            </div>
+            <span className="whitespace-nowrap text-xs font-bold text-blue-700 sm:text-sm">
+              {completedGroupSlots.length}/{REVIEW_GROUPS.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+            {REVIEW_GROUPS.map((group, groupIndex) => {
+              const groupColor = SPEED_TEST_GROUP_PALETTE[groupIndex % SPEED_TEST_GROUP_PALETTE.length];
+              const isFilled = completedGroupSlots.includes(groupIndex);
+              const isCurrent = currentGroupIndex === groupIndex;
+              return (
+                <motion.div
+                  key={`group-slot-${groupIndex}`}
+                  layout
+                  initial={{ opacity: 0, y: 8, scale: 0.92 }}
+                  animate={{ opacity: 1, y: 0, scale: isCurrent ? 1.06 : 1 }}
+                  transition={{ duration: 0.2, delay: Math.min(groupIndex * 0.02, 0.2) }}
+                  title={`Group ${groupIndex + 1}${isFilled ? ' complete' : ' open'}`}
+                  aria-label={`Group ${groupIndex + 1}, ${isFilled ? 'complete' : 'open'}`}
+                  className={`relative flex h-10 w-8 items-center justify-center rounded-md border-2 text-xs font-black shadow-sm transition-shadow sm:h-12 sm:w-9 sm:text-sm ${isFilled ? groupColor.filled : groupColor.empty} ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+                >
+                  {isFilled ? '✓' : groupIndex + 1}
+                  <span className="pointer-events-none absolute -bottom-1 -right-1 h-2 w-2 rounded-full border border-white bg-white/80" />
+                </motion.div>
+              );
+            })}
+          </div>
+        </footer>
 
         {/* Flashing CORRECT text at click position */}
         <AnimatePresence>

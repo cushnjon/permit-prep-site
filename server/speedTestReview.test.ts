@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getRelatedReviewQuestions, REVIEW_GROUPS } from "../client/src/components/SpeedTestGame";
+import {
+  getRelatedReviewQuestions,
+  getSpeedTestGroupIndex,
+  REVIEW_GROUPS,
+  SPEED_TEST_GROUP_PALETTE,
+} from "../client/src/components/SpeedTestGame";
 
 describe("Speed Test related review groups", () => {
   it("keeps every unnamed internal group at seven questions or fewer", () => {
@@ -17,6 +22,21 @@ describe("Speed Test related review groups", () => {
 
   it("returns an empty list for an unknown question", () => {
     expect(getRelatedReviewQuestions(999)).toEqual([]);
+  });
+
+  it("assigns every question to exactly one colored group slot", () => {
+    for (let questionId = 1; questionId <= 100; questionId += 1) {
+      const groupIndex = getSpeedTestGroupIndex(questionId);
+      expect(groupIndex).toBeGreaterThanOrEqual(0);
+      expect(groupIndex).toBeLessThan(REVIEW_GROUPS.length);
+      expect(SPEED_TEST_GROUP_PALETTE[groupIndex % SPEED_TEST_GROUP_PALETTE.length].surface).toMatch(/^bg-/);
+    }
+  });
+
+  it("provides a light-color palette with enough entries for the group slots", () => {
+    expect(SPEED_TEST_GROUP_PALETTE.length).toBeGreaterThan(0);
+    expect(SPEED_TEST_GROUP_PALETTE.every((color) => color.surface.endsWith("-50"))).toBe(true);
+    expect(SPEED_TEST_GROUP_PALETTE.every((color) => color.filled.includes("text-white"))).toBe(true);
   });
 });
 

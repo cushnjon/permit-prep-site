@@ -11,3 +11,12 @@
 
 - [x] Manually test the Speed Test end-game review flow on desktop and mobile by completing a session, opening the review modal, and confirming incorrect answers show expandable stacked related-question cards
 - [x] Capture desktop and mobile screenshots of the Speed Test review modal showing the layered stack and expanded related questions
+- [x] Add light color assignments for each grouped Speed Test question category
+- [x] Add Solitaire-style colored footer slots for grouped Speed Test categories
+- [x] Fill a group slot when a question from that group is answered correctly
+- [x] Verify the new Speed Test footer and group colors on desktop and mobile
+
+- [x] Manually verify the new Speed Test footer and group colors at a true mobile viewport after the footer/color changes
+- [x] Visually confirm a correct answer fills its matching group slot on desktop and mobile
+- [x] Capture post-change mobile evidence for the colored group card and Solitaire-style footer
+
