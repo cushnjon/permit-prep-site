@@ -9,5 +9,5 @@
 - [x] Add expandable layered card-stack presentation for related review questions
 - [x] Verify Speed Test review behavior on desktop and mobile
 
-- [ ] Manually test the Speed Test end-game review flow on desktop and mobile by completing a session, opening the review modal, and confirming incorrect answers show expandable stacked related-question cards
-- [ ] Capture desktop and mobile screenshots of the Speed Test review modal showing the layered stack and expanded related questions
+- [x] Manually test the Speed Test end-game review flow on desktop and mobile by completing a session, opening the review modal, and confirming incorrect answers show expandable stacked related-question cards
+- [x] Capture desktop and mobile screenshots of the Speed Test review modal showing the layered stack and expanded related questions
