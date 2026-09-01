@@ -148,6 +148,154 @@ interface Score {
 
 const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
 
+const REVIEW_TOPIC_PATTERNS: Array<[string, RegExp]> = [
+  ['impaired-driving', /dui|dwai|bac|alcohol|cannabis|breath|blood test|zero-tolerance|refusing/i],
+  ['traffic-signals', /traffic light|signal|flashing red|flashing yellow|yellow light|green light|red x|arrow|beacon/i],
+  ['parking', /parking|curb|fire hydrant|crosswalk/i],
+  ['passing-and-lanes', /passing|pass on the right|lane|yellow lines|white line|buffer zone|left lane|center lane|shoulder/i],
+  ['pedestrians-and-bicycles', /pedestrian|bicycl|blind.*cane|crosswalk/i],
+  ['emergency-response', /emergency|school bus|blowout|brake.*fail|crash|collision|stopped emergency|train track/i],
+  ['weather-and-road-conditions', /hydroplan|fog|ice|freeze|bridge|mountain|rural|winding|road surface|road hazard/i],
+  ['speed-and-following', /speed limit|speeding|following distance|stopping distance|55 mph|mph/i],
+  ['vehicle-safety', /seat belt|headlight|high beam|tire|steering wheel|backing up|freeway|merge/i],
+  ['licensing-and-teen-rules', /license|permit|dmv|cdl|curfew|passenger|car seat|booster|written test|address/i],
+];
+
+const reviewTopicFor = (question: Question): string => {
+  const match = REVIEW_TOPIC_PATTERNS.find(([, pattern]) => pattern.test(question.question));
+  return match?.[0] ?? 'general-rules';
+};
+
+// Build unnamed internal groups and split every group into chunks of seven or fewer.
+// The labels never appear in the UI; they only keep related review questions together.
+export const REVIEW_GROUPS = (() => {
+  const buckets = new Map<string, Question[]>();
+  QUESTIONS.forEach((question) => {
+    const topic = reviewTopicFor(question);
+    const bucket = buckets.get(topic) ?? [];
+    bucket.push(question);
+    buckets.set(topic, bucket);
+  });
+
+  const groups: Question[][] = [];
+  buckets.forEach((bucket) => {
+    const shuffledBucket = [...bucket].sort((a, b) => a.id - b.id);
+    for (let index = 0; index < shuffledBucket.length; index += 7) {
+      groups.push(shuffledBucket.slice(index, index + 7));
+    }
+  });
+  return groups;
+})();
+
+const REVIEW_GROUP_BY_QUESTION_ID = new Map<number, Question[]>();
+REVIEW_GROUPS.forEach((group) => {
+  group.forEach((question) => REVIEW_GROUP_BY_QUESTION_ID.set(question.id, group));
+});
+
+const REVIEW_TOPIC_QUESTIONS = new Map<string, Question[]>();
+QUESTIONS.forEach((question) => {
+  const topic = reviewTopicFor(question);
+  const bucket = REVIEW_TOPIC_QUESTIONS.get(topic) ?? [];
+  bucket.push(question);
+  REVIEW_TOPIC_QUESTIONS.set(topic, bucket);
+});
+
+export const getRelatedReviewQuestions = (questionId: number): Question[] => {
+  const question = QUESTIONS.find((candidate) => candidate.id === questionId);
+  if (!question) return [];
+
+  const sameGroup = REVIEW_GROUP_BY_QUESTION_ID.get(questionId) ?? [];
+  const sameTopic = REVIEW_TOPIC_QUESTIONS.get(reviewTopicFor(question)) ?? [];
+  const related = [...sameGroup.filter((candidate) => candidate.id !== questionId), ...sameTopic]
+    .filter((candidate, index, all) => candidate.id !== questionId && all.findIndex((item) => item.id === candidate.id) === index);
+
+  return related.slice(0, 5);
+};
+
+interface ReviewQuestionStackProps {
+  score: Score;
+  question: Question;
+  questionNumber: number;
+  relatedQuestions: Question[];
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+const ReviewQuestionStack: React.FC<ReviewQuestionStackProps> = ({
+  score: reviewScore,
+  question,
+  questionNumber,
+  relatedQuestions,
+  isExpanded,
+  onToggle,
+}) => (
+  <div className="relative">
+    {!isExpanded && relatedQuestions.slice(0, 3).map((relatedQuestion, index) => (
+      <div
+        key={`stack-layer-${relatedQuestion.id}`}
+        aria-hidden="true"
+        className="absolute inset-x-2 h-full rounded-lg border-2 border-red-200 bg-red-50/80 shadow-sm"
+        style={{ top: `${(index + 1) * 6}px`, transform: `scale(${1 - (index + 1) * 0.018})`, zIndex: 3 - index }}
+      />
+    ))}
+
+    <motion.button
+      type="button"
+      onClick={onToggle}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.99 }}
+      className={`relative z-10 w-full text-left p-4 rounded-lg border-2 bg-red-50 border-red-300 shadow-md transition-shadow hover:shadow-lg ${isExpanded ? 'mb-3' : ''}`}
+      aria-expanded={isExpanded}
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-bold">✕</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">
+              Q{questionNumber}: {question.question}
+            </p>
+            <span className="flex-shrink-0 text-xs font-semibold text-red-700">{isExpanded ? 'Collapse' : `+${relatedQuestions.length} related`}</span>
+          </div>
+          <div className="mt-2 space-y-1 text-xs sm:text-sm">
+            <p className="text-red-700"><span className="font-semibold">You Selected:</span> {reviewScore.selectedAnswer || 'No answer'}</p>
+            <p className="text-green-700"><span className="font-semibold">Correct Answer:</span> {question.answer}</p>
+          </div>
+        </div>
+      </div>
+    </motion.button>
+
+    <AnimatePresence initial={false}>
+      {isExpanded && relatedQuestions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, height: 0, y: -8 }}
+          animate={{ opacity: 1, height: 'auto', y: 0 }}
+          exit={{ opacity: 0, height: 0, y: -8 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className="relative z-20 space-y-2 overflow-hidden rounded-lg border border-blue-200 bg-blue-50/70 p-3 sm:p-4"
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Related review</p>
+          {relatedQuestions.map((relatedQuestion, relatedIndex) => (
+            <motion.div
+              key={`related-${relatedQuestion.id}`}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: relatedIndex * 0.035, duration: 0.18 }}
+              className="rounded-md border border-blue-100 bg-white p-3 shadow-sm"
+            >
+              <p className="text-xs sm:text-sm font-semibold text-gray-900">
+                {relatedIndex + 1}. {relatedQuestion.question}
+              </p>
+              <p className="mt-1 text-xs sm:text-sm text-blue-700">
+                <span className="font-semibold">Answer:</span> {relatedQuestion.answer}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+
 export const SpeedTestGame: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -161,6 +309,7 @@ export const SpeedTestGame: React.FC = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showReview, setShowReview] = useState(false);
+  const [expandedReviewQuestionId, setExpandedReviewQuestionId] = useState<number | null>(null);
   const [use5050Mode, setUse5050Mode] = useState(false);
 
   // Shuffled question order for the whole session — created once on start
@@ -441,54 +590,55 @@ export const SpeedTestGame: React.FC = () => {
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-4">
-                  {scores.map((score, idx) => {
-                    const question = QUESTIONS.find((q) => q.id === score.questionId);
+                  {scores.map((reviewScore, idx) => {
+                    const question = QUESTIONS.find((candidate) => candidate.id === reviewScore.questionId);
                     if (!question) return null;
 
+                    if (!reviewScore.correct) {
+                      return (
+                        <ReviewQuestionStack
+                          key={reviewScore.questionId}
+                          score={reviewScore}
+                          question={question}
+                          questionNumber={idx + 1}
+                          relatedQuestions={getRelatedReviewQuestions(question.id)}
+                          isExpanded={expandedReviewQuestionId === question.id}
+                          onToggle={() => setExpandedReviewQuestionId((current) => current === question.id ? null : question.id)}
+                        />
+                      );
+                    }
+
                     return (
-                      <div
-                        key={score.questionId}
-                        className={`p-4 rounded-lg border-2 ${
-                          score.correct
-                            ? 'bg-green-50 border-green-300'
-                            : 'bg-red-50 border-red-300'
-                        }`}
+                      <motion.div
+                        key={reviewScore.questionId}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="p-4 rounded-lg border-2 bg-green-50 border-green-300 shadow-sm"
                       >
-                        <div className="flex items-start gap-3 mb-3">
-                          <div
-                            className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                              score.correct ? 'bg-green-600' : 'bg-red-600'
-                            }`}
-                          >
-                            {score.correct ? '✓' : '✕'}
-                          </div>
-                          <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-bold">✓</div>
+                          <div className="min-w-0 flex-1">
                             <p className="font-semibold text-gray-900 text-sm sm:text-base mb-2">
                               Q{idx + 1}: {question.question}
                             </p>
                             <div className="space-y-1 text-xs sm:text-sm">
-                              <p className="text-gray-700">
-                                <span className="font-semibold">Correct Answer:</span> {question.answer}
-                              </p>
-                              {!score.correct && (
-                                <p className="text-red-600">
-                                  <span className="font-semibold">You Selected:</span> {score.selectedAnswer || 'Unknown'}
-                                </p>
-                              )}
-                              <p className="text-gray-600">
-                                <span className="font-semibold">Points:</span> {score.points}/{Math.round(4.7 * 200 / 4.7)}
-                              </p>
+                              <p className="text-green-700"><span className="font-semibold">Correct Answer:</span> {question.answer}</p>
+                              <p className="text-gray-600"><span className="font-semibold">Points:</span> {reviewScore.points}/{Math.round(4.7 * 200 / 4.7)}</p>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
 
                 <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6">
                   <button
-                    onClick={() => setShowReview(false)}
+                    onClick={() => {
+                      setShowReview(false);
+                      setExpandedReviewQuestionId(null);
+                    }}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
                   >
                     Close

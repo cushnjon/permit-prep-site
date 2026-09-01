@@ -5,3 +5,9 @@
 - [x] Use the uploaded E-50 and E-100 certificate PDFs as the visual basis for generated certificates
 - [x] Store test attempts and certificate generation details for the certification module
 - [x] Verify the certification module flow and certificate generation with tests and screenshots
+- [x] Add related-question groups to the first-module end-game review, capped at five follow-ups per incorrect answer and seven questions per unnamed group
+- [x] Add expandable layered card-stack presentation for related review questions
+- [x] Verify Speed Test review behavior on desktop and mobile
+
+- [ ] Manually test the Speed Test end-game review flow on desktop and mobile by completing a session, opening the review modal, and confirming incorrect answers show expandable stacked related-question cards
+- [ ] Capture desktop and mobile screenshots of the Speed Test review modal showing the layered stack and expanded related questions
