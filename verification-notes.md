@@ -52,3 +52,15 @@ The desktop preview showed the active Group 2 question with the correct answer a
 
 Desktop-width smoke verification succeeded at 1280x720: the test reported body width 1265 against viewport width 1265, and after a correct answer the footer showed 1/20 with a checkmark in the matching slot. The captured artifact is desktop-speed-test-footer.png. Together with the earlier 375x812 run, both responsive widths now have filled-slot evidence.
 
+
+Bingo Prep verification completed at true mobile and desktop viewport sizes. At 375x812, body width matched viewport width (375), the active Speed Test rendered four answer buttons, a Bingo Prep footer, and all 20 board spaces. At 1280x720, body width was 1265 within the viewport, the same four answer buttons rendered, and all 20 spaces remained visible. Screenshots were captured as temporary mobile-bingo-prep.png and desktop-bingo-prep.png artifacts and will be removed before checkpointing.
+
+
+Bingo Prep line verification succeeded at true mobile and desktop widths. At 375x812, the automated correct-answer run filled all 20 spaces, displayed 13 completed lines × 1,000 points, and reached 22,600 points with body width equal to the viewport. At 1280x720, the run displayed 18/20 spaces, 9 completed lines × 1,000 points, and 19,000 points with body width 1265, confirming line bonuses and responsive sizing. Hard-question mapping was exercised during the full correct-answer runs and supplies two slot indices.
+
+
+Visual inspection of retained bonus screenshots: the desktop screenshot shows the active question and all four answer cards using the current question-group light tint, with the correct card outlined in green. The mobile screenshot is 375px wide and shows the active question and answer cards within the responsive layout; the correct card is visibly outlined in green and the answer text remains contained. The automated verification recorded double-fill behavior and a visible Bingo +1,000 state at both widths, while the screenshots were captured shortly after the bonus transition and therefore do not show the transient bonus text itself.
+
+
+Final retained screenshot inspection: /home/ubuntu/verification/bingo-evidence-mobile.png shows a 375px-wide full-page Speed Test with no horizontal overflow, four responsive Bingo Prep rows, tinted answer cards, a completed-line count, and the blue current score. /home/ubuntu/verification/bingo-evidence-desktop.png shows the full desktop board with four rows, tinted answer cards matching the active group, filled colored spaces, and visible line-count/1,000-point copy. Both screenshots were captured from active sessions where the verifier observed a visible Bingo +1,000 state and hard-question double-fill behavior.
+

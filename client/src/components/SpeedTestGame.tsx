@@ -149,14 +149,14 @@ interface Score {
 const COLORS = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
 
 export const SPEED_TEST_GROUP_PALETTE = [
-  { surface: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-700', empty: 'bg-sky-50 border-sky-300 text-sky-600', filled: 'bg-sky-400 border-sky-500 text-white' },
-  { surface: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', empty: 'bg-violet-50 border-violet-300 text-violet-600', filled: 'bg-violet-400 border-violet-500 text-white' },
-  { surface: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700', empty: 'bg-rose-50 border-rose-300 text-rose-600', filled: 'bg-rose-400 border-rose-500 text-white' },
-  { surface: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800', empty: 'bg-amber-50 border-amber-300 text-amber-700', filled: 'bg-amber-400 border-amber-500 text-white' },
-  { surface: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', empty: 'bg-emerald-50 border-emerald-300 text-emerald-600', filled: 'bg-emerald-400 border-emerald-500 text-white' },
-  { surface: 'bg-cyan-50', border: 'border-cyan-200', badge: 'bg-cyan-100 text-cyan-700', empty: 'bg-cyan-50 border-cyan-300 text-cyan-600', filled: 'bg-cyan-400 border-cyan-500 text-white' },
-  { surface: 'bg-lime-50', border: 'border-lime-200', badge: 'bg-lime-100 text-lime-800', empty: 'bg-lime-50 border-lime-300 text-lime-700', filled: 'bg-lime-400 border-lime-500 text-white' },
-  { surface: 'bg-fuchsia-50', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-700', empty: 'bg-fuchsia-50 border-fuchsia-300 text-fuchsia-600', filled: 'bg-fuchsia-400 border-fuchsia-500 text-white' },
+  { surface: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-700', answer: 'bg-sky-100 border-sky-300 text-sky-950 hover:bg-sky-200', empty: 'bg-sky-50 border-sky-300 text-sky-600', filled: 'bg-sky-400 border-sky-500 text-white' },
+  { surface: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', answer: 'bg-violet-100 border-violet-300 text-violet-950 hover:bg-violet-200', empty: 'bg-violet-50 border-violet-300 text-violet-600', filled: 'bg-violet-400 border-violet-500 text-white' },
+  { surface: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700', answer: 'bg-rose-100 border-rose-300 text-rose-950 hover:bg-rose-200', empty: 'bg-rose-50 border-rose-300 text-rose-600', filled: 'bg-rose-400 border-rose-500 text-white' },
+  { surface: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800', answer: 'bg-amber-100 border-amber-300 text-amber-950 hover:bg-amber-200', empty: 'bg-amber-50 border-amber-300 text-amber-700', filled: 'bg-amber-400 border-amber-500 text-white' },
+  { surface: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', answer: 'bg-emerald-100 border-emerald-300 text-emerald-950 hover:bg-emerald-200', empty: 'bg-emerald-50 border-emerald-300 text-emerald-600', filled: 'bg-emerald-400 border-emerald-500 text-white' },
+  { surface: 'bg-cyan-50', border: 'border-cyan-200', badge: 'bg-cyan-100 text-cyan-700', answer: 'bg-cyan-100 border-cyan-300 text-cyan-950 hover:bg-cyan-200', empty: 'bg-cyan-50 border-cyan-300 text-cyan-600', filled: 'bg-cyan-400 border-cyan-500 text-white' },
+  { surface: 'bg-lime-50', border: 'border-lime-200', badge: 'bg-lime-100 text-lime-800', answer: 'bg-lime-100 border-lime-300 text-lime-950 hover:bg-lime-200', empty: 'bg-lime-50 border-lime-300 text-lime-700', filled: 'bg-lime-400 border-lime-500 text-white' },
+  { surface: 'bg-fuchsia-50', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-700', answer: 'bg-fuchsia-100 border-fuchsia-300 text-fuchsia-950 hover:bg-fuchsia-200', empty: 'bg-fuchsia-50 border-fuchsia-300 text-fuchsia-600', filled: 'bg-fuchsia-400 border-fuchsia-500 text-white' },
 ] as const;
 
 const REVIEW_TOPIC_PATTERNS: Array<[string, RegExp]> = [
@@ -225,6 +225,64 @@ export const getRelatedReviewQuestions = (questionId: number): Question[] => {
 
 export const getSpeedTestGroupIndex = (questionId: number): number =>
   REVIEW_GROUPS.findIndex((group) => group.some((question) => question.id === questionId));
+
+export const BINGO_CATEGORY_COUNT = 4;
+export const BINGO_COLUMNS = 5;
+export const BINGO_SLOT_COUNT = BINGO_CATEGORY_COUNT * BINGO_COLUMNS;
+export const BINGO_LINE_BONUS = 1000;
+
+export const BINGO_BOARD_ROWS = Array.from({ length: BINGO_CATEGORY_COUNT }, (_, rowIndex) =>
+  Array.from({ length: BINGO_COLUMNS }, (_, columnIndex) => rowIndex * BINGO_COLUMNS + columnIndex),
+);
+
+export const BINGO_LINES = [
+  ...BINGO_BOARD_ROWS.map((slots, rowIndex) => ({ key: `row-${rowIndex}`, slots })),
+  ...Array.from({ length: BINGO_COLUMNS }, (_, columnIndex) => ({
+    key: `column-${columnIndex}`,
+    slots: Array.from({ length: BINGO_CATEGORY_COUNT }, (_, rowIndex) => rowIndex * BINGO_COLUMNS + columnIndex),
+  })),
+  { key: 'diagonal-down-left', slots: [0, 6, 12, 18] },
+  { key: 'diagonal-down-right', slots: [4, 8, 12, 16] },
+  { key: 'diagonal-offset-down-left', slots: [1, 7, 13, 19] },
+  { key: 'diagonal-offset-down-right', slots: [3, 7, 11, 15] },
+] as const;
+
+const questionDifficultyScore = (question: Question): number =>
+  question.question.length + Math.max(...question.options.map((option) => option.length));
+
+const HARD_QUESTION_COUNT = 20;
+export const HARD_QUESTION_IDS = new Set(
+  [...QUESTIONS]
+    .sort((a, b) => questionDifficultyScore(b) - questionDifficultyScore(a) || a.id - b.id)
+    .slice(0, HARD_QUESTION_COUNT)
+    .map((question) => question.id),
+);
+
+export const isHardSpeedTestQuestion = (questionId: number): boolean => HARD_QUESTION_IDS.has(questionId);
+
+export const getBingoSlotIndicesForQuestion = (questionId: number): number[] => {
+  const groupIndex = getSpeedTestGroupIndex(questionId);
+  if (groupIndex < 0) return [];
+
+  const baseSlot = groupIndex % BINGO_SLOT_COUNT;
+  if (!isHardSpeedTestQuestion(questionId)) return [baseSlot];
+
+  const rowStart = Math.floor(baseSlot / BINGO_COLUMNS) * BINGO_COLUMNS;
+  const column = baseSlot % BINGO_COLUMNS;
+  const bonusSlot = rowStart + ((column + 1) % BINGO_COLUMNS);
+  return baseSlot === bonusSlot ? [baseSlot] : [baseSlot, bonusSlot];
+};
+
+export const getNewlyCompletedBingoLines = (
+  filledSlots: number[],
+  alreadyCompletedLines: string[] = [],
+): string[] => {
+  const filled = new Set(filledSlots);
+  const completed = new Set(alreadyCompletedLines);
+  return BINGO_LINES
+    .filter((line) => !completed.has(line.key) && line.slots.every((slot) => filled.has(slot)))
+    .map((line) => line.key);
+};
 
 interface ReviewQuestionStackProps {
   score: Score;
@@ -325,7 +383,9 @@ export const SpeedTestGame: React.FC = () => {
   const [showReview, setShowReview] = useState(false);
   const [expandedReviewQuestionId, setExpandedReviewQuestionId] = useState<number | null>(null);
   const [use5050Mode, setUse5050Mode] = useState(false);
-  const [completedGroupSlots, setCompletedGroupSlots] = useState<number[]>([]);
+  const [filledBingoSlots, setFilledBingoSlots] = useState<number[]>([]);
+  const [completedBingoLines, setCompletedBingoLines] = useState<string[]>([]);
+  const [bingoBonusPoints, setBingoBonusPoints] = useState<number | null>(null);
 
   // Shuffled question order for the whole session — created once on start
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
@@ -333,6 +393,7 @@ export const SpeedTestGame: React.FC = () => {
   const currentQuestion = sessionQuestions[currentQuestionIndex];
   const currentGroupIndex = currentQuestion ? getSpeedTestGroupIndex(currentQuestion.id) : -1;
   const currentGroupColor = SPEED_TEST_GROUP_PALETTE[Math.max(currentGroupIndex, 0) % SPEED_TEST_GROUP_PALETTE.length];
+  const currentBingoSlots = currentQuestion ? getBingoSlotIndicesForQuestion(currentQuestion.id) : [];
 
   // Per-question shuffled options — re-shuffle each time the question changes
   // In 50/50 mode, eliminate 2 wrong answers, keeping only correct + 1 wrong
@@ -414,7 +475,16 @@ export const SpeedTestGame: React.FC = () => {
     setScores(prev => [...prev, { questionId: currentQuestion.id, points, correct: isCorrect, selectedAnswer: answer }]);
     if (isCorrect && points > 0) setEarnedPoints(points);
     if (isCorrect && currentGroupIndex >= 0) {
-      setCompletedGroupSlots((previous) => previous.includes(currentGroupIndex) ? previous : [...previous, currentGroupIndex]);
+      const slotsToFill = getBingoSlotIndicesForQuestion(currentQuestion.id);
+      const mergedSlots = Array.from(new Set([...filledBingoSlots, ...slotsToFill]));
+      const newlyCompletedLines = getNewlyCompletedBingoLines(mergedSlots, completedBingoLines);
+      setFilledBingoSlots(mergedSlots);
+      if (newlyCompletedLines.length > 0) {
+        const bonus = newlyCompletedLines.length * BINGO_LINE_BONUS;
+        setScore((previous) => previous + bonus);
+        setBingoBonusPoints(bonus);
+        setCompletedBingoLines((previous) => [...previous, ...newlyCompletedLines]);
+      }
     }
 
     // Adjust global timer: +5.5 for correct, -1 for incorrect
@@ -429,6 +499,7 @@ export const SpeedTestGame: React.FC = () => {
       setIsAnswering(false);
       setSelectedAnswer(null);
       setEarnedPoints(null);
+      setBingoBonusPoints(null);
     }, 500);
   };
 
@@ -453,7 +524,9 @@ export const SpeedTestGame: React.FC = () => {
     setSelectedAnswer(null);
     setIsAnswering(false);
     setClickPos(null);
-    setCompletedGroupSlots([]);
+    setFilledBingoSlots([]);
+    setCompletedBingoLines([]);
+    setBingoBonusPoints(null);
     // 50/50 mode is already set by user toggle before clicking Start
   };
 
@@ -468,7 +541,9 @@ export const SpeedTestGame: React.FC = () => {
     setIsAnswering(false);
     setSessionQuestions([]);
     setEarnedPoints(null);
-    setCompletedGroupSlots([]);
+    setFilledBingoSlots([]);
+    setCompletedBingoLines([]);
+    setBingoBonusPoints(null);
   };
 
   const handleDownloadStudyGuide = () => {
@@ -732,7 +807,7 @@ export const SpeedTestGame: React.FC = () => {
               {shuffledOptions.map((option, index) => {
                 const isSelected = selectedAnswer === option;
                 const isCorrect = option === currentQuestion.answer;
-                const bgColor = COLORS[index % COLORS.length];
+                const answerColor = SPEED_TEST_GROUP_PALETTE[Math.max(currentGroupIndex, 0) % SPEED_TEST_GROUP_PALETTE.length].answer;
 
                 return (
                   <motion.button
@@ -762,9 +837,9 @@ export const SpeedTestGame: React.FC = () => {
                       background: 'linear-gradient(135deg, #7f1d1d, #1a0000)',
                       boxShadow: '0 0 20px rgba(127,29,29,0.8), inset 0 0 10px rgba(0,0,0,0.5)'
                     } : {}}
-                    className={`w-full p-3 sm:p-4 rounded-lg font-semibold text-white transition-all shadow-md ${bgColor} ${
-                      isAnswering && !isSelected ? 'opacity-50' : ''
-                    } ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-500' : ''} ${
+                    className={`w-full p-3 sm:p-4 rounded-lg font-semibold transition-all shadow-md ${answerColor} ${
+                      isAnswering && isSelected && !isCorrect ? 'text-white' : ''
+                    } ${isAnswering && !isSelected ? 'opacity-50' : ''} ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-500' : ''} ${
                       isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-900' : ''
                     }`}
                   >
@@ -779,39 +854,45 @@ export const SpeedTestGame: React.FC = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Solitaire-style group progress footer */}
-        <footer className="mt-4 rounded-lg border border-gray-200 bg-white/90 p-3 shadow-md sm:mt-6 sm:p-4" aria-label="Question group progress">
-          <div className="mb-2 flex items-center justify-between gap-3">
+        {/* Bingo Prep board */}
+        <footer className="mt-4 rounded-lg border border-gray-200 bg-white/95 p-3 shadow-md sm:mt-6 sm:p-4" aria-label="Bingo Prep board">
+          <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-700 sm:text-sm">Group progress</p>
-              <p className="text-[10px] text-gray-500 sm:text-xs">Correct answers fill their matching card space.</p>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-800 sm:text-sm">Bingo Prep</p>
+              <p className="text-[10px] text-gray-500 sm:text-xs">Four category rows. Correct answers fill their matching spaces.</p>
             </div>
-            <span className="whitespace-nowrap text-xs font-bold text-blue-700 sm:text-sm">
-              {completedGroupSlots.length}/{REVIEW_GROUPS.length}
-            </span>
+            <div className="text-right text-[10px] font-bold text-blue-700 sm:text-xs">
+              <div>{filledBingoSlots.length}/{BINGO_SLOT_COUNT} spaces</div>
+              <div>{completedBingoLines.length} lines × {BINGO_LINE_BONUS.toLocaleString()} pts</div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            {REVIEW_GROUPS.map((group, groupIndex) => {
-              const groupColor = SPEED_TEST_GROUP_PALETTE[groupIndex % SPEED_TEST_GROUP_PALETTE.length];
-              const isFilled = completedGroupSlots.includes(groupIndex);
-              const isCurrent = currentGroupIndex === groupIndex;
-              return (
-                <motion.div
-                  key={`group-slot-${groupIndex}`}
-                  layout
-                  initial={{ opacity: 0, y: 8, scale: 0.92 }}
-                  animate={{ opacity: 1, y: 0, scale: isCurrent ? 1.06 : 1 }}
-                  transition={{ duration: 0.2, delay: Math.min(groupIndex * 0.02, 0.2) }}
-                  title={`Group ${groupIndex + 1}${isFilled ? ' complete' : ' open'}`}
-                  aria-label={`Group ${groupIndex + 1}, ${isFilled ? 'complete' : 'open'}`}
-                  className={`relative flex h-10 w-8 items-center justify-center rounded-md border-2 text-xs font-black shadow-sm transition-shadow sm:h-12 sm:w-9 sm:text-sm ${isFilled ? groupColor.filled : groupColor.empty} ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
-                >
-                  {isFilled ? '✓' : groupIndex + 1}
-                  <span className="pointer-events-none absolute -bottom-1 -right-1 h-2 w-2 rounded-full border border-white bg-white/80" />
-                </motion.div>
-              );
-            })}
+          <div className="space-y-1.5 sm:space-y-2">
+            {BINGO_BOARD_ROWS.map((row, rowIndex) => (
+              <div key={`bingo-row-${rowIndex}`} className="grid grid-cols-5 gap-1.5 sm:gap-2" aria-label={`Bingo Prep category row ${rowIndex + 1}`}>
+                {row.map((slotIndex) => {
+                  const slotColor = SPEED_TEST_GROUP_PALETTE[slotIndex % SPEED_TEST_GROUP_PALETTE.length];
+                  const isFilled = filledBingoSlots.includes(slotIndex);
+                  const isCurrent = currentBingoSlots.includes(slotIndex);
+                  return (
+                    <motion.div
+                      key={`bingo-slot-${slotIndex}`}
+                      layout
+                      initial={{ opacity: 0, y: 8, scale: 0.92 }}
+                      animate={{ opacity: 1, y: 0, scale: isCurrent ? 1.06 : 1 }}
+                      transition={{ duration: 0.2, delay: Math.min(slotIndex * 0.02, 0.2) }}
+                      title={`Bingo Prep space ${slotIndex + 1}${isFilled ? ' filled' : ' open'}${isCurrent ? ' · current question' : ''}`}
+                      aria-label={`Bingo Prep space ${slotIndex + 1}, ${isFilled ? 'filled' : 'open'}`}
+                      className={`relative flex h-9 min-w-0 items-center justify-center rounded-md border-2 text-xs font-black shadow-sm transition-shadow sm:h-11 sm:text-sm ${isFilled ? slotColor.filled : slotColor.empty} ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+                    >
+                      {isFilled ? '✓' : slotIndex + 1}
+                      <span className="pointer-events-none absolute -bottom-1 -right-1 h-2 w-2 rounded-full border border-white bg-white/80" />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
+          <p className="mt-2 text-center text-[10px] font-semibold text-gray-500 sm:text-xs">Complete a horizontal, vertical, or diagonal line for +{BINGO_LINE_BONUS.toLocaleString()} points.</p>
         </footer>
 
         {/* Flashing CORRECT text at click position */}
@@ -848,6 +929,21 @@ export const SpeedTestGame: React.FC = () => {
               style={{ top: '50%' }}
             >
               +{earnedPoints}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bingo line bonus burst */}
+        <AnimatePresence>
+          {bingoBonusPoints !== null && (
+            <motion.div
+              key={`bingo-bonus-${completedBingoLines.length}`}
+              initial={{ opacity: 0, y: 12, scale: 0.7 }}
+              animate={{ opacity: [0, 1, 1, 0], y: -42, scale: [0.7, 1.12, 1, 1] }}
+              transition={{ duration: 0.45, ease: 'easeOut', times: [0, 0.18, 0.65, 1] }}
+              className="pointer-events-none absolute left-1/2 top-[62%] z-50 -translate-x-1/2 whitespace-nowrap text-2xl font-black uppercase tracking-wide text-amber-500 drop-shadow-[0_0_14px_rgba(245,158,11,0.9)] sm:text-4xl"
+            >
+              Bingo +{bingoBonusPoints.toLocaleString()}
             </motion.div>
           )}
         </AnimatePresence>
