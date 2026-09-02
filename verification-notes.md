@@ -64,3 +64,12 @@ Visual inspection of retained bonus screenshots: the desktop screenshot shows th
 
 Final retained screenshot inspection: /home/ubuntu/verification/bingo-evidence-mobile.png shows a 375px-wide full-page Speed Test with no horizontal overflow, four responsive Bingo Prep rows, tinted answer cards, a completed-line count, and the blue current score. /home/ubuntu/verification/bingo-evidence-desktop.png shows the full desktop board with four rows, tinted answer cards matching the active group, filled colored spaces, and visible line-count/1,000-point copy. Both screenshots were captured from active sessions where the verifier observed a visible Bingo +1,000 state and hard-question double-fill behavior.
 
+
+Compact-layout visual verification: /home/ubuntu/verification/compact-mobile.png is 375px wide with no horizontal overflow. Each answer shows its letter and text on one compact row, while longer text wraps within the row rather than escaping the card. Bingo Prep uses four compact rows with shorter header copy and reduced vertical spacing. /home/ubuntu/verification/compact-desktop.png shows the same one-row answer treatment at desktop width, with four group-based answer shades and a reduced Bingo Prep footprint.
+
+
+Final compact verification: /home/ubuntu/verification/final-compact-mobile.png shows 375px width with body width matching the viewport, answer letters and text in an explicit horizontal flex row, group-tinted answer cards, and the reduced Bingo Prep header/board spacing. /home/ubuntu/verification/final-compact-desktop.png shows the same horizontal answer treatment at desktop width, four distinct shades within the active group color, and the shortened Bingo Prep header copy. Both screenshots show four board rows and 20 spaces without overflow.
+
+
+Direct browser verification: the desktop session displayed four answer buttons in a compact horizontal letter/text treatment and the shortened Bingo Prep header with four rows. The active true-mobile session at 375px displayed the same compact A/B/C/D row layout, four board rows, and reduced Bingo Prep copy without visible horizontal overflow; long answer text stayed inside the card. The retained screenshots are /home/ubuntu/verification/final-compact-desktop.png and /home/ubuntu/verification/final-compact-mobile.png.
+

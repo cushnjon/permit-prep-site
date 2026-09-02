@@ -42,3 +42,15 @@
 - [x] Capture full-page mobile evidence with a completed Bingo line and visible +1,000/line-count feedback
 - [x] Record the retained evidence paths and concrete hard-question double-fill observations
 
+- [x] Slim the Speed Test answer section and place each answer letter and answer text on one compact line
+- [x] Add four distinct shades from the active question-group color to the A/B/C/D answer boxes
+- [x] Reduce Bingo Prep header text and spacing so the board uses less vertical space
+- [x] Verify the compact Speed Test layout on desktop and mobile
+
+- [x] Make the answer letter and answer text explicitly share one horizontal flex row, while allowing long text to wrap safely inside that row
+- [x] Manually verify the final compact Speed Test layout on desktop and true mobile, including long-answer containment and reduced Bingo Prep header space
+- [x] Capture and retain desktop and mobile screenshots of the final compact answer rows and minimized Bingo Prep header
+
+- [x] Manually verify the latest compact Speed Test layout on desktop and a true mobile viewport, confirming long answers stay contained and the minimized Bingo Prep header remains usable
+- [x] Record concrete manual verification evidence tied to the retained compact desktop and mobile screenshots
+

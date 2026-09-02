@@ -159,6 +159,17 @@ export const SPEED_TEST_GROUP_PALETTE = [
   { surface: 'bg-fuchsia-50', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-700', answer: 'bg-fuchsia-100 border-fuchsia-300 text-fuchsia-950 hover:bg-fuchsia-200', empty: 'bg-fuchsia-50 border-fuchsia-300 text-fuchsia-600', filled: 'bg-fuchsia-400 border-fuchsia-500 text-white' },
 ] as const;
 
+export const SPEED_TEST_ANSWER_SHADES = [
+  ['#f0f9ff', '#e0f2fe', '#bae6fd', '#7dd3fc'],
+  ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd'],
+  ['#fff1f2', '#ffe4e6', '#fecdd3', '#fda4af'],
+  ['#fffbeb', '#fef3c7', '#fde68a', '#fcd34d'],
+  ['#ecfdf5', '#d1fae5', '#a7f3d0', '#6ee7b7'],
+  ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9'],
+  ['#f7fee7', '#ecfccb', '#d9f99d', '#bef264'],
+  ['#fdf4ff', '#fae8ff', '#f5d0fe', '#f0abfc'],
+] as const;
+
 const REVIEW_TOPIC_PATTERNS: Array<[string, RegExp]> = [
   ['impaired-driving', /dui|dwai|bac|alcohol|cannabis|breath|blood test|zero-tolerance|refusing/i],
   ['traffic-signals', /traffic light|signal|flashing red|flashing yellow|yellow light|green light|red x|arrow|beacon/i],
@@ -807,7 +818,8 @@ export const SpeedTestGame: React.FC = () => {
               {shuffledOptions.map((option, index) => {
                 const isSelected = selectedAnswer === option;
                 const isCorrect = option === currentQuestion.answer;
-                const answerColor = SPEED_TEST_GROUP_PALETTE[Math.max(currentGroupIndex, 0) % SPEED_TEST_GROUP_PALETTE.length].answer;
+                const groupShadeSet = SPEED_TEST_ANSWER_SHADES[Math.max(currentGroupIndex, 0) % SPEED_TEST_ANSWER_SHADES.length];
+                const answerShade = groupShadeSet[index % groupShadeSet.length];
 
                 return (
                   <motion.button
@@ -836,16 +848,16 @@ export const SpeedTestGame: React.FC = () => {
                     style={isAnswering && isSelected && !isCorrect ? {
                       background: 'linear-gradient(135deg, #7f1d1d, #1a0000)',
                       boxShadow: '0 0 20px rgba(127,29,29,0.8), inset 0 0 10px rgba(0,0,0,0.5)'
-                    } : {}}
-                    className={`w-full p-3 sm:p-4 rounded-lg font-semibold transition-all shadow-md ${answerColor} ${
-                      isAnswering && isSelected && !isCorrect ? 'text-white' : ''
+                    } : { backgroundColor: answerShade }}
+                    className={`w-full p-2 sm:p-3 rounded-lg font-semibold transition-all shadow-md border-2 border-black/10 ${
+                      isAnswering && isSelected && !isCorrect ? 'text-white' : 'text-gray-950'
                     } ${isAnswering && !isSelected ? 'opacity-50' : ''} ${isAnswering && isSelected && isCorrect ? 'ring-4 ring-green-500' : ''} ${
                       isAnswering && isSelected && !isCorrect ? 'ring-4 ring-red-900' : ''
                     }`}
                   >
-                    <div className="text-left">
-                      <div className="text-xs opacity-75">{String.fromCharCode(65 + index)}.</div>
-                      <div className="text-xs sm:text-base line-clamp-2">{option}</div>
+                    <div className="flex min-w-0 flex-row items-center gap-2 text-left">
+                      <span className="shrink-0 text-xs font-black uppercase opacity-75 sm:text-sm">{String.fromCharCode(65 + index)}.</span>
+                      <span className="min-w-0 flex-1 break-words text-[11px] leading-tight sm:text-base">{option}</span>
                     </div>
                   </motion.button>
                 );
@@ -855,20 +867,20 @@ export const SpeedTestGame: React.FC = () => {
         </AnimatePresence>
 
         {/* Bingo Prep board */}
-        <footer className="mt-4 rounded-lg border border-gray-200 bg-white/95 p-3 shadow-md sm:mt-6 sm:p-4" aria-label="Bingo Prep board">
-          <div className="mb-3 flex items-start justify-between gap-3">
+        <footer className="mt-3 rounded-lg border border-gray-200 bg-white/95 p-2.5 shadow-md sm:mt-4 sm:p-3" aria-label="Bingo Prep board">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-800 sm:text-sm">Bingo Prep</p>
-              <p className="text-[10px] text-gray-500 sm:text-xs">Four category rows. Correct answers fill their matching spaces.</p>
+              <p className="text-[10px] text-gray-500 sm:text-xs">4 rows · +{BINGO_LINE_BONUS.toLocaleString()} per line</p>
             </div>
             <div className="text-right text-[10px] font-bold text-blue-700 sm:text-xs">
               <div>{filledBingoSlots.length}/{BINGO_SLOT_COUNT} spaces</div>
               <div>{completedBingoLines.length} lines × {BINGO_LINE_BONUS.toLocaleString()} pts</div>
             </div>
           </div>
-          <div className="space-y-1.5 sm:space-y-2">
+          <div className="space-y-1 sm:space-y-1.5">
             {BINGO_BOARD_ROWS.map((row, rowIndex) => (
-              <div key={`bingo-row-${rowIndex}`} className="grid grid-cols-5 gap-1.5 sm:gap-2" aria-label={`Bingo Prep category row ${rowIndex + 1}`}>
+              <div key={`bingo-row-${rowIndex}`} className="grid grid-cols-5 gap-1 sm:gap-1.5" aria-label={`Bingo Prep category row ${rowIndex + 1}`}>
                 {row.map((slotIndex) => {
                   const slotColor = SPEED_TEST_GROUP_PALETTE[slotIndex % SPEED_TEST_GROUP_PALETTE.length];
                   const isFilled = filledBingoSlots.includes(slotIndex);
@@ -882,7 +894,7 @@ export const SpeedTestGame: React.FC = () => {
                       transition={{ duration: 0.2, delay: Math.min(slotIndex * 0.02, 0.2) }}
                       title={`Bingo Prep space ${slotIndex + 1}${isFilled ? ' filled' : ' open'}${isCurrent ? ' · current question' : ''}`}
                       aria-label={`Bingo Prep space ${slotIndex + 1}, ${isFilled ? 'filled' : 'open'}`}
-                      className={`relative flex h-9 min-w-0 items-center justify-center rounded-md border-2 text-xs font-black shadow-sm transition-shadow sm:h-11 sm:text-sm ${isFilled ? slotColor.filled : slotColor.empty} ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+                      className={`relative flex h-8 min-w-0 items-center justify-center rounded-md border-2 text-[11px] font-black shadow-sm transition-shadow sm:h-10 sm:text-sm ${isFilled ? slotColor.filled : slotColor.empty} ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
                     >
                       {isFilled ? '✓' : slotIndex + 1}
                       <span className="pointer-events-none absolute -bottom-1 -right-1 h-2 w-2 rounded-full border border-white bg-white/80" />
@@ -892,7 +904,7 @@ export const SpeedTestGame: React.FC = () => {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-center text-[10px] font-semibold text-gray-500 sm:text-xs">Complete a horizontal, vertical, or diagonal line for +{BINGO_LINE_BONUS.toLocaleString()} points.</p>
+          <p className="mt-1 text-center text-[10px] font-semibold text-gray-500 sm:text-xs">Horizontal · vertical · diagonal</p>
         </footer>
 
         {/* Flashing CORRECT text at click position */}
